@@ -1,0 +1,138 @@
+---
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks.git
+    rev: v4.6.0
+    hooks:
+      - id: no-commit-to-branch
+        name: Check this commit is not to the main/master branch
+      - id: check-merge-conflict
+        name: Check for merge conflicts before committing
+      - id: check-case-conflict
+        name: Check for case conflicts for case-sensitive filesystems
+      - id: check-symlinks
+        name: Check for broken syslinks in the repository
+      - id: destroyed-symlinks
+        name: Check for destroyed symlinks in the repository
+      - id: check-added-large-files
+        name: Check no large files have been added to the commit
+        args:
+          # The CRDs in this repository can be very large in size, so we must
+          # allow for large files to be added
+          - --maxkb=4096
+      - id: trailing-whitespace
+        name: Check all trailing whitespace is removed
+      - id: end-of-file-fixer
+        name: Check all files end in a new-line only
+
+  - repo: https://github.com/zricethezav/gitleaks.git
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+        name: Check for hard-coded secrets, keys, and credentials
+
+  - repo: https://github.com/antonbabenko/pre-commit-terraform.git
+    rev: v1.95.0
+    hooks:
+      - id: terraform_fmt
+        name: Check Terraform configuration formatting
+
+      - id: terraform_validate
+        name: Validate the Terraform configuration
+        files: ^terraform/
+        args:
+          - --tf-init-args=-upgrade
+          - --tf-init-args=-get
+          - --hook-config=--retry-once-with-cleanup=true
+
+      - id: terraform_providers_lock
+        name: Check Terraform Provider plaforms configured
+        args:
+          - --args=-platform=linux_amd64
+          - --args=-platform=darwin_arm64
+          - --hook-config=--mode=only-check-is-current-lockfile-cross-platform
+
+      - id: terraform_tflint
+        name: Lint the Terraform configuration
+        files: ^terraform/
+        args:
+          - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
+
+      - id: terraform_tflint
+        name: Lint the Terraform modules
+        files: ^modules/
+        args:
+          - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
+          # Terraform resources deployed into AWS rely on the default_tags
+          # argument within the provider to manage the bulk of the tags, so only
+          # run the aws_resource_missing_tags rule within a Terraform
+          # configuration for accurate checks
+          - --args=--disable-rule=aws_resource_missing_tags
+
+      - id: terraform_trivy
+        name: Analyse the Terraform configuration
+        files: ^terraform/
+        args:
+          - --args=--skip-dirs=.terraform
+          - --args=--cache-dir=.trivy
+          - --args=--ignorefile=../.trivyignore
+          - --args=--tf-vars=variables/profound-mantis-1.tfvars
+          - --args=--severity=UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+
+      - id: terraform_docs
+        name: Check the documentation for the Terraform configurations
+        files: ^terraform/
+        args:
+          - --args=--config=.terraform-docs.yaml
+          - --args=--lockfile=true
+
+      - id: terraform_docs
+        name: Check the documentation for the Terraform modules
+        files: ^modules/
+        args:
+          - --args=--config=.terraform-docs.yaml
+          - --args=--lockfile=false
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        name: Lint selected files with Prettier
+        args:
+          - --config=.prettier.yaml
+        additional_dependencies:
+          - prettier@3.3.2
+        types_or:
+          - markdown
+          - json
+          - yaml
+          - css
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli.git
+    rev: v0.41.0
+    hooks:
+      - id: markdownlint
+        name: Check general Markdown correctness and formatting
+        exclude: ^pages/
+        args:
+          - --config
+          - .markdownlint.yaml
+          - --ignore-path
+          - .markdownignore
+      - id: markdownlint
+        name: Check GitHub Pages Markdown correctness and formatting
+        files: ^pages/
+        args:
+          - --config
+          - pages/.markdownlint.yaml
+          - --ignore-path
+          - pages/.markdownignore
+
+  - repo: https://github.com/python-jsonschema/check-jsonschema.git
+    rev: 0.29.2
+    hooks:
+      - name: Check the Taskfiles for correctness
+        id: check-taskfile
+      - name: Check Dependabot configuration for correctness
+        id: check-dependabot
+      - name: Check GitHub Workflows for correctness
+        id: check-github-workflows

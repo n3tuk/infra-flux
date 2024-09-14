@@ -1,0 +1,24 @@
+# Ignore any .terraform directories for caching providers, modules, and remote
+# states, plus any local Terraform states, plans, and configuration files
+.terraformrc
+**/.terraform
+*.tfstate
+*.tfstate.*
+*.tfplan
+
+# Ignore the placeholder for the current working environment
+.environment
+
+# Ignore cache files for Prettier linting and formatting checks
+.prettiercache
+
+# Ignore cache files for kubeconform validation checks
+flux/.kubeconform
+
+# Ignore the Trivy cache and any .sarif files for uploading to GitHub
+.trivy
+*.sarif
+
+# Ignore Taskfile processing directory and files
+.skip-pre-checks
+.task
