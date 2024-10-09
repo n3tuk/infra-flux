@@ -1,0 +1,24 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: gha-runner-scale-set-controller
+spec:
+  secretRef:
+    name: ghcr-login
+  provider: generic
+  type: oci
+  url: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set-controller
+  interval: 24h
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: gha-runner-scale-set
+spec:
+  secretRef:
+    name: ghcr-login
+  provider: generic
+  type: oci
+  url: oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
+  interval: 24h

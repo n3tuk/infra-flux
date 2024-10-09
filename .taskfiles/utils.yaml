@@ -1,0 +1,54 @@
+---
+version: 3
+
+tasks:
+  # Enable the pre-commit hook in this repository to ensure that all the
+  # required checks are run before committing staged changes back upstream
+  pre-commit:
+    internal: true
+    silent: true
+    run: once
+    deps:
+      - task: check:pre-commit
+    cmds:
+      # Avoid outputting anything from this command
+      - cmd: |-
+          pre-commit install >/dev/null 2>&1
+    generates:
+      - '{{ .root }}/.git/hooks/pre-commit'
+    status:
+      - test -f '{{ .root }}/.git/hooks/pre-commit'
+
+  # Run checks within the local environment to find out if the required tools
+  # exist, and if not exit from running any further with an explanation
+  pre-checks:
+    internal: true
+    silent: true
+    run: once
+    deps:
+      - task: check:prettier
+      - task: check:terraform
+      - task: check:terraform-docs
+      - task: check:tflint
+      - task: check:trivy
+      - task: check:flux
+      - task: check:kubeconform
+      - task: check:check-jsonschema
+      - task: check:markdownlint
+
+  # Run a check for a specific executable to ensure it's available within $PATH
+  check:*:
+    internal: true
+    silent: true
+    run: once
+    vars:
+      name: '{{ index .MATCH 0 }}'
+    cmds:
+      - cmd: |-
+          test -x "$(which '{{ .name }}' 2>/dev/null)" \
+            || ( echo -e '{{ .cr }}Cannot find {{ .name }} in $PATH{{ .cc }}'
+                 exit 1 )
+    status:
+      # Set this file to bypass all checks (only use if you know what you're
+      # doing)
+      - test -f {{ .root }}/.skip-pre-checks

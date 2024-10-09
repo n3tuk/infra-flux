@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prometheus-system
+  labels:
+    app.kubernetes.io/environment: ${label_environment}
+    app.kubernetes.io/instance: prometheus-system
+    app.kubernetes.io/managed-by: Kustomization
+    app.kubernetes.io/name: prometheus-system
+    app.kubernetes.io/repository: ${label_repository}

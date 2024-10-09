@@ -1,0 +1,55 @@
+---
+version: 3
+
+vars:
+  # ANSI Colours
+  cr: \e[1;31m
+  cg: \e[0;32m
+  cw: \e[1;37m
+  cc: \e[0m
+
+tasks:
+  tflint:init:
+    internal: true
+    silent: true
+    sources:
+      - '{{ .root }}/.tflint.hcl'
+    cmds:
+      - cmd: |-
+          tflint --config '{{ .root }}/.tflint.hcl' --init \
+            | { grep -v 'already installed' || true; }
+          echo -e '{{ .cg }}Completed{{ .cc }}'
+
+  tflint:validate:
+    internal: true
+    silent: true
+    sources:
+      - '{{ .root }}/.tflint.hcl'
+      - '*.tf'
+      - variables/{{ .workspace }}.tfvars
+      - assets/*
+      - templates/*
+    vars:
+      workspace:
+        sh: |-
+          ENV=$(cat .environment 2>/dev/null || true)
+          [[ -n "${ENV}" ]] && echo "${ENV}" || echo "{{ .default }}"
+      options:
+        sh: |-
+          echo -n '--var=environment={{ .environment }}'
+          if [[ -f 'variables/{{ .environment }}.tfvars' ]]
+          then
+            echo -n ' --var-file=variables/{{ .environment }}.tfvars'
+          fi
+    deps:
+      - task: tflint:init
+    cmds:
+      - cmd: |-
+          echo 'environment:'
+          echo -e '  {{ .cw }}{{ .environment }}{{ .cc }}'
+          echo 'options:'
+          echo -e '  {{ .cw }}{{
+            splitList " " .options | join (cat .cc "\n " .cw)
+          }}{{ .cc}}'
+          tflint --config '{{ .root }}/.tflint.hcl' {{ .options }}
+          echo -e '{{ .cg }}Passed{{ .cc }}'

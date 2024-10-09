@@ -1,0 +1,52 @@
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-cloudflare-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: jon@than.io
+    privateKeySecretRef:
+      name: letsencrypt-cloudflare-staging
+    solvers:
+      - dns01:
+          cloudflare:
+            email: jon@than.io
+            apiTokenSecretRef:
+              name: cloudflare-token
+              key: api-token
+        selector:
+          dnsZones:
+            - n3t.uk
+            - kub3.uk
+            - pip3.uk
+            - t3st.uk
+            - liv3.uk
+            - sit3.uk
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-cloudflare-production
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: jon@than.io
+    privateKeySecretRef:
+      name: letsencrypt-cloudflare-production
+    solvers:
+      - dns01:
+          cloudflare:
+            email: jon@than.io
+            apiTokenSecretRef:
+              name: cloudflare-token
+              key: api-token
+        selector:
+          dnsZones:
+            - n3t.uk
+            - kub3.uk
+            - pip3.uk
+            - t3st.uk
+            - liv3.uk
+            - sit3.uk
