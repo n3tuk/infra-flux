@@ -14,6 +14,7 @@
 
 # Ignore cache files for kubeconform validation checks
 flux/.kubeconform
+flux/report.xml
 
 # Ignore the Trivy cache and any .sarif files for uploading to GitHub
 .trivy

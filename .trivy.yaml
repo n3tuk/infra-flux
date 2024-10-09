@@ -1,0 +1,23 @@
+---
+quiet: true
+exit-code: 0
+cache:
+  dir: .trivy
+ignorefile: .trivyignore.yaml
+format: table
+severity:
+  - UNKNOWN
+  - LOW
+  - MEDIUM
+  - HIGH
+  - CRITICAL
+
+misconfiguration:
+  include-non-failures: false
+  scanners:
+    - terraform
+    - kubernetes
+  terraform:
+    vars:
+      - terraform/variables/production.tfvars
+    exclude-downloaded-modules: false

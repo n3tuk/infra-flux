@@ -1,7 +1,7 @@
 ---
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks.git
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: no-commit-to-branch
         name: Check this commit is not to the main/master branch
@@ -25,13 +25,13 @@ repos:
         name: Check all files end in a new-line only
 
   - repo: https://github.com/zricethezav/gitleaks.git
-    rev: v8.18.0
+    rev: v8.20.1
     hooks:
       - id: gitleaks
         name: Check for hard-coded secrets, keys, and credentials
 
   - repo: https://github.com/antonbabenko/pre-commit-terraform.git
-    rev: v1.95.0
+    rev: v1.96.1
     hooks:
       - id: terraform_fmt
         name: Check Terraform configuration formatting
@@ -39,10 +39,6 @@ repos:
       - id: terraform_validate
         name: Validate the Terraform configuration
         files: ^terraform/
-        args:
-          - --tf-init-args=-upgrade
-          - --tf-init-args=-get
-          - --hook-config=--retry-once-with-cleanup=true
 
       - id: terraform_providers_lock
         name: Check Terraform Provider plaforms configured
@@ -72,11 +68,11 @@ repos:
         name: Analyse the Terraform configuration
         files: ^terraform/
         args:
-          - --args=--skip-dirs=.terraform
-          - --args=--cache-dir=.trivy
-          - --args=--ignorefile=../.trivyignore
-          - --args=--tf-vars=variables/profound-mantis-1.tfvars
-          - --args=--severity=UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          - --args=--config=__GIT_WORKING_DIR__/.trivy.yaml
+          - --args=--cache-dir=__GIT_WORKING_DIR__/.trivy
+          - --args=--ignorefile=__GIT_WORKING_DIR__/.trivyignore.yaml
+          - --args=--tf-vars=variables/development.tfvars
+          - --args=--severity=CRITICAL,HIGH,MEDIUM
 
       - id: terraform_docs
         name: Check the documentation for the Terraform configurations
@@ -108,7 +104,7 @@ repos:
           - css
 
   - repo: https://github.com/igorshubovych/markdownlint-cli.git
-    rev: v0.41.0
+    rev: v0.42.0
     hooks:
       - id: markdownlint
         name: Check general Markdown correctness and formatting
@@ -128,7 +124,7 @@ repos:
           - pages/.markdownignore
 
   - repo: https://github.com/python-jsonschema/check-jsonschema.git
-    rev: 0.29.2
+    rev: 0.29.3
     hooks:
       - name: Check the Taskfiles for correctness
         id: check-taskfile

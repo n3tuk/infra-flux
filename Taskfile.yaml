@@ -1,0 +1,206 @@
+---
+version: 3
+output: prefixed
+
+# This Taskfile is configured to minimise dependencies and run most tasks in a
+# semi-sequential way, which reduces issues with parallel task contexts being
+# cancelled following failures. This helps the interval stay low. However, if
+# there are issues with tasks running continuously, or being re-added to the
+# queue multiple times due to regular changes, increase the value for the watch
+# interval to take into account the typical longest running task in the set.
+interval: 5s
+
+# Enforce the pipefail option in the Bash library to ensure that where commands
+# are run through pipes, the failure of any one step in the pipeline fails the
+# whole pipe. For example, terraform |& tee will not normally fail if Terraform
+# fails as tee almost always will exit cleanly, unless pipefail is set.
+set:
+  - pipefail
+
+vars:
+  # ANSI Colours
+  cr: \e[1;31m
+  cg: \e[0;32m
+  cw: \e[1;37m
+  cc: \e[0m
+
+  # Work out the full path to the root of this repository to allow us to create
+  # absolute paths to configuration files, caches, etc., rather than attempt to
+  # generate relative links programmatically
+  root:
+    sh: git rev-parse --show-toplevel
+  # Set the version of the Kubernetes API we should be validating the Flux
+  # Kustomizations against, as this may not be available at runtime
+  kubernetes_version: 1.30.3
+  # Find all the kustomization directories for Flux so that we can process and
+  # test them individually as part of their integrations
+  kustomizations:
+    sh: |-
+      ( find flux \
+          -type f \
+          -iname 'kustomization.yaml' \
+          -printf '%P\n' \
+        2> /dev/null \
+        | sed -e 's|/kustomization\.yaml$||' \
+      ) || true
+  # The list of supported Terraform workspaces which can be selected for this
+  # repository and configuration, including the default one to use if none given
+  workspaces: testing-01,testing-02,development,production
+  default: production
+  # The configuration for the Flux artifact repository
+  repository: n3tuk/flux/baseline
+
+# To help improve management of all the tasks supported within this repository,
+# many have been broken out into dedicated files grouped by the sections they
+# operate against, so, here, include them into the main Taskfile workflow
+includes:
+  utils:
+    taskfile: .taskfiles/utils.yaml
+    flatten: true
+  prettier:
+    taskfile: .taskfiles/prettier.yaml
+    flatten: true
+  yamllint:
+    taskfile: .taskfiles/yamllint.yaml
+    flatten: true
+  markdownlint:
+    taskfile: .taskfiles/markdownlint.yaml
+    flatten: true
+  jsonschema:
+    taskfile: .taskfiles/jsonschema.yaml
+    flatten: true
+  trivy:
+    taskfile: .taskfiles/trivy.yaml
+    flatten: true
+
+  flux:
+    taskfile: .taskfiles/flux.yaml
+    flatten: true
+  terraform:
+    taskfile: .taskfiles/terraform.yaml
+    flatten: true
+
+tasks:
+  default:
+    desc: Run the development and integration tasks once
+    summary: |-
+      Clean the environment and then run the development and integration tasks
+      for all resources by testing and checking the code and files, but only
+      once rather than continuously.
+
+      Use the following command for additional information on the steps
+      involved:
+
+      $ task --summary develop
+    silent: true
+    cmds:
+      - task: develop
+
+  develop:
+    desc: Continuously run the development and integration tasks
+    summary: |-
+      The develop task is designed to perform continuous integration on code
+      changes within this repository, first by cleaning the repository and then
+      running the following tasks when any relevant files are changed:
+
+      - Lint all supported files, ensuring their layout and syntax are correct
+        and consistent before staging and commiting changes;
+      - Validate the Terraform configuration to ensure it is valid and can be
+        run to configure and deploy resources;
+      - Run static code analysis against the Terraform configuration and any
+        Flux/Kubernetes resoruces to look for potential security issues or
+        misconfigurations;
+      - Ensure all documentation is kept up to date, where it is automated.
+    silent: true
+    watch: true
+    deps:
+      - task: pre-commit
+      - task: pre-checks
+      - task: clean
+    cmds:
+      - task: lint
+      - task: validate
+      - task: security
+      - task: documentation
+
+  lint:
+    desc: Lint selected files within this repository
+    summary: |-
+      Run linting checks across the GitHub Workflows, repository configuration
+      files, Terraform (and other) code, and all documentation to find any
+      potential issues within the repository by running the following steps:
+
+      - Parse all JSON, YAML, and Markdown files through Prettier in order to
+        ensure they are syntactically correct, and that they are consistent in
+        their layout and usage;
+      - Parse selected configurations (Task files, GitHub Dependabot
+        configuration, and GitHub Workflows) through JSON Schema to evaluate
+        these free-from configuration types are correctly structured for their
+        intended usage (i.e. keys are in the right place, the values are what is
+        expected or supported, and required settings are present);
+      - Review the format of Markdown files to ensure they are clean and
+        minimise the ability for the page to be incorrectly rendered, such as
+        de-duplicating headers, consistent text width, formatted list items,
+        and code layouts.
+      - Run tflint on the Terraform configuration, making sure that any
+        Terraform code is syntactically correct, properly formatted, and mostly
+        valid for runtime (e.g. using correct instance types, names are not too
+        long, and resource names are correctly formatted).
+    silent: true
+    cmds:
+      - task: prettier
+      - task: markdownlint
+      - task: jsonschema
+
+  validate:
+    desc: Validate the configurations and resources
+    summary: |-
+      Initialise (if required) and validate the syntax of all the Flux
+      kustomizations and Terraform configurations to ensure that the code is
+      correct and valid for the set environment.
+    silent: true
+    cmds:
+      - task: flux:conform
+      - task: terraform:validate
+
+  security:
+    desc: Run static analysis against configurations and resources
+    summary: |-
+      Run static code analysis tools against all the Terraform configurations
+      to identify mis-configurations and security issues within the code
+      by running the following steps:
+
+      - Run Trivy against the Terraform configuration utilising the
+        vulnerability, misconfiguration, and license scanners, looking for
+        potential security and configuration errors.
+    silent: true
+    cmds:
+      - task: trivy
+
+  documentation:
+    aliases:
+      - docs
+    desc: Update README.md files with terraform-docs
+    summary: |-
+      Update the README.md files for all Terraform configurations with a
+      summary of the configuration, including information about the
+      requirements, variables and outputs, as well as the resources
+      created, using terraform-docs.
+    silent: true
+    cmds:
+      - task: terraform:documentation
+
+  clean:
+    desc: Clean temporary files from the repository and configurations
+    silent: true
+    summary: |-
+      Clean any temporary directories and files created by both this Taskfile,
+      and the tools and applications called from it, and from within the
+      configurations.
+    run: once
+    cmds:
+      - cmd: rm -f .prettiercache
+      - cmd: rm -rf flux/report.xml flux/.kubeconform
+      - cmd: rm -rf terraform/terraform.tfplan terraform/.terraform
+      - cmd: rm -rf .task
+      - cmd: echo -e '{{ .cg }}Completed{{ .cc }}'

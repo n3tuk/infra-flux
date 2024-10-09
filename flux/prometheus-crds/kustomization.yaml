@@ -1,0 +1,17 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: prometheus-operator
+namespace: prometheus-operator
+
+commonLabels:
+  flux.kub3.uk/organisation: n3tuk
+  flux.kub3.uk/repository: infra-flux
+  flux.kub3.uk/kustomization: prometheus-crds
+  flux.kub3.uk/application: prometheus
+  flux.kub3.uk/component: prometheus-operator
+
+resources:
+  - namespace.yaml
+  - resources.yaml

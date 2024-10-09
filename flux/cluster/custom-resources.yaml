@@ -1,0 +1,42 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cert-manager-crds
+  namespace: flux-system
+spec:
+  sourceRef:
+    kind: OCIRepository
+    name: baseline
+  path: cert-manager-crds
+  interval: 1h
+  retryInterval: 10m
+  prune: true
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: prometheus-crds
+  namespace: flux-system
+spec:
+  sourceRef:
+    kind: OCIRepository
+    name: baseline
+  path: prometheus-crds
+  interval: 1h
+  retryInterval: 10m
+  prune: true
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: grafana-crds
+  namespace: flux-system
+spec:
+  sourceRef:
+    kind: OCIRepository
+    name: baseline
+  path: grafana-crds
+  interval: 1h
+  retryInterval: 10m
+  prune: true
