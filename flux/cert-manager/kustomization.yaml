@@ -1,0 +1,33 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: cert-manager
+  namespace: flux-system
+namespace: cert-manager
+resources:
+  - cert-manager-helm.yaml
+  - approver-policy-helm.yaml
+  - trust-manager-helm.yaml
+  - kms-issuer-helm.yaml
+configMapGenerator:
+  - name: helm-cert-manager-values
+    options:
+      disableNameSuffixHash: true
+    files:
+      - values.yaml=cert-manager-values.yaml
+  - name: helm-approver-policy-values
+    options:
+      disableNameSuffixHash: true
+    files:
+      - values.yaml=approver-policy-values.yaml
+  - name: helm-trust-manager-values
+    options:
+      disableNameSuffixHash: true
+    files:
+      - values.yaml=trust-manager-values.yaml
+  - name: helm-kms-issuer-values
+    options:
+      disableNameSuffixHash: true
+    files:
+      - values.yaml=kms-issuer-values.yaml

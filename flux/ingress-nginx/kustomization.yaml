@@ -1,0 +1,22 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: ingress-nginx
+  namespace: flux-system
+namespace: ingress-nginx
+resources:
+  - certificates.yaml
+  - internal-helm.yaml
+  - external-helm.yaml
+configMapGenerator:
+  - name: helm-internal-values
+    options:
+      disableNameSuffixHash: true
+    files:
+      - values.yaml=internal-values.yaml
+  - name: helm-external-values
+    options:
+      disableNameSuffixHash: true
+    files:
+      - values.yaml=external-values.yaml

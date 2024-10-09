@@ -1,0 +1,16 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: podinfo
+  namespace: flux-system
+namespace: app-podinfo
+resources:
+  - namespace.yaml
+  - podinfo-helm.yaml
+configMapGenerator:
+  - name: helm-podinfo-values
+    options:
+      disableNameSuffixHash: true
+    files:
+      - values.yaml=podinfo-values.yaml

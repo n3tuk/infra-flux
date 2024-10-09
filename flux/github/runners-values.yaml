@@ -1,0 +1,19 @@
+---
+githubConfigUrl: https://github.com/n3tuk
+githubConfigSecret: github-application
+
+runnerGroup: ${label_environment}
+runnerScaleSetName: ${label_environment}
+
+minRunners: 0
+maxRunners: 16
+
+containerMode:
+  type: kubernetes
+  kubernetesModeWorkVolumeClaim:
+    accessModes:
+      - ReadWriteOnce
+    storageClassName: proxmox-rbd-ext4
+    resources:
+      requests:
+        storage: 5Gi

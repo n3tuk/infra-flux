@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: trivy-system
+  labels:
+    app.kubernetes.io/environment: ${label_environment}
+    app.kubernetes.io/instance: trivy-operator
+    app.kubernetes.io/managed-by: Kustomization
+    app.kubernetes.io/name: trivy-operator
+    app.kubernetes.io/repository: ${label_repository}
+    pod-security.kubernetes.io/enforce: privileged

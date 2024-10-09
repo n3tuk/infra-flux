@@ -1,0 +1,35 @@
+---
+fullnameOverride: promox-csi
+# Currently, cannot be customized.
+clusterID: kubernetes
+
+storageClass:
+  - name: proxmox-rbd-xfs
+    storage: kub3-rbd
+    cache: writethrough
+    ssd: true
+    fstype: xfs
+    mountOptions:
+      - discard
+    allowVolumeExpansion: true
+    volumeBindingMode: WaitForFirstConsumer
+    reclaimPolicy: Delete
+  - name: proxmox-rbd-ext4
+    storage: kub3-rbd
+    cache: writethrough
+    ssd: true
+    fstype: ext4
+    mountOptions:
+      - discard
+    allowVolumeExpansion: true
+    volumeBindingMode: WaitForFirstConsumer
+    reclaimPolicy: Delete
+
+metrics:
+  enabled: true
+
+nodeSelector:
+  node-role.kubernetes.io/control-plane: ''
+tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    effect: NoSchedule

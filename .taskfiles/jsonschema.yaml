@@ -1,0 +1,96 @@
+---
+version: 3
+
+tasks:
+  jsonschema:
+    desc: Validation the schema of configuration files in the repository
+    summary: |-
+      Validate the layout and content of the YAML files in this repository
+      using the JSON Schema files, including:
+
+      - Taskfiles (Taskfile.yaml, .taskfiles/*.yaml)
+      - GitHub Dependabot configuration (.github/dependabot.yaml)
+      - GitHub Workflows (.github/workflows/*.yaml)
+      - pre-commit Configuration (.pre-commit-config)
+
+      Checks on Kubernetes resources under the flux/ folder will be managed
+      through the conform tasks using kubeconform, as although kubeconform still
+      uses JSON Schemas, it is able to dynamocally find and process the schemas.
+
+      $ task --summary conform
+    silent: true
+    deps:
+      - task: yamllint
+    cmds:
+      - task: taskfiles
+      - task: dependabot
+      - task: workflows
+      - task: pre-commit-config
+
+  taskfiles:
+    internal: true
+    silent: true
+    sources:
+      - Taskfile.yaml
+      - .taskfiles/*.yaml
+    cmds:
+      - cmd: |-
+          check-jsonschema \
+            --output-format text --no-cache --verbose \
+            --builtin-schema vendor.taskfile \
+            Taskfile.yaml .taskfiles/*.yaml
+          echo -e '{{ .cg }}Passed{{ .cc }}'
+
+  dependabot:
+    internal: true
+    silent: true
+    sources:
+      - .github/dependabot.yaml
+    cmds:
+      - cmd: |-
+          [[ -f .github/dependabot.yaml ]] || exit 0
+          check-jsonschema \
+            --output-format text --verbose \
+            --builtin-schema vendor.dependabot \
+            .github/dependabot.yaml
+          echo -e '{{ .cg }}Passed{{ .cc }}'
+
+  workflows:
+    internal: true
+    silent: true
+    sources:
+      - .github/workflows/*.yaml
+    vars:
+      files:
+        sh: |-
+          find .github/workflows \
+            -ignore_readdir_race \
+            -type f \
+            -iname '*.yaml' \
+            -printf '.github/workflows/%P ' \
+          2>/dev/null || true
+    cmds:
+      - cmd: |-
+          [[ -z '{{ .files }}' ]] && exit 0
+          check-jsonschema \
+            --output-format text --verbose \
+            --builtin-schema vendor.github-workflows \
+            {{ .files }}
+          echo -e '{{ .cg }}Passed{{ .cc }}'
+
+  pre-commit-config:
+    internal: true
+    silent: true
+    sources:
+      - .pre-commit-config.yaml
+    cmds:
+      # yamllint disable rule:line-length
+      - cmd: |-
+          [[ -f .pre-commit-config.yaml ]] || exit 0
+          check-jsonschema \
+            --output-format text --verbose \
+            --cache-filename pre-commit-config.json \
+            --schemafile https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/pre-commit-config.json \
+            .pre-commit-config.yaml
+          echo -e '{{ .cg }}Passed{{ .cc }}'
+      # yamllint enable rule:line-length

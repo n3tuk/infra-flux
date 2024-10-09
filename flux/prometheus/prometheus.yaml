@@ -1,0 +1,40 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: metrics
+  namespace: prometheus-system
+  labels:
+    app: prometheus-metrics
+spec:
+  image: quay.io/prometheus/prometheus:v2.54.1
+  nodeSelector:
+    kubernetes.io/os: linux
+  replicas: 2
+  # 15 days
+  retention: 360h
+  storage:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: proxmox-rbd-ext4
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 128Gi
+  resources:
+    requests:
+      memory: 512Mi
+  securityContext:
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  version: v2.54.1
+  serviceAccountName: prometheus
+  podMonitorSelector: {}
+  podMonitorNamespaceSelector: {}
+  serviceMonitorSelector: {}
+  serviceMonitorNamespaceSelector: {}
+  externalUrl: https://prometheus.${cluster_domain}/

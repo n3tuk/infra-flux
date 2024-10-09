@@ -1,0 +1,40 @@
+---
+# yamllint disable rule:line-length
+version: 3
+
+tasks:
+  trivy:
+    silent: true
+    cmds:
+      - task: trivy:flux
+      - task: trivy:terraform
+
+  trivy:flux:
+    internal: true
+    silent: true
+    sources:
+      - .trivy.yaml
+      - .trivyignore.yaml
+      - flux/**/*.yaml
+    cmds:
+      - cmd: |-
+          trivy config flux \
+            --config .trivy.yaml \
+            --exit-code 1 \
+            2> >(grep -v INFO)
+          echo -e '{{ .cg }}Passed{{ .cc }}'
+
+  trivy:terraform:
+    internal: true
+    silent: true
+    sources:
+      - .trivy.yaml
+      - .trivyignore.yaml
+      - terraform/*.tf
+    cmds:
+      - cmd: |-
+          trivy config flux \
+            --config .trivy.yaml \
+            --exit-code 1 \
+            2> >(grep -v INFO)
+          echo -e '{{ .cg }}Passed{{ .cc }}'
