@@ -1,0 +1,33 @@
+# NOTE: These rules must be globally ignored as the GitHub Action for Trivy does
+#       not support YAML-based ignore files, and Trivy itself does not support
+#       inline comments for exclusions on Kubernetes-based misconfiguration
+#       scans.
+
+# Force the container to run with user ID > 10000 to avoid conflicts with the
+# host’s user table.
+KSV020
+# Force the container to run with group ID > 10000 to avoid conflicts with the
+# host’s user table.
+KSV021
+# Viewing secrets at the cluster-scope is akin to cluster-admin in most clusters
+# as there are typically at least one service accounts (their token stored in a
+# secret) bound to cluster-admin directly or a Role/ClusterRole that gives
+# similar permissions.
+KSV041
+# Check whether role permits wildcard verb on specific resources.
+KSV045
+# Depending on the policies enforced by the admission controller, this
+# permission ranges from the ability to steal compute (crypto) by running
+# workloads or allowing for creating workloads that escape to the node as root
+# and escalation to cluster-admin.
+KSV048
+# Some workloads leverage ConfigMaps to store sensitive data or configuration
+# parameters that affect runtime behavior that can be modified by an attacker or
+# combined with another issue to potentially lead to compromise.
+KSV049
+# The ability to control which pods get service traffic directed to them allows
+# for interception attacks. Controlling network policy allows for bypassing
+# lateral movement restrictions.
+KSV056
+# Checks whether a workload is running in the default namespace.
+KSV110

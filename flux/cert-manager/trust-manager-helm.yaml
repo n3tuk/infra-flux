@@ -1,0 +1,44 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: trust-manager
+spec:
+  chart:
+    spec:
+      sourceRef:
+        kind: HelmRepository
+        namespace: flux-system
+        name: jetstack
+      chart: trust-manager
+      interval: 5m
+      version: 0.12.0
+  interval: 3h
+  install:
+    crds: CreateReplace
+    createNamespace: false
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  test:
+    enable: true
+  driftDetection:
+    mode: enabled
+  dependsOn:
+    - name: cert-manager
+    - name: approver-policy
+
+  valuesFrom:
+    - kind: ConfigMap
+      name: helm-trust-manager-values
+    - kind: ConfigMap
+      name: helm-trust-manager-overrides
+      optional: true
+    - kind: Secret
+      name: helm-cert-manager-overrides
+      optional: true

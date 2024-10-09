@@ -1,0 +1,14 @@
+---
+replicaCount: 2
+
+image:
+  tag: 2024.9.1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+securityContext:
+  seccompProfile:
+    type: RuntimeDefault

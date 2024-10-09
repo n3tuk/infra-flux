@@ -1,0 +1,29 @@
+---
+# yamllint disable rule:line-length
+version: 3
+
+tasks:
+  trivy:
+    silent: true
+    cmds:
+      - task: trivy:flux
+
+  trivy:flux:
+    internal: true
+    silent: true
+    dir: flux
+    sources:
+      - '{{ .root }}/.trivyignore'
+      - '**/*.yaml'
+    cmds:
+      - cmd: |-
+          trivy \
+              --quiet \
+            config \
+              --cache-dir '{{ .root }}/.trivy' \
+              --ignorefile '{{ .root }}/.trivyignore' \
+              --format table \
+              --exit-code 1 \
+              {{ .options }} . \
+            2> >(grep -v INFO)
+          echo -e '{{ .cg }}Passed{{ .cc }}'

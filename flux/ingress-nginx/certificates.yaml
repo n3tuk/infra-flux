@@ -1,0 +1,44 @@
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: self-signed
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ingress-nginx-ca
+  namespace: ingress-nginx
+spec:
+  isCA: true
+  commonName: ingress-nginx Private Certificate Authority
+  subject:
+    organizations:
+      - n3t.uk Lab Environment
+    organizationalUnits:
+      - n3tuk Kubernetes Certificate Authority
+    provinces:
+      - Bridgend
+    localities:
+      - Wales
+    countries:
+      - UK
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  secretName: ingress-nginx-root-ca-tls
+  issuerRef:
+    name: self-signed
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: ingress-nginx
+  namespace: ingress-nginx
+spec:
+  ca:
+    secretName: ingress-nginx-root-ca-tls
