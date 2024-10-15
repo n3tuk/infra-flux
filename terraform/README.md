@@ -10,74 +10,65 @@ TODO
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.9.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 5.58 |
-| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | ~> 2.31 |
+| <a name="requirement_auth0"></a> [auth0](#requirement\_auth0) | ~> 1.1.2 |
+| <a name="requirement_cloudflare"></a> [cloudflare](#requirement\_cloudflare) | ~> 4.23 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | ~> 6.6 |
+| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | ~> 2.25.2 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.6.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 5.61.0 |
-| <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | 2.31.0 |
-| <a name="provider_terraform"></a> [terraform](#provider\_terraform) | n/a |
+| <a name="provider_cloudflare"></a> [cloudflare](#provider\_cloudflare) | 4.43.0 |
+| <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | 2.25.2 |
+| <a name="provider_random"></a> [random](#provider\_random) | 3.6.3 |
 
 ## Modules
 
-| Name | Source | Version |
-|------|--------|---------|
-| <a name="module_sg_aws_privateca_issuer"></a> [sg\_aws\_privateca\_issuer](#module\_sg\_aws\_privateca\_issuer) | terraform-aws-modules/security-group/aws | 5.1.2 |
-| <a name="module_sg_default_backend"></a> [sg\_default\_backend](#module\_sg\_default\_backend) | terraform-aws-modules/security-group/aws | 5.1.2 |
-| <a name="module_sg_external_dns"></a> [sg\_external\_dns](#module\_sg\_external\_dns) | terraform-aws-modules/security-group/aws | 5.1.2 |
-| <a name="module_sg_ingress_nginx"></a> [sg\_ingress\_nginx](#module\_sg\_ingress\_nginx) | terraform-aws-modules/security-group/aws | 5.1.2 |
+No modules.
 
 ## Resources
 
 | Name | Type |
 |------|------|
-| [aws_iam_policy.aws_privateca_issuer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
-| [aws_iam_policy.private_dns](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
-| [aws_iam_role.aws_privateca_issuer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
-| [aws_iam_role.private_dns](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
-| [aws_iam_role_policy_attachment.aws_privateca_issuer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
-| [aws_iam_role_policy_attachment.private_dns](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
-| [kubernetes_config_map_v1.approver_policy_overrides](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
-| [kubernetes_config_map_v1.aws_privateca_issuer_overrides](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
-| [kubernetes_config_map_v1.aws_privateca_issuer_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
-| [kubernetes_config_map_v1.cert_manager_overrides](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
-| [kubernetes_config_map_v1.csi_driver_overrides](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
-| [kubernetes_config_map_v1.ingress_nginx_overrides](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
-| [kubernetes_config_map_v1.ingress_nginx_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
-| [kubernetes_config_map_v1.private_dns_overrides](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
-| [kubernetes_config_map_v1.trust_manager_overrides](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
-| [kubernetes_manifest.flux_services_artifact](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
-| [kubernetes_manifest.flux_services_flux](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
+| [cloudflare_api_token.cert_manager](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/resources/api_token) | resource |
+| [cloudflare_api_token.external_dns](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/resources/api_token) | resource |
+| [cloudflare_zero_trust_tunnel_cloudflared.cluster](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/resources/zero_trust_tunnel_cloudflared) | resource |
+| [cloudflare_zero_trust_tunnel_cloudflared_config.cluster](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/resources/zero_trust_tunnel_cloudflared_config) | resource |
+| [kubernetes_config_map_v1.cloudflare_system_helm_tunnel_overrides](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
+| [kubernetes_config_map_v1.common_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
+| [kubernetes_config_map_v1.external_dns_helm_cloudflare_overrides](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
+| [kubernetes_config_map_v1.routing_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
+| [kubernetes_manifest.flux_system_baseline](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
+| [kubernetes_manifest.flux_system_cluster](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
 | [kubernetes_namespace_v1.cert_manager](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
+| [kubernetes_namespace_v1.cloudflare_system](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
+| [kubernetes_namespace_v1.csi_proxmox](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
 | [kubernetes_namespace_v1.external_dns](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
-| [kubernetes_namespace_v1.flux_services](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
 | [kubernetes_namespace_v1.ingress_nginx](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
-| [aws_eks_cluster.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/eks_cluster) | data source |
-| [aws_iam_policy_document.aws_privateca_issuer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
-| [aws_iam_policy_document.aws_privateca_issuer_trust](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
-| [aws_iam_policy_document.private_dns](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
-| [aws_iam_policy_document.private_dns_trust](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
-| [aws_ip_ranges.route53](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ip_ranges) | data source |
-| [terraform_remote_state.cache](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
-| [terraform_remote_state.certificates](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
-| [terraform_remote_state.clusters](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
-| [terraform_remote_state.common](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
-| [terraform_remote_state.networking](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
+| [kubernetes_namespace_v1.metallb_system](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
+| [kubernetes_secret_v1.certificates_system_cloudflare_token](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
+| [kubernetes_secret_v1.cloudflare_system_tunnel_credentials](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
+| [kubernetes_secret_v1.csi_proxmox_helm_proxmox_csi_overrides](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
+| [kubernetes_secret_v1.external_dns_cloudflare_token](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
+| [random_password.tunnel](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
+| [cloudflare_api_token_permission_groups.all](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/data-sources/api_token_permission_groups) | data source |
+| [cloudflare_zone.n3tuk](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/data-sources/zone) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | The ID of the AWS Account this Terraform configuration will be deployed in to | `string` | n/a | yes |
-| <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | The name of the AWS Region this Terraform configuration will be primrily be deployed in to (this does not override the explicit providers for each AWS Region, if configured) | `string` | n/a | yes |
 | <a name="input_cluster_domain"></a> [cluster\_domain](#input\_cluster\_domain) | The external domain name of the EKS Cluster (i.e. the domain suffix for deployed services) | `string` | n/a | yes |
-| <a name="input_cluster_location"></a> [cluster\_location](#input\_cluster\_location) | The external name of the location for this EKS Cluster (i.e. the domain prefix for deployed services) | `string` | n/a | yes |
-| <a name="input_environment"></a> [environment](#input\_environment) | The name of the environment that this Terraform configuration will be deployed for | `string` | n/a | yes |
-| <a name="input_flux_artifact_name"></a> [flux\_artifact\_name](#input\_flux\_artifact\_name) | The name of the Flux artifact uploaded to ECR repository which should be deployed to this Cluster | `string` | `"flux/eks/application"` | no |
-| <a name="input_flux_artifact_tag"></a> [flux\_artifact\_tag](#input\_flux\_artifact\_tag) | The tag of the Flux artifact uploaded to ECR repository which should be deployed to this Cluster | `string` | `"latest"` | no |
+| <a name="input_metallb_pool_ipv4"></a> [metallb\_pool\_ipv4](#input\_metallb\_pool\_ipv4) | A CIDR for the IPv4 addresses to be used for metallb-managed LoadBalancer endpoints | `string` | n/a | yes |
+| <a name="input_metallb_pool_ipv6"></a> [metallb\_pool\_ipv6](#input\_metallb\_pool\_ipv6) | A CIDR for the IPv6 addresses to be used for metallb-managed LoadBalancer endpoints | `string` | n/a | yes |
+| <a name="input_metallb_routers"></a> [metallb\_routers](#input\_metallb\_routers) | A list of router IP addresses for each Proxmox Node for metallb | <pre>object({<br>    proxmox-01 = string<br>    proxmox-02 = string<br>    proxmox-03 = string<br>  })</pre> | n/a | yes |
+| <a name="input_proxmox_csi_plugin_token_id"></a> [proxmox\_csi\_plugin\_token\_id](#input\_proxmox\_csi\_plugin\_token\_id) | The API token name to provide the proxmox-csi-plugin resource access to the Proxmox API for Ceph | `string` | n/a | yes |
+| <a name="input_proxmox_csi_plugin_token_secret"></a> [proxmox\_csi\_plugin\_token\_secret](#input\_proxmox\_csi\_plugin\_token\_secret) | The API token secret to provide the proxmox-csi-plugin resource access to the Proxmox API for Ceph | `string` | n/a | yes |
+| <a name="input_cloudflare_account_id"></a> [cloudflare\_account\_id](#input\_cloudflare\_account\_id) | The Account ID for the Cloudflare account to be used | `string` | `"e0d4aae3f32f077cd16bbc26f615738d"` | no |
+| <a name="input_flux_artifact_repository"></a> [flux\_artifact\_repository](#input\_flux\_artifact\_repository) | The path to the repository for the Flux artifact to be uploaded to in GHCR | `string` | `"n3tuk/flux/baseline"` | no |
+| <a name="input_flux_artifact_tag"></a> [flux\_artifact\_tag](#input\_flux\_artifact\_tag) | The tag of the Flux artifact uploaded to GHCR which should be deployed to this cluster | `string` | `"latest"` | no |
 
 ## Outputs
 
