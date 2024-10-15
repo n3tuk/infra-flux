@@ -1,36 +1,6 @@
-# Alta AWARE EKS Clusters Flux Kustomizations
+# n3t.uk Flux Artifact Repository
 
-This repository provides the Kustomizations for deploying services and
-configuration via Flux in each of the EKS Clusters in AWS, enabling the
-third-party services on the clusters, such as [`external-dns`][external-dns],
-[`cert-manager`][cert-manager], and [`ingress-nginx`][ingress-nginx].
-Additionally, it provides all the necessary Terraform configuration to create
-the AWS resources (such as IAM Roles, Policies, and S3 buckets) and configure
-them for importing by Helm via ConfigMaps in Kubernetes.
-
-[external-dns]: https://github.com/kubernetes-sigs/external-dns
-[cert-manager]: https://cert-manager.io/
-[ingress-nginx]: https://github.com/kubernetes/ingress-nginx
-
-## Documentation
-
-The primary documentation is available via [GitHub Pages][site], based on the
-documents kept under [`pages/docs/`][docs] and built by [`mkdocs`][mkdocs].
-Please ensure any documentation updates are kept in sync with any infrastructure
-and code changes, as it will be built and deployed through the same Terraform
-GitHub Workflow ([`terraform.yaml`][workflow]) to GitHub Pages.
-
-[docs]: https://github.com/msicie/alta-aware-infra-flux-services/tree/main/pages/docs
-[mkdocs]: https://www.mkdocs.org/
-[workflow]: https://github.com/msicie/alta-aware-infra-flux-services/blob/main/.github/workflows/terraform.yaml
-
-> [!TIP]
-> Access to this repository's documentation can be found at the [GitHub
-> Pages][site] deployment (you must be authenticated by SSO to access),
-> alongside the [Central Documentation Portal][portal].
-
-[site]: https://supreme-fortnight-zw8jvv4.pages.github.io/
-[portal]: https://congenial-adventure-j79gww8.pages.github.io/
+TODO
 
 <!-- terraform-docs-start -->
 <!-- prettier-ignore-start -->
