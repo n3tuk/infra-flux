@@ -68,11 +68,11 @@ repos:
         name: Analyse the Terraform configuration
         files: ^terraform/
         args:
-          - --args=--skip-dirs=.terraform
+          - --args=--config=__GIT_WORKING_DIR__/.trivy.yaml
           - --args=--cache-dir=__GIT_WORKING_DIR__/.trivy
-          - --args=--ignorefile=../.trivyignore
+          - --args=--ignorefile=__GIT_WORKING_DIR__/.trivyignore.yaml
           - --args=--tf-vars=variables/development.tfvars
-          - --args=--severity=MEDIUM,HIGH,CRITICAL
+          - --args=--severity=CRITICAL,HIGH,MEDIUM
 
       - id: terraform_docs
         name: Check the documentation for the Terraform configurations

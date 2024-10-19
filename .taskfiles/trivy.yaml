@@ -7,23 +7,34 @@ tasks:
     silent: true
     cmds:
       - task: trivy:flux
+      - task: trivy:terraform
 
   trivy:flux:
     internal: true
     silent: true
-    dir: flux
     sources:
-      - '{{ .root }}/.trivyignore'
-      - '**/*.yaml'
+      - .trivy.yaml
+      - .trivyignore.yaml
+      - flux/**/*.yaml
     cmds:
       - cmd: |-
-          trivy \
-              --quiet \
-            config \
-              --cache-dir '{{ .root }}/.trivy' \
-              --ignorefile '{{ .root }}/.trivyignore' \
-              --format table \
-              --exit-code 1 \
-              {{ .options }} . \
+          trivy config flux \
+            --config .trivy.yaml \
+            --exit-code 1 \
+            2> >(grep -v INFO)
+          echo -e '{{ .cg }}Passed{{ .cc }}'
+
+  trivy:terraform:
+    internal: true
+    silent: true
+    sources:
+      - .trivy.yaml
+      - .trivyignore.yaml
+      - terraform/*.tf
+    cmds:
+      - cmd: |-
+          trivy config flux \
+            --config .trivy.yaml \
+            --exit-code 1 \
             2> >(grep -v INFO)
           echo -e '{{ .cg }}Passed{{ .cc }}'
