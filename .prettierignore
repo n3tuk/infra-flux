@@ -1,0 +1,11 @@
+# Ignore Taskfile, Trivy, and Terraform processing directories
+.task/*
+**/.terraform/*
+.trivy/*
+
+# Ignore the Prettier cache file
+.prettiercache
+
+# Ignore the Pull Request template file as this is not a complete document, just
+# a partial document for inclusion by GitHub
+.github/PULL_REQUEST_TEMPLATE.md

@@ -1,0 +1,120 @@
+---
+# This policy configures all options to allow all possible values.
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: allow-all
+spec:
+  allowed:
+    commonName:
+      value: '*'
+    dnsNames:
+      values:
+        - '*'
+    ipAddresses:
+      values:
+        - '*'
+    uris:
+      values:
+        - '*'
+    emailAddresses:
+      values:
+        - '*'
+    isCA: false
+    usages:
+      - server auth
+      - client auth
+      - digital signature
+      - key encipherment
+    subject:
+      organizations:
+        values:
+          - '*'
+      countries:
+        values:
+          - '*'
+      organizationalUnits:
+        values:
+          - '*'
+      localities:
+        values:
+          - '*'
+      provinces:
+        values:
+          - '*'
+      streetAddresses:
+        values:
+          - '*'
+      postalCodes:
+        values:
+          - '*'
+      serialNumber:
+        value: '*'
+  selector:
+    issuerRef: {}
+---
+# This policy configures all options to allow all possible values.
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: ingress-nginx-ca
+spec:
+  allowed:
+    isCA: true
+    commonName:
+      value: ingress-nginx Private Certificate Authority
+      required: true
+    subject:
+      organizations:
+        values:
+          - n3t.uk Lab Environment
+      organizationalUnits:
+        values:
+          - n3tuk Kubernetes Clusters
+          - n3tuk Kubernetes Certificate Authority
+      provinces:
+        values:
+          - Bridgend
+      localities:
+        values:
+          - Wales
+      countries:
+        values:
+          - UK
+      streetAddresses:
+        values: []
+      postalCodes:
+        values: []
+  selector:
+    issuerRef:
+      group: cert-manager.io
+      kind: ClusterIssuer
+      name: self-signed
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cert-manager-policy:allow
+rules:
+  - apiGroups:
+      - policy.cert-manager.io
+    resources:
+      - certificaterequestpolicies
+    verbs:
+      - use
+    resourceNames:
+      - allow-all
+      - ingress-nginx-ca
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cert-manager-policy:allow
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cert-manager-policy:allow
+subjects:
+  - kind: Group
+    name: system:authenticated
+    apiGroup: rbac.authorization.k8s.io

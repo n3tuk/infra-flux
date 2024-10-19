@@ -1,0 +1,42 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: controller
+  namespace: app-github
+spec:
+  chart:
+    spec:
+      sourceRef:
+        kind: HelmRepository
+        namespace: flux-system
+        name: gha-runner-scale-set-controller
+      chart: gha-runner-scale-set-controller
+      interval: 5m
+      version: 0.9.3
+  interval: 3h
+  install:
+    crds: CreateReplace
+    createNamespace: false
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  test:
+    enable: true
+  driftDetection:
+    mode: enabled
+
+  valuesFrom:
+    - kind: ConfigMap
+      name: helm-controller-values
+    - kind: ConfigMap
+      name: helm-controller-overrides
+      optional: true
+    - kind: Secret
+      name: helm-controller-overrides
+      optional: true
