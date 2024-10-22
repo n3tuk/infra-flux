@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: grafana-system
+  labels:
+    app.kubernetes.io/environment: ${label_environment}
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/managed-by: Kustomization
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/repository: ${label_repository}

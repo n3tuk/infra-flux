@@ -1,0 +1,29 @@
+---
+formatter: markdown table
+version: '>= 0.16.0, < 1.0.0'
+
+sort:
+  enabled: true
+  by: required
+
+settings:
+  # Although this should be disabled for modules, the GitHub Workflows do not
+  # initialise modules before running terraform-docs, and, for modules, the
+  # .terraform.lock.hcl file is excluded via .gitignore so it will fallback to
+  # the version constrains in the configuration, while locally, both Taskfiles
+  # and pre-commit have the --lockfile setting explicitly disabled which
+  # overrides this value, making it safe to set
+  lockfile: true
+  read-comments: false
+
+output:
+  file: README.md
+  mode: inject
+  template: |-
+    <!-- terraform-docs-start -->
+    <!-- prettier-ignore-start -->
+
+    {{ .Content }}
+
+    <!-- prettier-ignore-end -->
+    <!-- terraform-docs-end -->

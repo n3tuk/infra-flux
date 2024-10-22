@@ -1,0 +1,14 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: prometheus-metrics
+  namespace: flux-system
+namespace: prometheus-metrics
+resources:
+  - namespace.yaml
+  - service-account.yaml
+  - prometheus.yaml
+  - service.yaml
+  - service-monitor.yaml
+  - ingress.yaml

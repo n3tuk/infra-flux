@@ -1,0 +1,12 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: eck-operator
+namespace: elastic-system
+commonLabels:
+  app.kubernetes.io/managed-by: Kustomization
+  app.kubernetes.io/name: eck-operator
+resources:
+  - resources.yaml
+  - operator.yaml

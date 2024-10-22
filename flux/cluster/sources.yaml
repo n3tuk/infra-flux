@@ -1,0 +1,20 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: sources
+  namespace: flux-system
+spec:
+  # The reference used to define the artifact to fetch for this source will be
+  # defined by the tag set for the flux-artifacts OCI repository, either
+  # manually, or though a pipeline, ensuring each environment is fixed
+  sourceRef:
+    kind: OCIRepository
+    name: baseline
+  path: sources
+  # Reconcile this kustomization every hour, unless triggered by a new
+  # generation (i.e. new version) of the above source artifact, and if the
+  # reconciliation failed, attempt a retry every ten minutes
+  interval: 1h
+  retryInterval: 10m
+  prune: true

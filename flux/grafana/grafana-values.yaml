@@ -1,0 +1,58 @@
+---
+# Until centralised database is configured for Grafana, only a single replicate
+# can be created as state is managed through a persistent volume
+replicas: 1
+
+podDisruptionBudget:
+  minAvailable: 1
+
+deploymentStrategy:
+  type: RollingUpdate
+  maxSurge: 1
+
+serviceMonitor:
+  enabled: true
+
+ingress:
+  enabled: true
+  ingressClassName: internal
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare-production
+  hosts:
+    - grafana.${cluster_domain}
+  tls:
+    - hosts:
+        - grafana.${cluster_domain}
+      secretName: ingress-grafana-tls
+
+admin:
+  existingSecret: grafana-admin
+  userKey: username
+  passwordKey: password
+
+useStatefulSet: true
+persistence:
+  enabled: true
+  storageClassName: proxmox-rbd-ext4
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Production
+        type: prometheus
+        url: https://prometheus.${cluster_domain}
+        access: direct
+        isDefault: true
+    deleteDatasources:
+      - name: prometheus
+
+imageRenderer:
+  deploymentStrategy:
+    type: RollingUpdate
+    maxUnavailable: 1
+  enabled: true
+  replicas: 1
+  serviceMonitor:
+    enabled: true
+    path: /metrics

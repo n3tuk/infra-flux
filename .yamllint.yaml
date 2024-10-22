@@ -1,6 +1,13 @@
 ---
 extends: default
 
+ignore:
+  - flux/prometheus-crds/resources.yaml
+  - flux/cert-manager-crds/resources.yaml
+  - flux/elastic-crds/resources.yaml
+  - flux/elastic-crds/operator.yaml
+  - flux/grafana-crds/resources.yaml
+
 rules:
   document-start:
     present: true
