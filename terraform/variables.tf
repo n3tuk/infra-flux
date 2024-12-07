@@ -53,3 +53,15 @@ variable "flux_artifact_tag" {
   type        = string
   default     = "latest"
 }
+
+variable "proxmox_csi_plugin_token_id" {
+  description = "The API token name to provide the proxmox-csi-plugin resource access to the Proxmox API for Ceph"
+  type        = string
+  # required
+}
+
+variable "proxmox_csi_plugin_token_secret" {
+  description = "The API token secret to provide the proxmox-csi-plugin resource access to the Proxmox API for Ceph"
+  type        = string
+  # required
+}

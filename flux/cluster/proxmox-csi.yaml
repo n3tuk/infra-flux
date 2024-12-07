@@ -1,0 +1,24 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: proxmox-csi
+  namespace: flux-system
+spec:
+  sourceRef:
+    kind: OCIRepository
+    name: baseline
+  path: proxmox-csi
+  dependsOn:
+    - name: sources
+    - name: prometheus-crds
+  interval: 1h
+  retryInterval: 10m
+  prune: true
+
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: proxmox-csi-substitutions
+      - kind: Secret
+        name: proxmox-csi-substitutions

@@ -9,3 +9,4 @@ resources:
   - custom-resources.yaml
   - flux.yaml
   - core-dns.yaml
+  - proxmox-csi.yaml

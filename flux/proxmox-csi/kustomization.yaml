@@ -1,0 +1,27 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: proxmox-csi-plugin
+  namespace: flux-system
+namespace: proxmox-system
+
+resources:
+  - namespace.yaml
+  - proxmox-csi-helm.yaml
+  - proxmox-csi-secrets.yaml
+
+commonLabels:
+  flux.kub3.uk/organisation: n3tuk
+  flux.kub3.uk/repository: infra-flux
+  flux.kub3.uk/kustomization: proxmox
+  flux.kub3.uk/application: proxmox
+  flux.kub3.uk/component: csi
+
+configMapGenerator:
+  - name: helm-proxmox-csi-values
+    files:
+      - values.yaml=proxmox-csi-values.yaml
+
+configurations:
+  - kustomize-config.yaml
