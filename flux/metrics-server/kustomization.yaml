@@ -1,0 +1,15 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: metrics-server
+  namespace: flux-system
+namespace: kube-system
+resources:
+  - metrics-server-helm.yaml
+configMapGenerator:
+  - name: helm-metrics-server-values
+    options:
+      disableNameSuffixHash: true
+    files:
+      - values.yaml=metrics-server-values.yaml
