@@ -1,0 +1,168 @@
+---
+# yamllint disable rule:line-length
+version: 3
+
+tasks:
+  flux:kustomizations:
+    aliases:
+      - kustomizations
+    desc: List the Flux kustomizations
+    summary: |-
+      List all the known kustomizations that have been found for Flux in this
+      repository. These will be the configurations and resources that will be
+      checked and validated as part of the development integration:
+
+      $ task develop
+    silent: true
+    cmds:
+      - for:
+          var: kustomizations
+          as: kustom
+        cmd: echo "flux/{{ .kustom }}"
+
+  flux:conform:
+    aliases:
+      - conform
+    desc: Check the Flux Kustomizations conform to the Kubernetes specifications
+    summary: |-
+      Check that the Flux Kustomizations, and any resources defined therein, all
+      conform to the current versions of the API specifications for Kubernetes,
+      either for the v{{ .kubernetes_version }} release of Kubernetes, or for
+      the defined apiVersion/Kind of any Custom Resources described.
+    silent: true
+    dir: flux
+    sources:
+      - '**/*.yaml'
+      - exclude: '**/*-values.yaml'
+      - exclude: '**/*-patch.yaml'
+      - exclude: '**/*-config.yaml'
+    vars:
+      files:
+        sh: |-
+          find . \
+               -ignore_readdir_race \
+               -type f \
+               -iname '*.yaml' \
+               -and -not \
+            \(     -iname '*-values.yaml' \
+               -or -iname '*-patch.yaml' \
+               -or -iname '*-config.yaml' \
+            \) -printf '%P ' \
+          2> /dev/null || true
+    deps:
+      - task: yamllint
+    cmds:
+      # yamllint disable rule:line-length
+      - cmd: |-
+          [[ -n '{{ .files }}' ]] || exit 0
+           mkdir -p .kubeconform
+           kubeconform \
+             -kubernetes-version {{ .kubernetes_version }} \
+             -ignore-missing-schemas \
+             -schema-location 'https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{ printf "{{ .NormalizedKubernetesVersion }}-standalone{{ .StrictSuffix }}/{{ .ResourceKind }}{{ .KindSuffix }}" }}.json' \
+             -schema-location 'https://raw.githubusercontent.com/datreeio/crds-catalog/main/{{ printf "{{ .Group }}/{{ .ResourceKind }}_{{ .ResourceAPIVersion }}" }}.json' \
+             -cache .kubeconform \
+             -output pretty \
+             -verbose \
+             -summary \
+             -strict \
+             {{ .files }}
+           echo -e '{{ .cg }}Passed{{ .cc }}'
+      - cmd: |-
+          [[ -n '{{ .files }}' ]] || exit 0
+          kubeconform \
+            -kubernetes-version {{ .kubernetes_version }} \
+            -ignore-missing-schemas \
+            -schema-location 'https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{ printf "{{ .NormalizedKubernetesVersion }}-standalone{{ .StrictSuffix }}/{{ .ResourceKind }}{{ .KindSuffix }}" }}.json' \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/crds-catalog/main/{{ printf "{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}" }}.json' \
+            -cache .kubeconform \
+            -output junit \
+            -strict \
+            {{ .files }} \
+          > report.xml
+      # yamllint enable rule:line-length
+
+  flux:package:
+    aliases:
+      - package
+    desc: Package and upload the OCI-based baseline Flux artifact
+    summary: |
+      Package and upload the OCI-based Flux artifact for baseline cluster
+      configuration, and upload it to the GitHub Container Registry, with an
+      automatically built container tag to help ensure that the artifact is
+      progressively deployed through CI/CD workflows.
+
+      The following can be overidden on the command-line, if required:
+
+      - repository:     The path for the GitHub Container Registry repository to
+                        upload the Flux artifact into.
+      - tag:            The unique tag for this build (typically based on the
+                        date and time, and the commit SHA).
+    silent: true
+    dir: flux
+    sources:
+      - '**/*.yaml'
+      - '**/*.tmpl'
+    vars:
+      source:
+        sh: |-
+          if [[ -n "${GITHUB_REPOSITORY}" ]]; then
+            echo -n "https://github.com/${GITHUB_REPOSITORY}"
+          else
+            REPO=$(git config --get remote.origin.url)
+            if [[ "${REPO:0:8}" == "https://" ]]; then
+              echo -n "${REPO%.git}"
+            else
+              PATH="${REPO#*:}"
+              echo -n "https://github.com/${PATH%.git}"
+            fi
+          fi
+      branch:
+        sh: |-
+          if [[ -n "${GITHUB_REF_HEAD}" ]]; then
+            echo -n "${GITHUB_REF_HEAD}"
+          else
+            git branch --show-current
+          fi
+      commit:
+        sh: |-
+          if [[ -n "${GITHUB_SHA}" ]]; then
+            echo -n "${GITHUB_SHA}"
+          else
+            git rev-parse HEAD
+          fi
+      tag:
+        sh: |-
+          if [[ -n "{{ .tag }}" ]]; then
+            echo "{{ .tag }}"
+          else
+            TIME=$(date +%Y%m%d%H%M%S)
+            SHA=00000000
+            if [[ -n "${GITHUB_SHA}" ]]; then
+              SHA="${GITHUB_SHA:0:8}"
+            else
+              SHA=$(git rev-parse HEAD | cut -b 1-8)
+            fi
+
+            printf "t%s-g%s" "${TIME}" "${SHA}"
+          fi
+    cmds:
+      # yamllint disable rule:line-length
+      - cmd: rm -f report.xml
+      - cmd: |-
+          flux push artifact \
+              --source="{{ .source }}" \
+              --revision="{{ .branch }}@sha1:{{ .commit }}" \
+              --path=. \
+              --provider generic \
+            "oci://ghcr.io/{{ .repository }}:{{ .tag }}" \
+              --annotations='maintainer="Jonathan Wright <jon@than.io>"' \
+              --annotations='org.opencontainers.image.title=Flux Artifacts for n3t.uk Lab Environment Kubernetes Clusters' \
+              --annotations='org.opencontainers.image.description=A Flux artifact for the deployment of the resources needed within each of the n3t.uk Lab Environment Kubernetes Clusters' \
+              --annotations='org.opencontainers.image.vendor=n3t.uk' \
+              --annotations='org.opencontainers.image.authors=Jonathan Wright <jon@than.io>' \
+              --annotations='org.opencontainers.image.url=https://github.com/n3tuk/infra-flux' \
+              --annotations='org.opencontainers.image.source=https://github.com/n3tuk/infra-flux/blob/.taskfiles/flux.yaml' \
+              --annotations='org.opencontainers.image.documentation=https://d.n3t.uk' \
+              --creds jonathanio:$GITHUB_TOKEN
+      # yamllint enable rule:line-length

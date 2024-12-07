@@ -1,0 +1,115 @@
+---
+name: Static Analysis
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: 05 17 * * *
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      # Additionally trigger on "Ready for Review" for two reasons:
+      #   1. Workflows do not deploy when in draft mode, so by exiting draft
+      #      mode through triggering ready_for_review, we can run both the
+      #      integration and deployment workflows (all need to be run to ensure
+      #      that required status checks pass, not just deployment tasks); and
+      #   2. In the event that integration and deployment tasks need to be
+      #      re-triggered, the Pull Request can be returned to draft and back to
+      #      "Ready for Review", and re-run all workflows. This is better than
+      #      the old labelling method as labeled events can interfere with
+      #      opened events on new Pull Requests.
+      - ready_for_review
+
+# Set the maximum group of permissions allowed within this GitHub Workflow as we
+# are calling shared workflows (both within and without this repository), and,
+# therefore, allow the jobs within these workflows to ...
+permissions:
+  contents: read # check out repositories
+  actions: read # access information about workflows and actions
+  security-events: write # submit SARIF reports for advanced security
+
+defaults:
+  run:
+    # Error handling and pipefile must be explicitly set via the default shell
+    #   https://github.com/actions/runner/issues/353#issuecomment-1067227665
+    shell: bash --noprofile --norc -eo pipefail {0}
+
+jobs:
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@v0.2.1
+        with:
+          version: latest
+
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Create SARIF report
+        run: |
+          # $ trivy config terraform -o report.sarif
+          trivy config terraform \
+            --config .trivy.yaml \
+            --format sarif \
+            --output report.sarif
+
+      - name: Upload SARIF report
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: report.sarif
+          category: Terraform
+
+      - name: Create Summary Report
+        run: |
+          # $ trivy config terraform -o report.log
+          trivy config terraform \
+            --config .trivy.yaml \
+            --format template \
+            --template @.github/templates/terraform.md \
+            --output "${GITHUB_STEP_SUMMARY}" \
+            --exit-code 1
+
+  flux:
+    name: Flux
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@v0.2.1
+        with:
+          version: latest
+
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Create SARIF report
+        run: |
+          # $ trivy config terraform -o report.sarif
+          trivy config flux \
+            --config .trivy.yaml \
+            --format sarif \
+            --output report.sarif
+
+      - name: Upload SARIF report
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: report.sarif
+          category: Flux
+
+      - name: Create Summary Report
+        run: |
+          # $ trivy config terraform -o report.log
+          trivy config flux \
+            --config .trivy.yaml \
+            --format template \
+            --template @.github/templates/flux.md \
+            --output "${GITHUB_STEP_SUMMARY}" \
+            --exit-code 1

@@ -1,0 +1,68 @@
+---
+installCRDs: true
+crds:
+  annotations:
+    helm.sh/resource-policy: keep
+
+helmController:
+  create: true
+  resources:
+    limits: # Don't limit the CPU
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+
+kustomizeController:
+  create: true
+  container:
+    additionalArgs:
+      - --requeue-dependency=5s
+  resources:
+    limits:
+      memory: 256Mi
+    requests:
+      cpu: 10m
+      memory: 128Mi
+
+notificationController:
+  create: true
+  resources:
+    limits:
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 32Mi
+  webhookReceiver:
+    ingress:
+      create: true
+      ingressClassName: internal
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-cloudflare-production
+      hosts:
+        - host: flux.${cluster_domain}
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - secretName: ingress-flux-tls
+          hosts:
+            - flux.${cluster_domain}
+
+sourceController:
+  create: true
+  resources:
+    limits:
+      memory: 256Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+
+imageAutomationController:
+  create: false
+imageReflectionController:
+  create: false
+
+prometheus:
+  podMonitor:
+    create: true

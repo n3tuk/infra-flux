@@ -1,0 +1,276 @@
+---
+version: 3
+
+tasks:
+  terraform:switch:
+    aliases:
+      - switch
+    desc: Switch the active version of Terraform installed
+    silent: true
+    dir: terraform
+    vars:
+      bin: >-
+        {{ default (expandenv "$HOME/.local/bin") .TFSWITCH_BIN_DIR }}/terraform
+    cmds:
+      - cmd: |-
+          tfswitch \
+            --bin='{{ .bin }}' \
+            --default='~> 1.9.0'
+          echo -e '{{ .cg }}Completed{{ .cc }}'
+
+  terraform:fmt:
+    aliases:
+      - fmt
+    desc: Format all Terraform files for this configuration
+    silent: true
+    dir: terraform
+    sources:
+      - '*.tf'
+      - variables/*.tfvars
+      - tests/*.tftest.hcl
+    cmds:
+      - cmd: |-
+          terraform fmt -no-color
+          echo -e '{{ .cg }}Passed{{ .cc }}'
+      - for:
+          - tests
+          - variables
+        # Make sure to use the if here rather than "test ... &&" as in the
+        # latter case, if the directory does not exist the test will fail
+        cmd: |-
+          if test -d '{{ .ITEM }}'
+          then
+            terraform fmt -no-color '{{ .ITEM }}'
+            echo -e '{{ .ITEM }}/ {{ .cg }}Passed{{ .cc }}'
+          fi
+
+  terraform:init:
+    internal: true
+    silent: true
+    dir: terraform
+    sources:
+      # Monitor only the terraform.tf file as this is where the providers should
+      # be configured and the remote backend defined, so any re-initialisation
+      # will only be needed when these files changes, rather than just any .tf
+      # file in the configuration
+      - terraform.tf
+    vars:
+      workspace:
+        sh: |-
+          WORKSPACE=$(terraform workspace show)
+          if [[ "${WORKSPACE}" != "default" ]]; then
+            echo "${WORKSPACE}"
+          fi
+    env:
+      TF_WORKSPACE: '{{ default .default .workspace }}'
+    cmds:
+      # yamllint disable rule:line-length
+      - cmd: |-
+          echo 'workspace:'
+          echo -e '  {{ .cw }}{{ default .default .workspace }}{{ .cc }}'
+
+          terraform init -no-color -input=false
+          unset TF_WORKSPACE
+          terraform workspace select {{ default .default .workspace }}
+          echo -e '{{ .cg }}Completed{{ .cc }}'
+      - task: terraform:lock
+      # yamllint enable rule:line-length
+    status:
+      - test -f .terraform.lock.hcl
+      - test -d .terraform
+
+  terraform:lock:
+    aliases:
+      - lock
+    internal: true
+    silent: true
+    cmds:
+      - cmd: |-
+          terraform providers lock \
+            -no-color \
+            -platform=linux_amd64 \
+            -platform=darwin_arm64 \
+            -enable-plugin-cache
+          echo -e '{{ .cg }}Completed{{ .cc }}'
+
+  terraform:workspace:
+    aliases:
+      - workspace
+    desc: Show the workspace for this Terraform configuration
+    silent: true
+    dir: terraform
+    vars:
+      workspace:
+        sh: terraform workspace show
+      options:
+        sh: |-
+          if [[ -f 'variables/{{ .workspace }}.tfvars' ]]
+          then
+            echo -n '-var-file=variables/{{ .workspace }}.tfvars '
+          fi
+    cmds:
+      # yamllint disable rule:line-length
+      - cmd: |-
+          case '{{ .workspace }}' in
+            {{ .workspaces | splitList "," | join "|" }})
+              if [[ ! -f '{{ .root }}/terraform/variables/{{ .workspace }}.tfvars' ]]
+              then
+                echo >&2 'The workspace {{ .workspace }} has no known .tfvars file.'
+                echo >&2 'Run `task {{ .TASK }}:{{ .default }}` to reset.'
+                exit 1
+              fi
+              ;;
+            *)
+              if [[ '{{ .workspace }}' != '{{ .default }}' ]]
+              then
+                echo >&2 'The workspace {{ .workspace }} is invalid.'
+                echo >&2 -e 'Workspaces must be one of: {{ .workspaces | splitList "," | join ", " }}.'
+                echo >&2 'Run `task {{ .TASK }}:{{ .default }}` to reset.'
+                exit 1
+              fi
+              ;;
+          esac
+      - cmd: |-
+          echo 'workspace:'
+          echo -e '  {{ .cw }}{{ .workspace }}{{ .cc }}'
+          echo 'options:'
+          echo -e '  {{ .cw }}{{ default "(none)" .options }}{{ .cc }}'
+      # yamllint enable rule:line-length
+
+  terraform:validate:
+    desc: Validate the Terraform configuration
+    silent: true
+    dir: terraform
+    sources:
+      - '*.tf'
+      - variables/{{ .workspace }}.tfvars
+      - assets/*
+      - templates/*
+    vars:
+      workspace:
+        sh: terraform workspace show
+    deps:
+      - task: terraform:init
+    cmds:
+      - cmd: |-
+          terraform get -no-color
+          terraform validate -no-color
+          echo -e '{{ .cg }}Passed{{ .cc }}'
+
+  terraform:plan:
+    aliases:
+      - plan
+    desc: Plan the changes for this Terraform configuration
+    silent: true
+    dir: terraform
+    deps:
+      - task: flux:package
+      - task: terraform:validate
+    cmds:
+      # yamllint disable rule:line-length
+      - cmd: |-
+          WS=$(terraform workspace show)
+          if [[ "${WS}" == "default" || ! -f "variables/${WS}.tfvars" ]]; then
+            echo -e "  {{ .cr }}FATAL{{ .cc }}: Invalid Terraform workspace: ${WS}"
+            exit 1
+          fi
+
+          TAG=$(skopeo list-tags 'docker://ghcr.io/{{ .repository }}' | jq -r '.Tags | last')
+
+          echo 'workspace:'
+          echo -e "  {{ .cw }}${WS}{{ .cc }}"
+          echo 'options:'
+          echo -e "  {{ .cw }}-var-file=variables/${WS}.tfvars{{ .cc }}"
+          echo -e "  {{ .cw }}-var=flux_artifact_repository={{ .repository }}{{ .cc }}"
+          echo -e "  {{ .cw }}-var=flux_artifact_tag=${TAG:-latest}{{ .cc }}"
+
+          terraform plan -no-color -input=false \
+            -var-file=variables/${WS}.tfvars \
+            -var=flux_artifact_repository={{ .repository }} \
+            -var=flux_artifact_tag=${TAG:-latest} \
+            -out terraform.tfplan \
+          |& tee '.terraform/plan.log'
+          echo -e '{{ .cg }}Completed{{ .cc }}'
+      # yamllint enable rule:line-length
+    status:
+      - test -f terraform.tfplan
+
+  terraform:apply:
+    aliases:
+      - apply
+    desc: Apply the changes for this Terraform configuration
+    silent: true
+    dir: terraform
+    sources:
+      - terraform.tfplan
+    deps:
+      - task: terraform:plan
+    cmds:
+      # The terraform.tfplan file is rendered obsolete by even a partial apply
+      # of the configuration, so must always be deleted when an apply is run
+      - defer: rm -f terraform.tfplan
+      # yamllint disable rule:line-length
+      - cmd: |-
+          WS=$(terraform workspace show)
+          if [[ "${WS}" == "default" || ! -f "variables/${WS}.tfvars" ]]; then
+            echo -e "  {{ .cr }}FATAL{{ .cc }}: Invalid Terraform workspace: ${WS}"
+            exit 1
+          fi
+
+          echo 'workspace:'
+          echo -e "  {{ .cw }}${WS}{{ .cc }}"
+
+          terraform apply -no-color terraform.tfplan \
+            |& tee '.terraform/apply.log'
+          echo -e '{{ .cg }}Completed{{ .cc }}'
+      # yamllint enable rule:line-length
+
+  terraform:documentation:
+    desc: Update the README.md file with terraform-docs
+    silent: true
+    dir: terraform
+    sources:
+      - '{{ .root }}/.terraform-docs.yaml'
+      - '*.tf'
+    cmds:
+      # Make sure the lockfile option is explicitly set as configurations should
+      # pull this information directly from the lockfile as a reference for what
+      # is actually being used to plan and deploy the resources
+      - cmd: |-
+          [[ -f '{{ .root }}/.terraform-docs.yaml' ]] || exit 0
+          terraform-docs . \
+            --config '{{ .root }}/.terraform-docs.yaml' \
+            --lockfile=true
+          echo -e '{{ .cg }}Completed{{ .cc }}'
+
+  terraform:test:
+    desc: Run tests against the Terraform configuration
+    silent: true
+    prefix: test
+    dir: terraform
+    sources:
+      - '*.tf'
+      - variables/{{ .environment }}.tfvars
+      - tests/*.tftest.hcl
+      - assets/*
+      - templates/*
+    vars:
+      workspace:
+        sh: terraform workspace show
+      options:
+        sh: |-
+          if [[ -f 'variables/{{ .workspace }}.tfvars' ]]
+          then
+            echo -n ' -var-file=variables/{{ .workspace }}.tfvars'
+          fi
+    deps:
+      - task: init
+    cmds:
+      - cmd: |-
+          test -d tests || exit 0
+          echo 'workspace:'
+          echo -e '   {{ .cw }}{{ .workspace }}{{ .cc }}'
+          echo 'options:'
+          echo -e '   {{ .cw }}{{ default "(none)" .options }}{{ .cc }}'
+          terraform test -no-color {{ .options }}
+          echo -e '{{ .cg }}Passed{{ .cc }}'

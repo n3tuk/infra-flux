@@ -1,5 +1,8 @@
 # Ignore the Pull Request template for GitHub
 .github/PULL_REQUEST_TEMPLATE.md
 
+# Ignore the Trivy templates for Github Workflows
+.github/templates/*.md
+
 # Ignore the GitHub Pages site as that's covered by separate configuratio
 pages/docs/*

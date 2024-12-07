@@ -1,0 +1,16 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: cert-manager
+namespace: cert-manager
+
+commonLabels:
+  flux.kub3.uk/organisation: n3tuk
+  flux.kub3.uk/repository: infra-flux
+  flux.kub3.uk/kustomization: cert-manager-crds
+  flux.kub3.uk/application: cert-manager
+  flux.kub3.uk/component: cert-manager
+
+resources:
+  - resources.yaml

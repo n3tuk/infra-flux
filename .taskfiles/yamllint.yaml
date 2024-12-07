@@ -1,0 +1,35 @@
+---
+version: 3
+
+tasks:
+  yamllint:
+    desc: Run yamllint for all YAML files
+    silent: true
+    sources:
+      - '**/*.yaml'
+      - '{{ .root }}/.yamllint.yaml'
+      # Ignore the Terraform cache and any temporary files for Trivy
+      - exclude: terraform/.terraform/**
+      - exclude: .trivy/**
+    vars:
+      files:
+        sh: |-
+          find . \
+               -ignore_readdir_race \
+               -type f \
+               -not \
+            \(     -path './terraform/.terraform/*' \
+               -or -path './.trivy/*' \
+            \) -and -iname '*.yaml' \
+            -printf '%P ' \
+          2> /dev/null || true
+    deps:
+      - task: prettier
+    cmds:
+      - cmd: |-
+          [[ -n '{{ .files }}' ]] || exit 0
+          yamllint \
+            --config-file .yamllint.yaml \
+            --format standard \
+            {{ .files }}
+          echo -e '{{ .cg }}Passed{{ .cc }}'
