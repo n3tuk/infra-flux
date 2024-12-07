@@ -28,14 +28,18 @@ No modules.
 | Name | Type |
 |------|------|
 | [kubernetes_config_map_v1.common_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
+| [kubernetes_config_map_v1.proxmox_csi_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
 | [kubernetes_manifest.flux_system_baseline](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
 | [kubernetes_manifest.flux_system_cluster](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
+| [kubernetes_secret_v1.proxmox_csi_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_cluster_domain"></a> [cluster\_domain](#input\_cluster\_domain) | The external domain name of the EKS Cluster (i.e. the domain suffix for deployed services) | `string` | n/a | yes |
+| <a name="input_proxmox_csi_plugin_token_id"></a> [proxmox\_csi\_plugin\_token\_id](#input\_proxmox\_csi\_plugin\_token\_id) | The API token name to provide the proxmox-csi-plugin resource access to the Proxmox API for Ceph | `string` | n/a | yes |
+| <a name="input_proxmox_csi_plugin_token_secret"></a> [proxmox\_csi\_plugin\_token\_secret](#input\_proxmox\_csi\_plugin\_token\_secret) | The API token secret to provide the proxmox-csi-plugin resource access to the Proxmox API for Ceph | `string` | n/a | yes |
 | <a name="input_root_domain"></a> [root\_domain](#input\_root\_domain) | The root external domain name of the EKS Cluster (i.e. the domain suffix for selected services) | `string` | n/a | yes |
 | <a name="input_sit3_domain"></a> [sit3\_domain](#input\_sit3\_domain) | The external domain name of the EKS Cluster using the sit3.uk domain | `string` | n/a | yes |
 | <a name="input_t3st_domain"></a> [t3st\_domain](#input\_t3st\_domain) | The external domain name of the EKS Cluster using the t3st.uk domain | `string` | n/a | yes |

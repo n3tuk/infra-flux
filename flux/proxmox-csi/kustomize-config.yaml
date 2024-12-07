@@ -1,0 +1,18 @@
+---
+# Automatically update the reference to the ConfigMap containing the HelmRelease
+# values, forcing the resource to reconcile on changes to the configuration
+nameReference:
+  - kind: ConfigMap
+    version: v1
+    fieldSpecs:
+      - path: spec/valuesFrom/name
+        kind: HelmRelease
+
+  # Also override the name for the Secret resource created through this
+  # Kustomization as the above specification will override all name arguments
+  # under valuesFrom
+  - kind: ConfigMap
+    version: v1
+    fieldSpecs:
+      - path: metadata/name
+        kind: Secret

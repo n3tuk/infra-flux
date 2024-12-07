@@ -1,0 +1,37 @@
+---
+fullnameOverride: proxmox-csi
+
+storageClass:
+  - name: proxmox-rbd-xfs
+    storage: kub3-rbd
+    cache: writethrough
+    ssd: true
+    fstype: xfs
+    mountOptions:
+      - discard
+      - noatime
+    allowVolumeExpansion: true
+    volumeBindingMode: WaitForFirstConsumer
+    reclaimPolicy: Delete
+  - name: proxmox-rbd-ext4
+    storage: kub3-rbd
+    cache: writethrough
+    ssd: true
+    fstype: ext4
+    mountOptions:
+      - discard
+      - noatime
+    allowVolumeExpansion: true
+    volumeBindingMode: WaitForFirstConsumer
+    reclaimPolicy: Delete
+
+metrics:
+  enabled: true
+
+# These services can run on the Control Plane so that any general issues with
+# worker nodes will not affect the processing of PVCs within the cluster
+nodeSelector:
+  node-role.kubernetes.io/control-plane: ''
+tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    effect: NoSchedule
