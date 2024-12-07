@@ -7,3 +7,4 @@ namespace: flux-system
 resources:
   - flux-community.yaml
   - proxmox-csi.yaml
+  - metrics-server.yaml
