@@ -8,3 +8,4 @@ resources:
   - sources.yaml
   - custom-resources.yaml
   - flux.yaml
+  - core-dns.yaml
