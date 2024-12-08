@@ -5,14 +5,16 @@ metadata:
   name: prometheus-operator
 namespace: prometheus-operator
 
-commonLabels:
-  flux.kub3.uk/organisation: n3tuk
-  flux.kub3.uk/repository: infra-flux
-  flux.kub3.uk/kustomization: prometheus-crds
-  flux.kub3.uk/name: prometheus
-  flux.kub3.uk/application: prometheus
-  flux.kub3.uk/component: prometheus-operator
-  flux.kub3.uk/managed-by: kustomization
+labels:
+  - includeSelectors: true
+    pairs:
+      flux.kub3.uk/organisation: n3tuk
+      flux.kub3.uk/repository: infra-flux
+      flux.kub3.uk/kustomization: prometheus-crds
+      flux.kub3.uk/name: prometheus
+      flux.kub3.uk/application: prometheus
+      flux.kub3.uk/component: prometheus-operator
+      flux.kub3.uk/managed-by: kustomization
 
 resources:
   - namespace.yaml

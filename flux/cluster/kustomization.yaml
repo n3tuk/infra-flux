@@ -4,6 +4,7 @@ kind: Kustomization
 metadata:
   name: cluster
 namespace: flux-system
+
 resources:
   - sources.yaml
   - custom-resources.yaml
@@ -14,3 +15,4 @@ resources:
   - cloudflared.yaml
   - cert-manager.yaml
   - certificates.yaml
+  - external-dns.yaml

@@ -6,8 +6,10 @@ metadata:
   namespace: flux-system
 namespace: certificates-system
 
-commonLabels:
-  flux.kub3.uk/component: cert-manager
+labels:
+  - includeSelectors: true
+    pairs:
+      flux.kub3.uk/component: cert-manager
 
 resources:
   - cert-manager-helm.yaml

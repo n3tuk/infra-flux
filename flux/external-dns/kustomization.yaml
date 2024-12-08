@@ -6,12 +6,15 @@ metadata:
   namespace: flux-system
 namespace: dns-system
 
-commonLabels:
-  flux.kub3.uk/organisation: n3tuk
-  flux.kub3.uk/repository: infra-flux
-  flux.kub3.uk/name: external-dns
-  flux.kub3.uk/kustomization: external-dns
-  flux.kub3.uk/application: external-dns
+labels:
+  - includeSelectors: true
+    pairs:
+      flux.kub3.uk/organisation: n3tuk
+      flux.kub3.uk/repository: infra-flux
+      flux.kub3.uk/kustomization: external-dns
+      flux.kub3.uk/name: external-dns
+      flux.kub3.uk/application: external-dns
+      flux.kub3.uk/managed-by: kustomization
 
 resources:
   - namespace.yaml
