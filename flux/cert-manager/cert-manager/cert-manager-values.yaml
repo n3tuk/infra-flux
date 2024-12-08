@@ -1,0 +1,178 @@
+---
+installCRDs: false
+
+dns01RecursiveNameservers: 1.1.1.1:53,1.0.0.1:53
+dns01RecursiveNameserversOnly: true
+
+global:
+  rbac:
+    create: true
+    aggregateClusterRoles: true
+
+  podSecurityPolicy:
+    enabled: false # No longer supported in Kubernetes
+
+  leaderElection:
+    namespace: certificates-system
+
+crds:
+  # The CRDs for cert-manager are managed by the custom-resource Kustomization
+  # within Flux, allowing resources to persist outside of this Helm Chart, and
+  # to break a dependency loop between cert-manager and Prometheus
+  enabled: false
+
+replicaCount: 1
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+enableCertificateOwnerRef: true
+
+# Prepare for making all approval decisions using approver-policy
+disableAutoApproval: true
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+
+topologySpreadConstraints:
+  # With three Proxmox nodes and two workers per node, this will ensure that
+  # cert-manager is distributed across multiple nodes, not just multiple workers
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/instance: cert-manager
+        app.kubernetes.io/component: controller
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/instance: cert-manager
+        app.kubernetes.io/component: controller
+
+prometheus:
+  enabled: true
+  servicemonitor:
+    enabled: true
+
+webhook:
+  replicaCount: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/instance: cert-manager
+          app.kubernetes.io/component: webhook
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/instance: cert-manager
+          app.kubernetes.io/component: webhook
+
+  networkPolicy:
+    enabled: false
+
+    ingress:
+      - from:
+          - ipBlock:
+              cidr: 0.0.0.0/0
+
+    egress:
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: 0.0.0.0/0
+      - ports:
+          - port: 53
+            protocol: TCP
+          - port: 53
+            protocol: UDP
+        to:
+          - ipBlock:
+              cidr: 172.20.0.10/32
+          - ipBlock:
+              cidr: 1.1.1.1/32
+          - ipBlock:
+              cidr: 1.0.0.1/32
+          - ipBlock:
+              cidr: 8.8.8.8/32
+          - ipBlock:
+              cidr: 8.8.4.4/32
+
+cainjector:
+  enabled: true
+  replicaCount: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+  resources:
+    requests:
+      cpu: 5m
+      memory: 64Mi
+
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/instance: cert-manager
+          app.kubernetes.io/component: cainjector
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/instance: cert-manager
+          app.kubernetes.io/component: cainjector
+
+startupapicheck:
+  enabled: true
+
+  resources:
+    limits: # Don't limit the CPU
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 32Mi

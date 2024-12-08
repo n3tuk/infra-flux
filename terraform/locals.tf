@@ -7,6 +7,11 @@ locals {
     "t3st.uk",
   ]
 
+  cloudflare_ip = [
+    "82.69.106.64/32",
+    "2a02:8010:8006::/48",
+  ]
+
   kubernetes_labels = {
     "flux.kub3.uk/managed-by" = "terraform"
     "flux.kub3.uk/repository" = "infra-flux"
