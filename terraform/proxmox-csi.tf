@@ -4,8 +4,8 @@ resource "kubernetes_config_map_v1" "proxmox_csi_substitutions" {
     namespace = "flux-system"
 
     labels = merge(local.kubernetes_labels, {
-      "kub3.uk/name"     = "proxmox-csi"
-      "kub3.uk/instance" = "proxmox-csi"
+      "flux.kub3.uk/name"     = "proxmox-csi"
+      "flux.kub3.uk/instance" = "proxmox-csi"
     })
   }
 
@@ -22,8 +22,8 @@ resource "kubernetes_secret_v1" "proxmox_csi_substitutions" {
     namespace = "flux-system"
 
     labels = merge(local.kubernetes_labels, {
-      "kub3.uk/name"     = "proxmox-csi"
-      "kub3.uk/instance" = "proxmox-csi"
+      "flux.kub3.uk/name"     = "proxmox-csi"
+      "flux.kub3.uk/instance" = "proxmox-csi"
     })
   }
 

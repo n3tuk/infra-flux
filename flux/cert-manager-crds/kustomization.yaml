@@ -9,8 +9,10 @@ commonLabels:
   flux.kub3.uk/organisation: n3tuk
   flux.kub3.uk/repository: infra-flux
   flux.kub3.uk/kustomization: cert-manager-crds
+  flux.kub3.uk/name: cert-manager
   flux.kub3.uk/application: cert-manager
   flux.kub3.uk/component: cert-manager
+  flux.kub3.uk/managed-by: kustomization
 
 resources:
   - resources.yaml

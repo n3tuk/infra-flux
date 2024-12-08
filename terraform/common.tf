@@ -6,6 +6,11 @@ resource "kubernetes_config_map_v1" "common_substitutions" {
   metadata {
     name      = "common-substitutions"
     namespace = "flux-system"
+
+    labels = merge(local.kubernetes_labels, {
+      "flux.kub3.uk/name"     = "flux"
+      "flux.kub3.uk/instance" = "flux"
+    })
   }
 
   data = {

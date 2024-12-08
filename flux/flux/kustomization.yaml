@@ -9,6 +9,15 @@ resources:
   # Namespace already created during bootstrapping
   - flux-helm.yaml
 
+commonLabels:
+  flux.kub3.uk/organisation: n3tuk
+  flux.kub3.uk/repository: infra-flux
+  flux.kub3.uk/kustomization: flux
+  flux.kub3.uk/name: flux
+  flux.kub3.uk/application: flux
+  flux.kub3.uk/component: flux
+  flux.kub3.uk/managed-by: kustomization
+
 configMapGenerator:
   - name: helm-flux-values
     options:
