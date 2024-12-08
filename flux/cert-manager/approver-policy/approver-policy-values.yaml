@@ -1,0 +1,58 @@
+---
+# The use of nameOverride does not work currently:
+#   https://github.com/cert-manager/approver-policy/issues/207
+# nameOverride: approver-policy
+
+crds:
+  enabled: true
+  keep: true
+
+replicaCount: 1
+
+app:
+  logFormat: json
+  logLevel: 4
+
+  approveSignerNames:
+    - issuers.cert-manager.io/*
+    - clusterissuers.cert-manager.io/*
+
+  metrics:
+    service:
+      enabled: true
+      servicemonitor:
+        enabled: true
+
+topologySpreadConstraints:
+  # With three Proxmox nodes and two workers per node, this will ensure that
+  # cert-manager is distributed across multiple nodes, not just multiple workers
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: cert-manager-approver-policy
+        app.kubernetes.io/instance: approver-policy
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: cert-manager-approver-policy
+        app.kubernetes.io/instance: approver-policy
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+resources:
+  limits: # Don't limit the CPU
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 32Mi
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1

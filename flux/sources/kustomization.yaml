@@ -9,3 +9,4 @@ resources:
   - proxmox-csi.yaml
   - metrics-server.yaml
   - cloudflare.yaml
+  - jetstack.yaml

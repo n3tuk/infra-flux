@@ -1,0 +1,21 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: cert-manager
+  namespace: flux-system
+namespace: certificates-system
+
+commonLabels:
+  flux.kub3.uk/component: cert-manager
+
+resources:
+  - approver-policy-helm.yaml
+
+configMapGenerator:
+  - name: helm-approver-policy-values
+    files:
+      - values.yaml=approver-policy-values.yaml
+
+configurations:
+  - kustomize-config.yaml
