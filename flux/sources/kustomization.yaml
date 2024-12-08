@@ -10,3 +10,4 @@ resources:
   - metrics-server.yaml
   - cloudflare.yaml
   - jetstack.yaml
+  - external-dns.yaml

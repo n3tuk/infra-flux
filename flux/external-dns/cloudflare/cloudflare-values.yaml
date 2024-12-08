@@ -1,0 +1,51 @@
+---
+# Enfoce an override on all naming to allow concurrent external-dns services to
+# operate within the same namespace, allowing DNS records to be managed
+# centrally for multiple providers, as needed
+nameOverride: cloudflare
+
+serviceAccount:
+  create: true
+serviceMonitor:
+  enabled: true
+
+logFormat: json
+
+resources:
+  limits: # Don't limit the CPU
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 64Mi
+
+provider:
+  name: cloudflare
+domainFilters:
+  - kub3.uk
+  - pip3.uk
+  - t3st.uk
+  - sit3.uk
+  - liv3.uk
+
+interval: 15m
+triggerLoopOnEvent: true
+policy: sync
+sources:
+  - ingress
+  - service
+
+registry: txt
+txtOwnerId: ${cluster_name}/external-dns/cloudflare
+txtPrefix: _%{record_type}.
+
+env:
+  - name: CF_API_TOKEN
+    value: file:/etc/cloudflare/api-token
+extraVolumes:
+  - name: cloudflare-token
+    secret:
+      secretName: cloudflare-token
+extraVolumeMounts:
+  - name: cloudflare-token
+    mountPath: /etc/cloudflare
+    readOnly: true
