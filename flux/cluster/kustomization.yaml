@@ -13,3 +13,4 @@ resources:
   - metrics-server.yaml
   - cloudflared.yaml
   - cert-manager.yaml
+  - certificates.yaml
