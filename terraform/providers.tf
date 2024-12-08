@@ -4,7 +4,7 @@ provider "google" {
   zone    = "europe-west2-a"
 
   default_labels = {
-    environment = "development"
+    environment = terraform.workspace
     deployer    = "terraform"
     owner       = "jonathan-n3t-uk"
   }
