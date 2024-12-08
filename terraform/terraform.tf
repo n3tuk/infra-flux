@@ -6,9 +6,17 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 6.6"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.23"
+    }
     kubernetes = {
       source  = "hashicorp/kubernetes"
       version = "~> 2.25.2"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6.0"
     }
   }
 

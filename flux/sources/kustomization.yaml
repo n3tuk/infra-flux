@@ -8,3 +8,4 @@ resources:
   - flux-community.yaml
   - proxmox-csi.yaml
   - metrics-server.yaml
+  - cloudflare.yaml

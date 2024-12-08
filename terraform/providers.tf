@@ -10,6 +10,10 @@ provider "google" {
   }
 }
 
+provider "cloudflare" {
+  retries = 3
+}
+
 provider "kubernetes" {
   config_path    = "~/.kube/config.yaml"
   config_context = "admin@${terraform.workspace}"

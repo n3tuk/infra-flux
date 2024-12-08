@@ -19,5 +19,7 @@ resource "kubernetes_config_map_v1" "common_substitutions" {
     root_domain    = var.root_domain
     t3st_domain    = var.t3st_domain
     sit3_domain    = var.sit3_domain
+
+    cloudflare_tunnel = cloudflare_zero_trust_tunnel_cloudflared.cluster.cname
   }
 }

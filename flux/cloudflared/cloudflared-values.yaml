@@ -1,0 +1,21 @@
+---
+fullnameOverride: tunnel
+replicaCount: 2
+
+cloudflare:
+  tunnelName: ${cloudflared_tunnel_name}
+  secretName: cloudflared-credentials
+
+image:
+  tag: 2024.11.1
+
+resources:
+  limits: # Don't limit the CPU
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+securityContext:
+  seccompProfile:
+    type: RuntimeDefault

@@ -11,3 +11,4 @@ resources:
   - core-dns.yaml
   - proxmox-csi.yaml
   - metrics-server.yaml
+  - cloudflared.yaml
