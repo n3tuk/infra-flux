@@ -12,3 +12,4 @@ resources:
   - proxmox-csi.yaml
   - metrics-server.yaml
   - cloudflared.yaml
+  - cert-manager.yaml
