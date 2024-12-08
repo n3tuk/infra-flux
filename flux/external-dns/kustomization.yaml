@@ -2,19 +2,20 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 metadata:
-  name: core-dns
-namespace: kube-system
+  name: external-dns
+  namespace: flux-system
+namespace: dns-system
 
 labels:
   - includeSelectors: true
     pairs:
       flux.kub3.uk/organisation: n3tuk
       flux.kub3.uk/repository: infra-flux
-      flux.kub3.uk/kustomization: core-dns
-      flux.kub3.uk/name: core-dns
-      flux.kub3.uk/application: core-dns
-      flux.kub3.uk/component: service-monitor
+      flux.kub3.uk/kustomization: external-dns
+      flux.kub3.uk/name: external-dns
+      flux.kub3.uk/application: external-dns
       flux.kub3.uk/managed-by: kustomization
 
 resources:
-  - service-monitor.yaml
+  - namespace.yaml
+  - cloudflare

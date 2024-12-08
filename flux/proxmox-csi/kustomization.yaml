@@ -6,19 +6,21 @@ metadata:
   namespace: flux-system
 namespace: proxmox-system
 
+labels:
+  - includeSelectors: true
+    pairs:
+      flux.kub3.uk/organisation: n3tuk
+      flux.kub3.uk/repository: infra-flux
+      flux.kub3.uk/kustomization: proxmox
+      flux.kub3.uk/name: proxmox
+      flux.kub3.uk/application: proxmox
+      flux.kub3.uk/component: csi
+      flux.kub3.uk/managed-by: kustomization
+
 resources:
   - namespace.yaml
   - proxmox-csi-helm.yaml
   - proxmox-csi-secrets.yaml
-
-commonLabels:
-  flux.kub3.uk/organisation: n3tuk
-  flux.kub3.uk/repository: infra-flux
-  flux.kub3.uk/kustomization: proxmox
-  flux.kub3.uk/name: proxmox
-  flux.kub3.uk/application: proxmox
-  flux.kub3.uk/component: csi
-  flux.kub3.uk/managed-by: kustomization
 
 configMapGenerator:
   - name: helm-proxmox-csi-values

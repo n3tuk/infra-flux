@@ -6,17 +6,19 @@ metadata:
   namespace: flux-system
 namespace: kube-system
 
+labels:
+  - includeSelectors: true
+    pairs:
+      flux.kub3.uk/organisation: n3tuk
+      flux.kub3.uk/repository: infra-flux
+      flux.kub3.uk/kustomization: metrics-server
+      flux.kub3.uk/name: metrics-server
+      flux.kub3.uk/application: metrics-server
+      flux.kub3.uk/component: metrics-server
+      flux.kub3.uk/managed-by: kustomization
+
 resources:
   - metrics-server-helm.yaml
-
-commonLabels:
-  flux.kub3.uk/organisation: n3tuk
-  flux.kub3.uk/repository: infra-flux
-  flux.kub3.uk/kustomization: metrics-server
-  flux.kub3.uk/name: metrics-server
-  flux.kub3.uk/application: metrics-server
-  flux.kub3.uk/component: metrics-server
-  flux.kub3.uk/managed-by: kustomization
 
 configMapGenerator:
   - name: helm-metrics-server-values

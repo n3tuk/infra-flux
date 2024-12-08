@@ -4,9 +4,11 @@ kind: Kustomization
 metadata:
   name: sources
 namespace: flux-system
+
 resources:
   - flux-community.yaml
   - proxmox-csi.yaml
   - metrics-server.yaml
   - cloudflare.yaml
   - jetstack.yaml
+  - external-dns.yaml

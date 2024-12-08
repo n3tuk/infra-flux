@@ -5,14 +5,16 @@ metadata:
   name: grfana-operator
 namespace: grafana-operator
 
-commonLabels:
-  flux.kub3.uk/organisation: n3tuk
-  flux.kub3.uk/repository: infra-flux
-  flux.kub3.uk/kustomization: grafana-crds
-  flux.kub3.uk/name: grafana-operator
-  flux.kub3.uk/application: grafana
-  flux.kub3.uk/component: grafana-operator
-  flux.kub3.uk/managed-by: kustomization
+labels:
+  - includeSelectors: true
+    pairs:
+      flux.kub3.uk/organisation: n3tuk
+      flux.kub3.uk/repository: infra-flux
+      flux.kub3.uk/kustomization: grafana-crds
+      flux.kub3.uk/name: grafana-operator
+      flux.kub3.uk/application: grafana
+      flux.kub3.uk/component: grafana-operator
+      flux.kub3.uk/managed-by: kustomization
 
 resources:
   - namespace.yaml

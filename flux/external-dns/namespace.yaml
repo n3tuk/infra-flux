@@ -1,0 +1,7 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dns-system
+  labels:
+    flux.kub3.uk/component: external-dns
