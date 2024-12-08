@@ -4,5 +4,15 @@ kind: Kustomization
 metadata:
   name: core-dns
 namespace: kube-system
+
 resources:
   - service-monitor.yaml
+
+commonLabels:
+  flux.kub3.uk/organisation: n3tuk
+  flux.kub3.uk/repository: infra-flux
+  flux.kub3.uk/kustomization: core-dns
+  flux.kub3.uk/name: core-dns
+  flux.kub3.uk/application: core-dns
+  flux.kub3.uk/component: service-monitor
+  flux.kub3.uk/managed-by: kustomization

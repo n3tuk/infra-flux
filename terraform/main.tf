@@ -12,7 +12,11 @@ resource "kubernetes_manifest" "flux_system_baseline" {
     "metadata" = {
       "name"      = "baseline"
       "namespace" = "flux-system"
-      "labels"    = local.kubernetes_labels
+
+      "labels" = merge(local.kubernetes_labels, {
+        "flux.kub3.uk/name"     = "flux"
+        "flux.kub3.uk/instance" = "flux"
+      })
     }
 
     "spec" = {
@@ -37,7 +41,11 @@ resource "kubernetes_manifest" "flux_system_cluster" {
     "metadata" = {
       "name"      = "cluster"
       "namespace" = "flux-system"
-      "labels"    = local.kubernetes_labels
+
+      "labels" = merge(local.kubernetes_labels, {
+        "flux.kub3.uk/name"     = "flux"
+        "flux.kub3.uk/instance" = "flux"
+      })
     }
 
     "spec" = {

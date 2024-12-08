@@ -65,3 +65,9 @@ variable "proxmox_csi_plugin_token_secret" {
   type        = string
   # required
 }
+
+variable "cloudflare_account_id" {
+  description = "The Account ID for the Cloudflare account to be used"
+  type        = string
+  default     = "e0d4aae3f32f077cd16bbc26f615738d"
+}
