@@ -1,0 +1,41 @@
+---
+controller:
+  enabled: true
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  logLevel: info
+  resources:
+    limits: # Don't limit the CPU
+      memory: 256Mi
+    request:
+      cpu: 100m
+      memory: 64Mi
+
+speaker:
+  enabled: true
+  frr:
+    enabled: true
+    image:
+      tag: 9.1.2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  logLevel: info
+  resources:
+    limits:
+      memory: 256Mi
+    request:
+      cpu: 100m
+      memory: 64Mi
+
+crds:
+  enabled: true
+  validationFailurePolicy: Fail
+
+serviceMonitor:
+  enabled: true

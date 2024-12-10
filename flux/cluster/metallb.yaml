@@ -1,0 +1,17 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: metallb
+  namespace: flux-system
+spec:
+  sourceRef:
+    kind: OCIRepository
+    name: baseline
+  path: metallb
+  dependsOn:
+    - name: sources
+    - name: prometheus-crds
+  interval: 1h
+  retryInterval: 10m
+  prune: true
