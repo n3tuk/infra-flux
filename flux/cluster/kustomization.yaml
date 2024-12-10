@@ -16,3 +16,4 @@ resources:
   - cert-manager.yaml
   - certificates.yaml
   - external-dns.yaml
+  - ingress-nginx.yaml

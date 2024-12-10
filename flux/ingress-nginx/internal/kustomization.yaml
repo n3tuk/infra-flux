@@ -1,0 +1,22 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: internal
+  namespace: flux-system
+
+labels:
+  - includeSelectors: true
+    pairs:
+      flux.kub3.uk/component: internal
+
+resources:
+  - internal-helm.yaml
+
+configMapGenerator:
+  - name: helm-internal-values
+    files:
+      - values.yaml=internal-values.yaml
+
+configurations:
+  - kustomize-config.yaml
