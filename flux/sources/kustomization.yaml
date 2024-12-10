@@ -12,3 +12,4 @@ resources:
   - cloudflare.yaml
   - jetstack.yaml
   - external-dns.yaml
+  - ingress-nginx.yaml
