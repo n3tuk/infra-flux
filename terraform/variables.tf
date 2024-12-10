@@ -71,3 +71,25 @@ variable "cloudflare_account_id" {
   type        = string
   default     = "e0d4aae3f32f077cd16bbc26f615738d"
 }
+
+variable "metallb_pool_ipv4" {
+  description = "A CIDR for the IPv4 addresses to be used for metallb-managed LoadBalancer endpoints"
+  type        = string
+  # required
+}
+
+variable "metallb_pool_ipv6" {
+  description = "A CIDR for the IPv6 addresses to be used for metallb-managed LoadBalancer endpoints"
+  type        = string
+  # required
+}
+
+variable "metallb_routers" {
+  description = "A list of router IP addresses for each Proxmox Node for metallb"
+  type = object({
+    proxmox-01 = string
+    proxmox-02 = string
+    proxmox-03 = string
+  })
+  # required
+}

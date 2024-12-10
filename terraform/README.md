@@ -37,6 +37,7 @@ No modules.
 | [cloudflare_zero_trust_tunnel_cloudflared_config.cluster](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/resources/zero_trust_tunnel_cloudflared_config) | resource |
 | [kubernetes_config_map_v1.common_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
 | [kubernetes_config_map_v1.flux_system_cloudflared_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
+| [kubernetes_config_map_v1.flux_system_routing_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
 | [kubernetes_config_map_v1.proxmox_csi_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
 | [kubernetes_manifest.flux_system_baseline](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
 | [kubernetes_manifest.flux_system_cluster](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
@@ -53,6 +54,9 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_cluster_domain"></a> [cluster\_domain](#input\_cluster\_domain) | The external domain name of the EKS Cluster (i.e. the domain suffix for deployed services) | `string` | n/a | yes |
+| <a name="input_metallb_pool_ipv4"></a> [metallb\_pool\_ipv4](#input\_metallb\_pool\_ipv4) | A CIDR for the IPv4 addresses to be used for metallb-managed LoadBalancer endpoints | `string` | n/a | yes |
+| <a name="input_metallb_pool_ipv6"></a> [metallb\_pool\_ipv6](#input\_metallb\_pool\_ipv6) | A CIDR for the IPv6 addresses to be used for metallb-managed LoadBalancer endpoints | `string` | n/a | yes |
+| <a name="input_metallb_routers"></a> [metallb\_routers](#input\_metallb\_routers) | A list of router IP addresses for each Proxmox Node for metallb | <pre>object({<br/>    proxmox-01 = string<br/>    proxmox-02 = string<br/>    proxmox-03 = string<br/>  })</pre> | n/a | yes |
 | <a name="input_proxmox_csi_plugin_token_id"></a> [proxmox\_csi\_plugin\_token\_id](#input\_proxmox\_csi\_plugin\_token\_id) | The API token name to provide the proxmox-csi-plugin resource access to the Proxmox API for Ceph | `string` | n/a | yes |
 | <a name="input_proxmox_csi_plugin_token_secret"></a> [proxmox\_csi\_plugin\_token\_secret](#input\_proxmox\_csi\_plugin\_token\_secret) | The API token secret to provide the proxmox-csi-plugin resource access to the Proxmox API for Ceph | `string` | n/a | yes |
 | <a name="input_root_domain"></a> [root\_domain](#input\_root\_domain) | The root external domain name of the EKS Cluster (i.e. the domain suffix for selected services) | `string` | n/a | yes |

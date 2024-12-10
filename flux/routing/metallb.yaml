@@ -1,0 +1,70 @@
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: ${cluster}
+spec:
+  addresses:
+    - ${ipv4_pool}
+---
+apiVersion: metallb.io/v1beta2
+kind: BGPPeer
+metadata:
+  name: proxmox-01
+spec:
+  myASN: 64512
+  peerASN: 64512
+  peerAddress: ${proxmox_01}
+  peerPort: 179
+  bfdProfile: ${cluster}
+  nodeSelectors:
+    - matchLabels:
+        topology.kubernetes.io/zone: proxmox-01
+---
+apiVersion: metallb.io/v1beta2
+kind: BGPPeer
+metadata:
+  name: proxmox-02
+spec:
+  myASN: 64512
+  peerASN: 64512
+  peerAddress: ${proxmox_02}
+  peerPort: 179
+  bfdProfile: ${cluster}
+  nodeSelectors:
+    - matchLabels:
+        topology.kubernetes.io/zone: proxmox-02
+---
+apiVersion: metallb.io/v1beta2
+kind: BGPPeer
+metadata:
+  name: proxmox-03
+spec:
+  myASN: 64512
+  peerASN: 64512
+  peerAddress: ${proxmox_03}
+  peerPort: 179
+  bfdProfile: ${cluster}
+  nodeSelectors:
+    - matchLabels:
+        topology.kubernetes.io/zone: proxmox-03
+---
+apiVersion: metallb.io/v1beta1
+kind: BFDProfile
+metadata:
+  name: ${cluster}
+spec:
+  receiveInterval: 300
+  transmitInterval: 270
+  detectMultiplier: 3
+---
+apiVersion: metallb.io/v1beta1
+kind: BGPAdvertisement
+metadata:
+  name: router
+spec:
+  peers:
+    - proxmox-01
+    - proxmox-02
+    - proxmox-03
+  aggregationLength: 32
