@@ -1,0 +1,85 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: metrics
+  labels:
+    prometheus: metrics
+spec:
+  image: quay.io/prometheus/prometheus:v3.0.0
+  version: v3.0.0
+
+  externalUrl: https://prometheus.${cluster_domain}/
+
+  nodeSelector:
+    kubernetes.io/os: linux
+  replicas: 2
+  shards: 1
+
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          prometheus: metrics
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          prometheus: metrics
+
+  enableFeatures:
+    - memory-snapshot-on-shutdown
+
+  serviceAccountName: prometheus
+
+  retention: 360h
+  retentionSize: 112GiB
+  disableCompaction: true
+  storage:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: proxmox-rbd-ext4
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 128Gi
+
+  resources:
+    limits: # Don't limit the CPU
+      memory: 1024Mi
+    requests:
+      cpu: 500m
+      memory: 256Mi
+
+  logFormat: json
+
+  securityContext:
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
+
+  podMonitorSelector: {}
+  podMonitorNamespaceSelector: {}
+  serviceMonitorSelector: {}
+  serviceMonitorNamespaceSelector: {}
+
+  ruleSelector:
+    matchLabels:
+      alertmanager: metrics
+
+  externalLabels:
+    environment: ${environment}
+    cluster: ${cluster_domain}
+    location: bridgend
+
+  alerting:
+    alertmanagers:
+      - namespace: prometheus-metrics
+        name: alertmanager-operated
+        port: web

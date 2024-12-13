@@ -1,0 +1,26 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: prometheus-metrics
+  namespace: flux-system
+namespace: prometheus-metrics
+
+labels:
+  - includeSelectors: true
+    pairs:
+      flux.kub3.uk/organisation: n3tuk
+      flux.kub3.uk/repository: infra-flux
+      flux.kub3.uk/kustomization: prometheus
+      flux.kub3.uk/name: prometheus
+      flux.kub3.uk/application: prometheus
+      flux.kub3.uk/component: metrics
+      flux.kub3.uk/managed-by: kustomization
+
+resources:
+  - namespace.yaml
+  - service-account.yaml
+  - prometheus.yaml
+  - service.yaml
+  - service-monitor.yaml
+  - ingress.yaml

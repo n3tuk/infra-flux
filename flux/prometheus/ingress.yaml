@@ -1,0 +1,26 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prometheus
+  namespace: prometheus-system
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare-production
+  labels:
+    prometheus: metrics
+spec:
+  ingressClassName: internal
+  rules:
+    - host: prometheus.${cluster_domain}
+      http:
+        paths:
+          - pathType: ImplementationSpecific
+            backend:
+              service:
+                name: prometheus
+                port:
+                  number: 9090
+  tls:
+    - hosts:
+        - prometheus.${cluster_domain}
+      secretName: ingress-prometheus-tls
