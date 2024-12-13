@@ -25,3 +25,6 @@ configMapGenerator:
   - name: helm-metallb-values
     files:
       - values.yaml=metallb-values.yaml
+
+configurations:
+  - kustomize-config.yaml
