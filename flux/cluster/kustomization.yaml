@@ -18,3 +18,5 @@ resources:
   - external-dns.yaml
   - ingress-nginx.yaml
   - metallb.yaml
+  - routing.yaml
+  - prometheus.yaml

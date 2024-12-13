@@ -1,0 +1,22 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: prometheus
+spec:
+  sourceRef:
+    kind: OCIRepository
+    name: baseline
+  path: prometheus
+  dependsOn:
+    - name: prometheus-crds
+    - name: cert-manager-crds
+    - name: proxmox-csi
+  interval: 1h
+  retryInterval: 10m
+  prune: true
+
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: common-substitutions
