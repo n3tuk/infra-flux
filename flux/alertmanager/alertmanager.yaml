@@ -1,0 +1,69 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
+metadata:
+  name: metrics
+  labels:
+    alertmanager: metrics
+spec:
+  image: quay.io/prometheus/alertmanager:v0.27.0
+  version: v0.27.0
+
+  externalUrl: https://alerts.${cluster_domain}/
+
+  alertmanagerConfigSelector:
+    matchLabels:
+      alertmanager: metrics
+  alertmanagerConfigMatcherStrategy:
+    type: None
+  configMaps:
+    - alertmanager-templates
+
+  nodeSelector:
+    kubernetes.io/os: linux
+  replicas: 2
+  # Pods initiate a pull/push sync every sixty seconds, so ensure a Pod is
+  # running successfully for at least 90s before marking it as Ready to ensure
+  # that new Pods synchronise data with old ones on roll-out
+  # minReadySeconds: 90
+
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          alertmanager: metrics
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          alertmanager: metrics
+
+  storage:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: proxmox-rbd-ext4
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi
+
+  resources:
+    limits: # Don't limit the CPU
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 32Mi
+
+  logFormat: json
+  logLevel: debug
+
+  securityContext:
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault

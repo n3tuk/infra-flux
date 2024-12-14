@@ -1,0 +1,26 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: alertmanager
+  namespace: prometheus-system
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare-production
+  labels:
+    prometheus: metrics
+spec:
+  ingressClassName: internal
+  rules:
+    - host: alerts.${cluster_domain}
+      http:
+        paths:
+          - pathType: ImplementationSpecific
+            backend:
+              service:
+                name: alertmanager
+                port:
+                  number: 9093
+  tls:
+    - hosts:
+        - alerts.${cluster_domain}
+      secretName: ingress-alertmanager-tls

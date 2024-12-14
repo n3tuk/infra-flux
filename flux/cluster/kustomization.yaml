@@ -20,3 +20,4 @@ resources:
   - metallb.yaml
   - routing.yaml
   - prometheus.yaml
+  - alertmanager.yaml
