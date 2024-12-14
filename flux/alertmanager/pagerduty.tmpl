@@ -1,0 +1,19 @@
+{{  define "pagerduty_client" -}}
+alertmanager ({{ .GroupLabels.cluster }})
+{{- end }}
+
+{{  define "pagerduty_client_url" -}}
+{{ .ExternalURL }}/#/alerts?receiver={{ .Receiver | urlquery }}
+{{- end }}
+
+{{  define "pagerduty_description" -}}
+{{-   if .CommonAnnotations.description -}}
+{{ .CommonAnnotations.description }}
+{{-   else -}}
+The alert `{{ .GroupLabels.alertname }}` has fired, but has no description.
+{{-   end -}}
+{{- end }}
+
+{{ define "pagerduty_instances" }}
+{{ template "__text_alert_list" . }}
+{{ end }}

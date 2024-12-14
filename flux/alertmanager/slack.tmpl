@@ -1,0 +1,50 @@
+{{  define "slack_username" -}}
+alertmanager ({{ .CommonLabels.cluster }})
+{{- end }}
+
+{{  define "slack_summary" -}}
+{{-   if .CommonAnnotations.summary }}{{ .CommonAnnotations.summary }}
+{{-   else }}{{ .GroupLabels.alertname }}
+{{-   end }}
+{{- end }}
+
+{{  define "slack_link" -}}
+{{-   if .CommonAnnotations.link }}{{ .CommonAnnotations.link }}
+{{-   else if .CommonAnnotations.dashboard }}{{ .CommonAnnotations.dashboard }}
+{{-   else if .CommonAnnotations.runbook }}{{ .CommonAnnotations.runbook }}
+{{-   else }}{{ (index .Alerts 0).GeneratorURL }}
+{{-   end }}
+{{- end }}
+
+{{  define "slack_description" -}}
+{{-   if .CommonAnnotations.description -}}
+{{ .CommonAnnotations.description }}
+{{-   else -}}
+The alert `{{ .GroupLabels.alertname }}` has fired, but has no description.
+{{-   end -}}
+{{- end }}
+
+{{  define "slack_fallback" -}}
+{{  template "slack_summary" . }} | {{ template "slack_link" . }}
+{{- end }}
+
+{{  define "slack_footer" -}}
+Alert Name: {{ .GroupLabels.alertname }}
+Severity: {{ .CommonLabels.severity }}
+Cluster: {{ .GroupLabels.cluster }}
+{{-   if .CommonLabels.pod }}
+Pod: {{ .GroupLabels.namespace }}/{{ .CommonLabels.pod }}
+{{-   else }}
+Namespace: {{ .GroupLabels.namespace }}
+{{-   end }}
+{{- end }}
+
+{{  define "slack_color" }}
+{{-   if eq .Status "firing" -}}
+{{-     if eq .CommonLabels.severity "critical" -}} danger
+{{-     else if eq .CommonLabels.severity "warning" -}} warning
+{{-     else -}} #439FE0
+{{-     end -}}
+{{-   else -}} good
+{{- end -}}
+{{- end }}
