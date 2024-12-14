@@ -1,0 +1,21 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: node-exporter
+spec:
+  sourceRef:
+    kind: OCIRepository
+    name: baseline
+  path: node-exporter
+  dependsOn:
+    - name: sources
+    - name: prometheus-crds
+  interval: 1h
+  retryInterval: 10m
+  prune: true
+
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: common-substitutions
