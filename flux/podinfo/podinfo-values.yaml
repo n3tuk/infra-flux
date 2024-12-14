@@ -1,0 +1,49 @@
+---
+replicaCount: 3
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
+topologySpreadConstraints:
+  # With three Proxmox nodes and two workers per node, this will ensure that
+  # cert-manager is distributed across multiple nodes, not just multiple workers
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: podinfo
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: podinfo
+
+ingress:
+  enabled: true
+  className: external
+  annotations:
+    external-dns.alpha.kubernetes.io/target: ${cloudflare_tunnel}
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
+  hosts:
+    - host: podinfo.${t3st_domain}
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  # TLS is not required as this is a proxied connection from Cloudflare
+  tls: []
+
+resources:
+  limits: # Don't limit the CPU
+    memory: 256Mi
+  requests:
+    cpu: 10m
+    memory: 64Mi

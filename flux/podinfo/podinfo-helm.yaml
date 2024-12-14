@@ -1,0 +1,35 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: podinfo
+spec:
+  chart:
+    spec:
+      sourceRef:
+        kind: HelmRepository
+        namespace: flux-system
+        name: podinfo
+      chart: podinfo
+      interval: 5m
+      version: 6.7.1
+  interval: 3h
+  install:
+    crds: CreateReplace
+    createNamespace: false
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  test:
+    enable: false
+  driftDetection:
+    mode: enabled
+
+  valuesFrom:
+    - kind: ConfigMap
+      name: helm-podinfo-values

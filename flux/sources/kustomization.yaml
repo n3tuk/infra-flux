@@ -15,3 +15,4 @@ resources:
   - ingress-nginx.yaml
   - metallb.yaml
   - prometheus-community.yaml
+  - podinfo.yaml
