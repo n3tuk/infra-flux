@@ -1,0 +1,21 @@
+---
+replicas: 1
+
+prometheusScrape: true
+prometheus:
+  monitor:
+    enabled: true
+
+rbac:
+  create: true
+  useClusterRole: true
+
+networkPolicy:
+  enabled: false
+
+resources:
+  limits: # Don't limit the CPU
+    memory: 64Mi
+  requests:
+    cpu: 10m
+    memory: 32Mi

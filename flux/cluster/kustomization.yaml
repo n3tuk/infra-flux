@@ -21,3 +21,5 @@ resources:
   - routing.yaml
   - prometheus.yaml
   - alertmanager.yaml
+  - node-exporter.yaml
+  - kube-state-metrics.yaml
