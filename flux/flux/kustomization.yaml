@@ -20,10 +20,15 @@ labels:
 resources:
   # Namespace already created during bootstrapping
   - flux-helm.yaml
+  - secrets.yaml
+  - provider-slack.yaml
+  - provider-pagerduty.yaml
+  - notifications.yaml
 
 configMapGenerator:
   - name: helm-flux-values
-    options:
-      disableNameSuffixHash: true
     files:
       - values.yaml=flux-values.yaml
+
+configurations:
+  - kustomize-config.yaml

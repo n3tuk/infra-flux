@@ -1,0 +1,103 @@
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Alert
+metadata:
+  name: flux-baseline-slack
+spec:
+  eventSources:
+    - kind: OCIRepository
+      namespace: flux-system
+      name: baseline
+  eventSeverity: info
+  eventMetadata:
+    Namespace: flux-system
+    OCIRepository: baseline
+    Cluster: ${cluster}
+  providerRef:
+    name: slack
+  summary: >-
+    Update to the baseline OCIRepository resource containing all Flux-managed
+    resources and Kustomizations.
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Alert
+metadata:
+  name: flux-baseline-pagerduty
+spec:
+  eventSources:
+    - kind: OCIRepository
+      namespace: flux-system
+      name: baseline
+  eventSeverity: error
+  eventMetadata:
+    Namespace: flux-system
+    OCIRepository: baseline
+    Cluster: ${cluster}
+  providerRef:
+    name: pagerduty
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Alert
+metadata:
+  name: flux-kustomizations-slack
+spec:
+  eventSources:
+    - kind: Kustomization
+      name: '*'
+  eventSeverity: info
+  eventMetadata:
+    Cluster: ${cluster}
+  providerRef:
+    name: slack
+  exclusionList:
+    - ^Dependencies do not meet ready condition
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Alert
+metadata:
+  name: flux-kustomizations-pagerduty
+spec:
+  eventSources:
+    - kind: Kustomization
+      name: '*'
+  eventSeverity: error
+  eventMetadata:
+    Cluster: ${cluster}
+  providerRef:
+    name: pagerduty
+  exclusionList:
+    - ^Dependencies do not meet ready condition
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Alert
+metadata:
+  name: helm-flux-slack
+spec:
+  eventSources:
+    - kind: HelmRelease
+      namespace: flux-system
+      name: flux
+  eventSeverity: info
+  eventMetadata:
+    Namespace: flux-system
+    HelmRelease: flux
+    Cluster: ${cluster}
+  providerRef:
+    name: slack
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Alert
+metadata:
+  name: helm-flux-pagerduty
+spec:
+  eventSources:
+    - kind: HelmRelease
+      namespace: flux-system
+      name: flux
+  eventSeverity: error
+  eventMetadata:
+    Namespace: flux-system
+    HelmRelease: flux
+    Cluster: ${cluster}
+  providerRef:
+    name: pagerduty

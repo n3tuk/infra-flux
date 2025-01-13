@@ -19,6 +19,7 @@ labels:
 resources:
   - namespace.yaml
   - podinfo-helm.yaml
+  - notifications.yaml
 
 configMapGenerator:
   - namespace: app-podinfo

@@ -1,0 +1,41 @@
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Alert
+metadata:
+  name: helm-podinfo-slack
+  namespace: flux-system
+spec:
+  eventSources:
+    - kind: HelmRelease
+      namespace: app-podinfo
+      name: podinfo
+  eventSeverity: info
+  eventMetadata:
+    Repository: https://github.com/n3tuk/infra-flux
+    Kustomization: podinfo
+    Namespace: app-podinfo
+    Name: podinfo
+    Cluster: ${cluster}
+  providerRef:
+    name: slack
+  summary: podinfo HelmRelease
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Alert
+metadata:
+  name: helm-podinfo-pagerduty
+  namespace: flux-system
+spec:
+  eventSources:
+    - kind: HelmRelease
+      namespace: app-podinfo
+      name: podinfo
+  eventSeverity: info
+  eventMetadata:
+    Repository: https://github.com/n3tuk/infra-flux
+    Kustomization: podinfo
+    Namespace: app-podinfo
+    Name: podinfo
+    Cluster: ${cluster}
+  providerRef:
+    name: pagerduty

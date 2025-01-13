@@ -20,6 +20,7 @@ TODO
 | Name | Version |
 |------|---------|
 | <a name="provider_cloudflare"></a> [cloudflare](#provider\_cloudflare) | 4.43.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | 6.6.0 |
 | <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | 2.25.2 |
 | <a name="provider_random"></a> [random](#provider\_random) | 3.6.3 |
 
@@ -44,10 +45,14 @@ No modules.
 | [kubernetes_secret_v1.flux_system_cert_manager_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.flux_system_cloudflared_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.flux_system_external_dns_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
+| [kubernetes_secret_v1.flux_system_flux_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.proxmox_csi_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [random_password.tunnel](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 | [cloudflare_api_token_permission_groups.all](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/data-sources/api_token_permission_groups) | data source |
 | [cloudflare_zone.n3tuk](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/data-sources/zone) | data source |
+| [google_secret_manager_secret_version.flux_pagerduty_key](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/secret_manager_secret_version) | data source |
+| [google_secret_manager_secret_version.flux_slack_token](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/secret_manager_secret_version) | data source |
+| [google_secret_manager_secret_version.proxmox_csi_plugin_token_secret](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/secret_manager_secret_version) | data source |
 
 ## Inputs
 
@@ -58,7 +63,6 @@ No modules.
 | <a name="input_metallb_pool_ipv6"></a> [metallb\_pool\_ipv6](#input\_metallb\_pool\_ipv6) | A CIDR for the IPv6 addresses to be used for metallb-managed LoadBalancer endpoints | `string` | n/a | yes |
 | <a name="input_metallb_routers"></a> [metallb\_routers](#input\_metallb\_routers) | A list of router IP addresses for each Proxmox Node for metallb | <pre>object({<br/>    proxmox-01 = string<br/>    proxmox-02 = string<br/>    proxmox-03 = string<br/>  })</pre> | n/a | yes |
 | <a name="input_proxmox_csi_plugin_token_id"></a> [proxmox\_csi\_plugin\_token\_id](#input\_proxmox\_csi\_plugin\_token\_id) | The API token name to provide the proxmox-csi-plugin resource access to the Proxmox API for Ceph | `string` | n/a | yes |
-| <a name="input_proxmox_csi_plugin_token_secret"></a> [proxmox\_csi\_plugin\_token\_secret](#input\_proxmox\_csi\_plugin\_token\_secret) | The API token secret to provide the proxmox-csi-plugin resource access to the Proxmox API for Ceph | `string` | n/a | yes |
 | <a name="input_root_domain"></a> [root\_domain](#input\_root\_domain) | The root external domain name of the EKS Cluster (i.e. the domain suffix for selected services) | `string` | n/a | yes |
 | <a name="input_sit3_domain"></a> [sit3\_domain](#input\_sit3\_domain) | The external domain name of the EKS Cluster using the sit3.uk domain | `string` | n/a | yes |
 | <a name="input_t3st_domain"></a> [t3st\_domain](#input\_t3st\_domain) | The external domain name of the EKS Cluster using the t3st.uk domain | `string` | n/a | yes |
