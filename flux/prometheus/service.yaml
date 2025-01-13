@@ -3,6 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: prometheus
+  namespace: prometheus-metrics
   labels:
     prometheus: metrics
 spec:

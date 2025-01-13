@@ -3,6 +3,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
   name: metrics
+  namespace: prometheus-metrics
   labels:
     prometheus: metrics
 spec:
@@ -74,9 +75,7 @@ spec:
       alertmanager: metrics
 
   externalLabels:
-    environment: ${environment}
-    cluster: ${cluster_domain}
-    location: bridgend
+    cluster: ${cluster}
 
   alerting:
     alertmanagers:
