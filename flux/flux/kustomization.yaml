@@ -7,7 +7,7 @@ metadata:
 namespace: flux-system
 
 labels:
-  - includeSelectors: true
+  - includeSelectors: false
     pairs:
       flux.kub3.uk/organisation: n3tuk
       flux.kub3.uk/repository: infra-flux
@@ -20,10 +20,15 @@ labels:
 resources:
   # Namespace already created during bootstrapping
   - flux-helm.yaml
+  - secrets.yaml
+  - provider-slack.yaml
+  - provider-pagerduty.yaml
+  - notifications.yaml
 
 configMapGenerator:
   - name: helm-flux-values
-    options:
-      disableNameSuffixHash: true
     files:
       - values.yaml=flux-values.yaml
+
+configurations:
+  - kustomize-config.yaml

@@ -64,3 +64,26 @@ resource "kubernetes_manifest" "flux_system_cluster" {
     kubernetes_manifest.flux_system_baseline
   ]
 }
+
+resource "kubernetes_secret_v1" "flux_system_flux_substitutions" {
+  metadata {
+    name      = "flux-substitutions"
+    namespace = "flux-system"
+
+    labels = merge(local.kubernetes_labels, {
+      "flux.kub3.uk/name"     = "flux"
+      "flux.kub3.uk/instance" = "flux"
+    })
+  }
+
+  type = "Opaque"
+
+  data = {
+    flux_slack_token   = data.google_secret_manager_secret_version.flux_slack_token.secret_data
+    flux_pagerduty_key = data.google_secret_manager_secret_version.flux_pagerduty_key.secret_data
+  }
+
+  depends_on = [
+    kubernetes_manifest.flux_system_baseline
+  ]
+}

@@ -60,12 +60,6 @@ variable "proxmox_csi_plugin_token_id" {
   # required
 }
 
-variable "proxmox_csi_plugin_token_secret" {
-  description = "The API token secret to provide the proxmox-csi-plugin resource access to the Proxmox API for Ceph"
-  type        = string
-  # required
-}
-
 variable "cloudflare_account_id" {
   description = "The Account ID for the Cloudflare account to be used"
   type        = string

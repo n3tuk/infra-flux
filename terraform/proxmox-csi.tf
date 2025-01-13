@@ -30,6 +30,6 @@ resource "kubernetes_secret_v1" "proxmox_csi_substitutions" {
   type = "Opaque"
 
   data = {
-    proxmox_csi_token_secret = var.proxmox_csi_plugin_token_secret
+    proxmox_csi_token_secret = data.google_secret_manager_secret_version.proxmox_csi_plugin_token_secret.secret_data
   }
 }

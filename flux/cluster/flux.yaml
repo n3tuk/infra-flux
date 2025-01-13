@@ -20,3 +20,5 @@ spec:
     substituteFrom:
       - kind: ConfigMap
         name: common-substitutions
+      - kind: Secret
+        name: flux-substitutions
