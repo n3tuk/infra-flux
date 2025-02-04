@@ -62,7 +62,7 @@ From here, Flux can be deployed, but with some minor overrides, specifically:
 
 ```console
 $ kubectl create namespace flux-system
-$ helm install fluxcd fluxcd-community/flux2 \
+$ helm install flux fluxcd-community/flux2 \
     --values flux/flux/flux-values.yaml \
     --set prometheus.podMonitor.create=false \
     --set notificationController.webhookReceiver.ingress.create=false
