@@ -12,16 +12,16 @@ TODO
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.10.0 |
 | <a name="requirement_cloudflare"></a> [cloudflare](#requirement\_cloudflare) | ~> 4.23 |
 | <a name="requirement_google"></a> [google](#requirement\_google) | ~> 6.6 |
-| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | ~> 2.25.2 |
+| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | ~> 2.35.1 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.6.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_cloudflare"></a> [cloudflare](#provider\_cloudflare) | 4.43.0 |
-| <a name="provider_google"></a> [google](#provider\_google) | 6.6.0 |
-| <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | 2.25.2 |
+| <a name="provider_cloudflare"></a> [cloudflare](#provider\_cloudflare) | 4.51.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | 6.19.0 |
+| <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | 2.35.1 |
 | <a name="provider_random"></a> [random](#provider\_random) | 3.6.3 |
 
 ## Modules

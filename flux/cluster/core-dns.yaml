@@ -8,6 +8,8 @@ spec:
     kind: OCIRepository
     name: baseline
   path: core-dns
+  dependsOn:
+    - name: prometheus-crds
   interval: 1h
   retryInterval: 10m
   prune: true
