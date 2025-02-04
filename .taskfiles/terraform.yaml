@@ -11,6 +11,8 @@ tasks:
     vars:
       bin: >-
         {{ default (expandenv "$HOME/.local/bin") .TFSWITCH_BIN_DIR }}/terraform
+    env:
+      TF_IN_AUTOMATION: true
     cmds:
       - cmd: |-
           tfswitch \
@@ -63,6 +65,7 @@ tasks:
           fi
     env:
       TF_WORKSPACE: '{{ default .default .workspace }}'
+      TF_IN_AUTOMATION: true
     cmds:
       # yamllint disable rule:line-length
       - cmd: |-
@@ -84,6 +87,8 @@ tasks:
       - lock
     internal: true
     silent: true
+    env:
+      TF_IN_AUTOMATION: true
     cmds:
       - cmd: |-
           terraform providers lock \
@@ -108,6 +113,8 @@ tasks:
           then
             echo -n '-var-file=variables/{{ .workspace }}.tfvars '
           fi
+    env:
+      TF_IN_AUTOMATION: true
     cmds:
       # yamllint disable rule:line-length
       - cmd: |-
@@ -149,6 +156,8 @@ tasks:
     vars:
       workspace:
         sh: terraform workspace show
+    env:
+      TF_IN_AUTOMATION: true
     deps:
       - task: terraform:init
     cmds:
@@ -166,6 +175,8 @@ tasks:
     deps:
       - task: flux:package
       - task: terraform:validate
+    env:
+      TF_IN_AUTOMATION: true
     cmds:
       # yamllint disable rule:line-length
       - cmd: |-
@@ -205,6 +216,8 @@ tasks:
       - terraform.tfplan
     deps:
       - task: terraform:plan
+    env:
+      TF_IN_AUTOMATION: true
     cmds:
       # The terraform.tfplan file is rendered obsolete by even a partial apply
       # of the configuration, so must always be deleted when an apply is run
@@ -265,6 +278,8 @@ tasks:
           fi
     deps:
       - task: init
+    env:
+      TF_IN_AUTOMATION: true
     cmds:
       - cmd: |-
           test -d tests || exit 0
