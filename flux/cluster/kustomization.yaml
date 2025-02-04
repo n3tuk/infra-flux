@@ -19,8 +19,12 @@ resources:
   - ingress-nginx.yaml
   - metallb.yaml
   - routing.yaml
+  - elastic-operator.yaml
   - prometheus.yaml
+  - elastic-logs.yaml
+  - fluent-bit.yaml
   - alertmanager.yaml
   - node-exporter.yaml
   - kube-state-metrics.yaml
+  - grafana.yaml
   - podinfo.yaml

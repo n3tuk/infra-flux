@@ -1,0 +1,21 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: fluent-bit
+spec:
+  sourceRef:
+    kind: OCIRepository
+    name: baseline
+  path: fluent-bit
+  dependsOn:
+    - name: prometheus-crds
+    - name: elastic-logs
+  interval: 1h
+  retryInterval: 10m
+  prune: true
+
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: common-substitutions

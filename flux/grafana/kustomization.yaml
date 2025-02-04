@@ -1,0 +1,26 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: grafana
+  namespace: flux-system
+namespace: grafana-system
+
+commonLabels:
+  flux.kub3.uk/organisation: n3tuk
+  flux.kub3.uk/repository: infra-flux
+  flux.kub3.uk/kustomization: grafana
+  flux.kub3.uk/application: grafana
+  flux.kub3.uk/component: grafana
+
+resources:
+  - namespace.yaml
+  - grafana-helm.yaml
+
+configMapGenerator:
+  - name: helm-grafana-values
+    files:
+      - values.yaml=grafana-values.yaml
+
+configurations:
+  - kustomize-config.yaml

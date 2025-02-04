@@ -17,4 +17,5 @@ resources:
   - prometheus-community.yaml
   - grafana.yaml
   - elastic.yaml
+  - fluent.yaml
   - podinfo.yaml
