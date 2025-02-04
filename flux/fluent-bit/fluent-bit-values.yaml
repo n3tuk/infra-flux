@@ -1,0 +1,151 @@
+---
+kind: DaemonSet
+
+serviceMonitor:
+  enabled: false
+prometheusRule:
+  enabled: false
+dashboards:
+  enabled: true
+  labelKey: fluent-bit-dashboard
+
+resources:
+  limits:
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+hotReload:
+  enabled: true
+
+extraPorts:
+  - port: 2001
+    containerPort: 2001
+    protocol: TCP
+    name: talos
+
+tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+
+config:
+  # yamllint disable rule:line-length
+  inputs: |
+    [INPUT]
+        name tail
+        path /var/log/containers/*.log
+        parser containerd
+        tag kubernetes.*
+        mem_buf_limit 128MB
+        skip_long_lines Off
+
+    # Will this work with DaemonSet, should this be a
+    # single-Pod deployment in addition?
+    # [INPUT]
+    #     name kubernetes_events
+    #     tag kubernetes-events
+    #     kube_url https://kubernetes.default.svc
+
+    [INPUT]
+        name systemd
+        tag host.*
+        systemd_filter _SYSTEMD_UNIT=kubelet.service
+        read_from_tail On
+
+    [INPUT]
+        name tail
+        alias audit
+        path /var/log/audit/kube/*.log
+        parser audit
+        tag audit.*
+
+    [INPUT]
+        name tcp
+        listen 0.0.0.0
+        port 2001
+        format json
+        tag talos.*
+
+  # https://docs.fluentbit.io/manual/pipeline/filters
+  filters: |
+    [FILTER]
+        name kubernetes
+        alias kubernetes
+        match kubernetes.*
+        kube_tag_prefix kubernetes.var.log.containers.
+        use_kubelet off
+        merge_log on
+        merge_log_trim on
+        keep_log off
+        k8s-logging.parser on
+        k8s-logging.exclude on
+        annotations off
+        labels on
+
+    [FILTER]
+        name modify
+        match kubernetes.*
+        add source kubernetes
+        remove logtag
+
+  # https://docs.fluentbit.io/manual/pipeline/outputs
+  outputs: |
+    [OUTPUT]
+        name es
+        match kubernetes.*
+        host logs-es-http.elastic-logs.svc
+        suppress_type_name On
+        http_user fluent-bit
+        http_passwd
+        logstash_format on
+        logstash_prefix logs-kubernetes
+        logstash_dateformat %Y%m%d
+        retry_limit false
+
+    [OUTPUT]
+        name es
+        match host.*
+        host logs-es-http.elastic-logs.svc
+        suppress_type_name On
+        http_user fluent-bit
+        http_passwd
+        logstash_format on
+        logstash_prefix logs-node
+        logstash_dateformat %Y%m%d
+        retry_limit false
+
+    [OUTPUT]
+        name es
+        match audit.*
+        host logs-es-http.elastic-logs.svc
+        suppress_type_name On
+        http_user fluent-bit
+        http_passwd
+        logstash_format on
+        logstash_prefix logs-audit
+        logstash_dateformat %Y%m%d
+        retry_limit false
+
+  # https://docs.fluentbit.io/manual/pipeline/parsers
+  customParsers: |
+    [PARSER]
+        name docker_no_time
+        format json
+        time_keep Off
+        time_key time
+        time_format %Y-%m-%dT%H:%M:%S.%L
+
+    [PARSER]
+        name audit
+        format json
+        time_key requestReceivedTimestamp
+        time_format %Y-%m-%dT%H:%M:%S.%L%z
+
+    [PARSER]
+        name containerd
+        format regex
+        regex ^(?<time>[^ ]+) (?<stream>stdout|stderr) (?<logtag>[^ ]*) (?<log>.*)$
+        time_key time
+        time_format %Y-%m-%dT%H:%M:%S.%L%z

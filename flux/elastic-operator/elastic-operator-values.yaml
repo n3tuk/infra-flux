@@ -1,0 +1,17 @@
+---
+installCRDs: false
+replicaCount: 1
+
+resources:
+  limits: # Don't limit the CPU
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+serviceMonitor:
+  enabled: true

@@ -1,0 +1,61 @@
+---
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: logs
+  namespace: elastic-logs
+spec:
+  version: 8.17.1
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
+  secureSettings:
+    - secretName: elastic-credentials
+  nodeSets:
+    - name: data
+      count: 3
+      config:
+        node.roles:
+          - master
+          - data
+          - ingest
+      podTemplate:
+        spec:
+          topologySpreadConstraints:
+            # With three Proxmox nodes and two workers per node, this will
+            # ensure that # cert-manager is distributed across multiple nodes,
+            # not just multiple workers
+            - maxSkew: 1
+              topologyKey: topology.kubernetes.io/zone
+              whenUnsatisfiable: ScheduleAnyway
+              labelSelector:
+                matchLabels:
+                  elasticsearch.k8s.elastic.co/cluster-name: logs
+            - maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: DoNotSchedule
+              labelSelector:
+                matchLabels:
+                  elasticsearch.k8s.elastic.co/cluster-name: logs
+          containers:
+            - name: elasticsearch
+              env:
+                - name: ES_JAVA_OPTS
+                  value: -Xms4g -Xmx4g
+              resources:
+                limits:
+                  memory: 5Gi
+                requests:
+                  memory: 4Gi
+                  cpu: 250m
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 64Gi
+            storageClassName: proxmox-rbd-ext4

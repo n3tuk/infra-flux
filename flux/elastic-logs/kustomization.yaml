@@ -1,0 +1,24 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: elastic-logs
+  namespace: flux-system
+namespace: elastic-logs
+
+labels:
+  - includeSelectors: true
+    pairs:
+      flux.kub3.uk/organisation: n3tuk
+      flux.kub3.uk/repository: infra-flux
+      flux.kub3.uk/name: elastic
+      flux.kub3.uk/kustomization: elastic-logs
+      flux.kub3.uk/application: elasticsearch
+      flux.kub3.uk/component: logs
+      flux.kub3.uk/managed-by: kustomization
+
+resources:
+  - namespace.yaml
+  - elastic-secrets.yaml
+  - elastic-server.yaml
+  - ingress.yaml
