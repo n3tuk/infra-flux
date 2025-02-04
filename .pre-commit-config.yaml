@@ -41,10 +41,10 @@ repos:
         files: ^terraform/
 
       - id: terraform_providers_lock
-        name: Check Terraform Provider plaforms configured
+        name: Check Terraform Provider platforms configured
         args:
           - --args=-platform=linux_amd64
-          - --args=-platform=darwin_arm64
+          - --args=-platform=linux_arm64
           - --hook-config=--mode=only-check-is-current-lockfile-cross-platform
 
       - id: terraform_tflint

@@ -94,7 +94,7 @@ tasks:
           terraform providers lock \
             -no-color \
             -platform=linux_amd64 \
-            -platform=darwin_arm64 \
+            -platform=linux_arm64 \
             -enable-plugin-cache
           echo -e '{{ .cg }}Completed{{ .cc }}'
 
