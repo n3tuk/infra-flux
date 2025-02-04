@@ -9,6 +9,7 @@ spec:
     name: baseline
   path: prometheus
   dependsOn:
+    # Sources is not a dependency for this Kustomization
     - name: prometheus-crds
     - name: cert-manager-crds
     - name: proxmox-csi

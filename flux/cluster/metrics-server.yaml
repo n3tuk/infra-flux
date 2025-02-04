@@ -9,6 +9,7 @@ spec:
     name: baseline
   path: metrics-server
   dependsOn:
+    - name: sources
     - name: prometheus-crds
   interval: 1h
   retryInterval: 10m
