@@ -12,7 +12,7 @@ spec:
         name: jetstack
       chart: cert-manager
       interval: 5m
-      version: 1.16.2
+      version: 1.16.4
   interval: 3h
   install:
     crds: CreateReplace
