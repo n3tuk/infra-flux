@@ -51,6 +51,12 @@ updateStrategy:
   rollingUpdate:
     maxSurge: 1
 
+# Ensure a new Pod is spun up by the Scheduler before allowing the existing Pod
+# to be removed should a Node need to drained, updated, or deleted
+podDisruptionBudget:
+  enabled: true
+  minAvilable: 1
+
 env:
   - name: FLUENT_ELASTICSEARCH_PASSWORD
     valueFrom:
