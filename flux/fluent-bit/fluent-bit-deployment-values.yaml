@@ -20,7 +20,7 @@ prometheusRule:
       expr: |
         rate(
           fluentbit_output_proc_bytes_total{
-            name="events"
+            name="es-logs-events"
           }[1m]
         ) == 0
       annotations:
@@ -70,7 +70,7 @@ config:
   inputs: |
     [INPUT]
         name kubernetes_events
-        alias ${cluster}
+        alias kubernetes-events
         tag kubernetes-events
 
   filters: |
@@ -86,7 +86,7 @@ config:
   outputs: |
     [OUTPUT]
         name es
-        alias events
+        alias es-logs-events
         match kubernetes-events
         host logs-es-http.elastic-logs.svc
         # The _type field is not supported by Elasticsearch 8.0.0 or greater
@@ -98,3 +98,4 @@ config:
         # Enable nano-second precision as we're using Logstash formats
         time_key_nanos on
         buffer_size 1M
+        retry_limit 3

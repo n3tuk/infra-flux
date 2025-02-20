@@ -20,7 +20,7 @@ prometheusRule:
       expr: |
         rate(
           fluentbit_output_proc_bytes_total{
-            name="kubernetes"
+            name="es-logs-kubernetes"
           }[1m]
         ) == 0
       annotations:
@@ -37,7 +37,7 @@ prometheusRule:
       expr: |
         rate(
           fluentbit_filter_bytes_total{
-            name="kubernetes"
+            name="kubernetes-metadata-add"
           }[1m]
         ) == 0
       annotations:
@@ -55,7 +55,7 @@ prometheusRule:
         sum by (name) (
           rate(
             fluentbit_output_proc_bytes_total{
-              name="audit"
+              name="es-logs-audit"
             }[1m]
           )
         ) == 0
@@ -135,7 +135,7 @@ config:
   inputs: |
     [INPUT]
         name tail
-        alias containerd
+        alias kubernetes-logs
         path /var/log/containers/*.log
         parser containerd
         # multiline.parser cri
@@ -163,7 +163,7 @@ config:
 
     [INPUT]
         name tail
-        alias audit
+        alias audit-logs
         path /var/log/audit/kube/*.log
         parser audit
         tag audit.*
@@ -184,7 +184,7 @@ config:
     # them in Elasticsearch)
     [FILTER]
         name kubernetes
-        alias kubernetes
+        alias kubernetes-metadata-add
         match kubernetes.*
         kube_tag_prefix kubernetes.
         regex_parser kubernetes-tags
@@ -205,7 +205,7 @@ config:
 
     [FILTER]
         name nest
-        alias kubernetes-lift
+        alias kubernetes-metadata-lift
         match kubernetes.*
         operation lift
         nested_under kubernetes
@@ -213,7 +213,7 @@ config:
 
     [FILTER]
         name modify
-        alias kubernetes
+        alias kubernetes-metadata-cleanup
         match kubernetes.*
         add source kubernetes
         # Remove these fields as we don't need this level of granuality
@@ -229,7 +229,7 @@ config:
 
     [FILTER]
         name nest
-        alias kubernetes-nest
+        alias kubernetes-metadata-nest
         match *
         operation nest
         wildcard kubernetes_*
@@ -238,13 +238,8 @@ config:
 
   outputs: |
     [OUTPUT]
-        name  counter
-        alias all
-        match *
-
-    [OUTPUT]
         name es
-        alias dashboard
+        alias es-logs-dashboard
         match kubernetes.app-dashboard.*
         host logs-es-http.elastic-logs.svc
         # The _type field is not supported by Elasticsearch 8.0.0 or greater
@@ -256,10 +251,11 @@ config:
         # Enable nano-second precision as we're using Logstash formats
         time_key_nanos on
         buffer_size 2M
+        retry_limit 3
 
     [OUTPUT]
         name es
-        alias kubernetes
+        alias es-logs-kubernetes
         match kubernetes.*
         host logs-es-http.elastic-logs.svc
         suppress_type_name on
@@ -269,10 +265,11 @@ config:
         logstash_prefix logs-kubernetes
         time_key_nanos on
         buffer_size 2M
+        retry_limit 3
 
     [OUTPUT]
         name es
-        alias audit
+        alias es-logs-audit
         match audit.*
         host logs-es-http.elastic-logs.svc
         suppress_type_name on
@@ -282,6 +279,7 @@ config:
         logstash_prefix logs-audit
         time_key_nanos on
         buffer_size 1M
+        retry_limit 3
 
   customParsers: |
     # The tail input for the container logs from Kubernetes implements a custom
