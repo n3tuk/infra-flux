@@ -21,13 +21,14 @@ prometheusRule:
         rate(
           fluentbit_output_proc_bytes_total{
             name="events"
-          }[5m]
+          }[1m]
         ) == 0
       annotations:
         summary: No Kubernetes Events Processed
         message: |
-          The fluent-bit Deployment in {{ $labels.namespace }} has not processed
-          any Kubernetes Events in the last fifteen minutes.
+          The fluent-bit Deployment Pod {{ $labels.namespace}}/{{ $labels.pod }}
+          has not processed any Kubernetes Events for at least the
+          last fifteen minutes.
       for: 15m
       labels:
         severity: critical

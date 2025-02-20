@@ -16,7 +16,7 @@ prometheusRule:
   additionalLabels:
     alertmanager: metrics
   rules:
-    - alert: NoKubernetesLogsProcessed
+    - alert: NoKubernetesContainerLogsProcessed
       expr: |
         rate(
           fluentbit_output_proc_bytes_total{
@@ -24,15 +24,33 @@ prometheusRule:
           }[1m]
         ) == 0
       annotations:
-        summary: No Container Logs Processed
+        summary: No Kubernetes Container Logs Processed
         message: |
           The fluent-bit DaemonSet Pod {{ $labels.namespace}}/{{ $labels.pod }}
-          has not processed any container logs for the last five minutes.
+          has not processed any container logs from Kubernetes for at least the
+          last five minutes.
       for: 5m
       labels:
         severity: critical
 
-    - alert: NoAuditLogsProcessed
+    - alert: NoKubernetesMetadataProcessed
+      expr: |
+        rate(
+          fluentbit_filter_bytes_total{
+            name="kubernetes"
+          }[1m]
+        ) == 0
+      annotations:
+        summary: No Kubernetes Metadata Processed
+        message: |
+          The fluent-bit DaemonSet Pod {{ $labels.namespace}}/{{ $labels.pod }}
+          has not processed the addition of any Kubernetes Metadata for the
+          Kubernetes container logs FILTER for at least the last five minutes.
+      for: 5m
+      labels:
+        severity: critical
+
+    - alert: NoKubernetesAuditLogsProcessed
       expr: |
         sum by (name) (
           rate(
@@ -42,12 +60,46 @@ prometheusRule:
           )
         ) == 0
       annotations:
-        summary: No Audit Logs Processed
+        summary: No Kubernetes Audit Logs Processed
         message: |
-          No fluent-bit Pod in {{ $labels.namespace}} has processed any data
-          for the audit output for at least fifteen minutes
-          fifteen minutes.
+          No fluent-bit DaemonSet Pod in {{ $labels.namespace}} has processed
+          any data for the Kubernetes controller audit logs OUTPUT for at least
+          the last fifteen minutes.
       for: 15m
+      labels:
+        severity: critical
+
+    - alert: OutputRetriesFailed
+      expr: |
+        rate(
+          fluentbit_output_retries_failed_total[1m]
+        ) >= 0.01
+      annotations:
+        summary: Retries Failed
+        message: |
+          The fluent-bit Pod {{ $labels.namespace}}/{{ $labels.pod }} in the
+          {{ $labels.job }} Job has retried multiple times to push log entries
+          being processed by the {{ $labels.name }} OUTPUT over at least the
+          last five minutes.
+      for: 5m
+      labels:
+        severity: critical
+
+    - alert: OutputRecordsDropped
+      # This will cover 3 or more logs per five-minute window, and will alert
+      # for both DaemonSet and Deployment jobs
+      expr: |
+        rate(
+          fluentbit_output_dropped_records_total[1m]
+        ) >= 0.01
+      annotations:
+        summary: Records Dropped
+        message: |
+          The fluent-bit Pod {{ $labels.namespace}}/{{ $labels.pod }} in the
+          {{ $labels.job }} Job has dropped mulitple log entries that are being
+          processed by the {{ $labels.name }} OUTPUT over at least the last five
+          minutes.
+      for: 5m
       labels:
         severity: critical
 
