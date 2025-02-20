@@ -46,28 +46,6 @@ resources:
 hotReload:
   enabled: true
 
-extraPorts:
-  - port: 2001
-    containerPort: 2001
-    protocol: TCP
-    name: talos
-  - port: 5140
-    containerPort: 5140
-    protocol: TCP
-    name: syslog
-
-# ingress:
-#   enabled: true
-#   ingressClassName: internal
-#   annotations:
-#     cert-manager.io/cluster-issuer: letsencrypt-cloudflare-production
-#   hosts:
-#     - host: fluent.${cluster_domain}
-#   tls:
-#     - hosts:
-#         - fluent.${cluster_domain}
-#       secretName: ingress-fluent-bit-deployment-tls
-
 updateStrategy:
   type: RollingUpdate
   rollingUpdate:
@@ -88,31 +66,6 @@ config:
         alias ${cluster}
         tag kubernetes-events
 
-    [INPUT]
-        name tcp
-        alias talos-${cluster}
-        mode tcp
-        listen 0.0.0.0
-        port 2001
-        buffer_size 128
-        chunk_size 1024
-        format json
-        source_address_key remote
-        tag talos
-
-    [INPUT]
-        name syslog
-        alias tcp-${cluster}
-        mode tcp
-        listen 0.0.0.0
-        port 2001
-        buffer_size 128
-        chunk_size 1024
-        parser syslog-rfc3164
-        source_address_key remote
-        tag syslog
-
-  # https://docs.fluentbit.io/manual/pipeline/filters
   filters: |
     # All cluster field with the name of the cluster to all log entries to
     # ensure that we can search by cluster
@@ -136,31 +89,5 @@ config:
         logstash_format on
         logstash_prefix logs-events
         # Enable nano-second precision as we're using Logstash formats
-        time_key_nanos on
-        buffer_size 1M
-
-    [OUTPUT]
-        name es
-        alias talos
-        match talos.*
-        host logs-es-http.elastic-logs.svc
-        suppress_type_name on
-        http_user fluent-bit
-        http_passwd $${FLUENT_ELASTICSEARCH_PASSWORD}
-        logstash_format on
-        logstash_prefix logs-talos
-        time_key_nanos on
-        buffer_size 1M
-
-    [OUTPUT]
-        name es
-        alias syslog
-        match syslog
-        host logs-es-http.elastic-logs.svc
-        suppress_type_name on
-        http_user fluent-bit
-        http_passwd $${FLUENT_ELASTICSEARCH_PASSWORD}
-        logstash_format on
-        logstash_prefix logs-syslog
         time_key_nanos on
         buffer_size 1M
