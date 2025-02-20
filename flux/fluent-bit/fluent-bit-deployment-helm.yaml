@@ -30,6 +30,10 @@ spec:
     enable: true
   driftDetection:
     mode: enabled
+  dependsOn:
+    # Shared resources (e.g. the ServiceAccount) are created in the DaemonSet
+    # deployment of fluent-bit, so ensure that is deployed and operational first
+    - name: fluent-bit-daemonset
 
   valuesFrom:
     - kind: ConfigMap

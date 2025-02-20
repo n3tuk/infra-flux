@@ -3,11 +3,11 @@ kind: Deployment
 replicaCount: 1
 
 serviceAccount:
-  create: true
+  create: false
+  # This ServiceAccount will be created by the DaemonSet HelmRelease
+  name: fluent-bit
 rbac:
-  create: true
-  nodeAccess: true
-  eventsAccess: true
+  create: false
 
 serviceMonitor:
   enabled: true

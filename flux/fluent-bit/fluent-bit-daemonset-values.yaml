@@ -3,10 +3,11 @@ kind: DaemonSet
 
 serviceAccount:
   create: true
+  name: fluent-bit
 rbac:
   create: true
   nodeAccess: true
-  eventsAccess: false
+  eventsAccess: true
 
 serviceMonitor:
   enabled: true
@@ -115,7 +116,6 @@ config:
         parser audit
         tag audit.*
 
-  # https://docs.fluentbit.io/manual/pipeline/filters
   filters: |
     # All cluster field with the name of the cluster to all log entries to
     # ensure that we can search by cluster
@@ -184,7 +184,6 @@ config:
         nest_under kubernetes
         remove_prefix kubernetes_
 
-  # https://docs.fluentbit.io/manual/pipeline/outputs
   outputs: |
     [OUTPUT]
         name  counter
@@ -232,7 +231,6 @@ config:
         time_key_nanos on
         buffer_size 1M
 
-  # https://docs.fluentbit.io/manual/pipeline/parsers
   customParsers: |
     # The tail input for the container logs from Kubernetes implements a custom
     # tagging structure to allow for more fine-grained filtering of streams

@@ -14,7 +14,6 @@ commonLabels:
   flux.kub3.uk/component: fluentbit
 
 resources:
-  # - fluent-bit-service-account.yaml
   - fluent-bit-secrets.yaml
   - fluent-bit-daemonset-helm.yaml
   - fluent-bit-deployment-helm.yaml
