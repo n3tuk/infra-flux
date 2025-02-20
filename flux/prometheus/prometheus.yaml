@@ -73,6 +73,7 @@ spec:
   ruleSelector:
     matchLabels:
       alertmanager: metrics
+  ruleNamespaceSelector: {}
 
   externalLabels:
     cluster: ${cluster}

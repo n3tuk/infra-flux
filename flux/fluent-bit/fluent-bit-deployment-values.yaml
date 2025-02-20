@@ -10,9 +10,28 @@ rbac:
   eventsAccess: true
 
 serviceMonitor:
-  enabled: false
+  enabled: true
 prometheusRule:
-  enabled: false
+  enabled: true
+  additionalLabels:
+    alertmanager: metrics
+  rules:
+    - alert: NoKubernetesEventsProcessed
+      expr: |
+        rate(
+          fluentbit_output_proc_bytes_total{
+            name="events"
+          }[5m]
+        ) == 0
+      annotations:
+        summary: No Kubernetes Events Processed
+        message: |
+          The fluent-bit Deployment in {{ $labels.namespace }} has not processed
+          any Kubernetes Events in the last fifteen minutes.
+      for: 15m
+      labels:
+        severity: critical
+
 dashboards:
   # This will be deployed by the DaemonSet HelmRelease
   enabled: false

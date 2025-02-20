@@ -9,9 +9,47 @@ rbac:
   eventsAccess: false
 
 serviceMonitor:
-  enabled: false
+  enabled: true
 prometheusRule:
-  enabled: false
+  enabled: true
+  additionalLabels:
+    alertmanager: metrics
+  rules:
+    - alert: NoKubernetesLogsProcessed
+      expr: |
+        rate(
+          fluentbit_output_proc_bytes_total{
+            name="kubernetes"
+          }[1m]
+        ) == 0
+      annotations:
+        summary: No Container Logs Processed
+        message: |
+          The fluent-bit DaemonSet Pod {{ $labels.namespace}}/{{ $labels.pod }}
+          has not processed any container logs for the last five minutes.
+      for: 5m
+      labels:
+        severity: critical
+
+    - alert: NoAuditLogsProcessed
+      expr: |
+        sum by (name) (
+          rate(
+            fluentbit_output_proc_bytes_total{
+              name="audit"
+            }[1m]
+          )
+        ) == 0
+      annotations:
+        summary: No Audit Logs Processed
+        message: |
+          No fluent-bit Pod in {{ $labels.namespace}} has processed any data
+          for the audit output for at least fifteen minutes
+          fifteen minutes.
+      for: 15m
+      labels:
+        severity: critical
+
 dashboards:
   enabled: true
   labelKey: fluent-bit-dashboard
