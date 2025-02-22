@@ -14,5 +14,7 @@ spec:
       protocol: TCP
       targetPort: web
   selector:
+    app.kubernetes.io/name: alertmanager
     alertmanager: metrics
   sessionAffinity: ClientIP
+  internalTrafficPolicy: Cluster
