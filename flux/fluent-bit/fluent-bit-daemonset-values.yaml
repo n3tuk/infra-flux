@@ -1,0 +1,306 @@
+---
+kind: DaemonSet
+
+serviceAccount:
+  create: true
+  name: fluent-bit
+rbac:
+  create: true
+  nodeAccess: true
+  eventsAccess: true
+
+serviceMonitor:
+  enabled: true
+prometheusRule:
+  enabled: true
+  additionalLabels:
+    alertmanager: metrics
+  rules:
+    - alert: NoKubernetesContainerLogsProcessed
+      expr: |
+        rate(
+          fluentbit_output_proc_bytes_total{
+            name="es-logs-kubernetes"
+          }[1m]
+        ) == 0
+      annotations:
+        summary: No Kubernetes Container Logs Processed
+        message: |
+          The fluent-bit DaemonSet Pod {{ $labels.namespace}}/{{ $labels.pod }}
+          has not processed any container logs from Kubernetes for at least the
+          last five minutes.
+      for: 5m
+      labels:
+        severity: critical
+
+    - alert: NoKubernetesMetadataProcessed
+      expr: |
+        rate(
+          fluentbit_filter_bytes_total{
+            name="kubernetes-metadata-add"
+          }[1m]
+        ) == 0
+      annotations:
+        summary: No Kubernetes Metadata Processed
+        message: |
+          The fluent-bit DaemonSet Pod {{ $labels.namespace}}/{{ $labels.pod }}
+          has not processed the addition of any Kubernetes Metadata for the
+          Kubernetes container logs FILTER for at least the last five minutes.
+      for: 5m
+      labels:
+        severity: critical
+
+    - alert: NoKubernetesAuditLogsProcessed
+      expr: |
+        sum by (name) (
+          rate(
+            fluentbit_output_proc_bytes_total{
+              name="es-logs-audit"
+            }[1m]
+          )
+        ) == 0
+      annotations:
+        summary: No Kubernetes Audit Logs Processed
+        message: |
+          No fluent-bit DaemonSet Pod in {{ $labels.namespace}} has processed
+          any data for the Kubernetes controller audit logs OUTPUT for at least
+          the last fifteen minutes.
+      for: 15m
+      labels:
+        severity: critical
+
+    - alert: OutputRetriesFailed
+      expr: |
+        rate(
+          fluentbit_output_retries_failed_total[1m]
+        ) >= 0.01
+      annotations:
+        summary: Retries Failed
+        message: |
+          The fluent-bit Pod {{ $labels.namespace}}/{{ $labels.pod }} in the
+          {{ $labels.job }} Job has retried multiple times to push log entries
+          being processed by the {{ $labels.name }} OUTPUT over at least the
+          last five minutes.
+      for: 5m
+      labels:
+        severity: critical
+
+    - alert: OutputRecordsDropped
+      # This will cover 3 or more logs per five-minute window, and will alert
+      # for both DaemonSet and Deployment jobs
+      expr: |
+        rate(
+          fluentbit_output_dropped_records_total[1m]
+        ) >= 0.01
+      annotations:
+        summary: Records Dropped
+        message: |
+          The fluent-bit Pod {{ $labels.namespace}}/{{ $labels.pod }} in the
+          {{ $labels.job }} Job has dropped mulitple log entries that are being
+          processed by the {{ $labels.name }} OUTPUT over at least the last five
+          minutes.
+      for: 5m
+      labels:
+        severity: critical
+
+dashboards:
+  enabled: true
+  labelKey: fluent-bit-dashboard
+
+resources:
+  limits:
+    memory: 128Mi
+  requests:
+    cpu: 20m
+    memory: 16Mi
+
+hotReload:
+  enabled: true
+
+tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+
+env:
+  - name: FLUENT_ELASTICSEARCH_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: fluent-bit-credentials
+        key: password
+
+config:
+  # yamllint disable rule:line-length
+
+  inputs: |
+    [INPUT]
+        name tail
+        alias kubernetes-logs
+        path /var/log/containers/*.log
+        parser containerd
+        # multiline.parser cri
+        # This configuration is inside a DaemonSet and so has no PVC to
+        # maintain state, but we have access to the /var/log of the underlying
+        # host where we're pulling log files from, so use that as a place to
+        # store the database to keep the tracking state for all monitored logs
+        db /var/log/.fluent-bit-tail-kubernetes.db
+        # Set that only fluent-bit will access this file to improve performace
+        db.locking on
+        # Built a named-capture regular expression to match against the
+        # filename of the container log which can be used to build the tag for
+        # this log entry, and hence allow for more fine-grained filtering
+        tag_regex (?<pod_name>[a-z0-9](?:[-a-z0-9]*[a-z0-9])?(?:\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)_(?<namespace_name>[^_]+)_(?<container_name>.+)-(?<container_id>[a-z0-9]{64})\.log$
+        tag kubernetes.<namespace_name>.<pod_name>.<container_name>.<container_id>
+        # Make the memory that can be used before flushing
+        # data doesn't exceed the limit on the Pod
+        mem_buf_limit 16MB
+        # Limit line length to 128k and don't stop log processing when that is exceeded, only skip the line.
+        buffer_max_size 128k
+        skip_long_lines on
+        # If we find new files not listed in the local database, ensure we read
+        # all the contents of the file from the head, not just tail it
+        read_from_head on
+
+    [INPUT]
+        name tail
+        alias audit-logs
+        path /var/log/audit/kube/*.log
+        parser audit
+        tag audit.*
+
+  filters: |
+    # All cluster field with the name of the cluster to all log entries to
+    # ensure that we can search by cluster
+    [FILTER]
+        name modify
+        alias add-cluster-tag
+        match *
+        add cluster ${cluster}
+        remove logtag
+
+    # Add metadata to all log entries processed via the Kubernetes logs (i.e
+    # those tail'd from /var/log/containers), and then optimise those entries
+    # through another filter to remove reduntant files and correctly group
+    # them in Elasticsearch)
+    [FILTER]
+        name kubernetes
+        alias kubernetes-metadata-add
+        match kubernetes.*
+        kube_tag_prefix kubernetes.
+        regex_parser kubernetes-tags
+        # If the log field contains JSON data, merge the data into the document
+        # before outputting
+        merge_log on
+        merge_log_key fields
+        merge_log_trim on
+        # Do not keep the original log field after processing
+        keep_log on
+        # Allow Pods to hint at the parser to use, but not to allow them to
+        # exclude themselves from being processed and saved to Elasticsearch
+        k8s-logging.parser on
+        k8s-logging.exclude off
+        # Do not show the Labels nor Annotations for each Pod
+        labels off
+        annotations off
+
+    [FILTER]
+        name nest
+        alias kubernetes-metadata-lift
+        match kubernetes.*
+        operation lift
+        nested_under kubernetes
+        add_prefix kubernetes_
+
+    [FILTER]
+        name modify
+        alias kubernetes-metadata-cleanup
+        match kubernetes.*
+        add source kubernetes
+        # Remove these fields as we don't need this level of granuality
+        remove kubernetes_pod_id
+        remove kubernetes_docker_id
+        remove kubernetes_container_hash
+        # Simplify the names of these fields to be more standard
+        rename kubernetes_container_image kubernetes_image
+        rename kubernetes_container_name kubernetes_container
+        rename kubernetes_namespace_name kubernetes_namespace
+        rename kubernetes_pod_ip kubernetes_ip
+        rename kubernetes_pod_name kubernetes_pod
+
+    [FILTER]
+        name nest
+        alias kubernetes-metadata-nest
+        match *
+        operation nest
+        wildcard kubernetes_*
+        nest_under kubernetes
+        remove_prefix kubernetes_
+
+  outputs: |
+    [OUTPUT]
+        name es
+        alias es-logs-dashboard
+        match kubernetes.app-dashboard.*
+        host logs-es-http.elastic-logs.svc
+        # The _type field is not supported by Elasticsearch 8.0.0 or greater
+        suppress_type_name on
+        http_user fluent-bit
+        http_passwd $${FLUENT_ELASTICSEARCH_PASSWORD}
+        logstash_format on
+        logstash_prefix logs-dashboard
+        # Enable nano-second precision as we're using Logstash formats
+        time_key_nanos on
+        buffer_size 2M
+        retry_limit 3
+
+    [OUTPUT]
+        name es
+        alias es-logs-kubernetes
+        match kubernetes.*
+        host logs-es-http.elastic-logs.svc
+        suppress_type_name on
+        http_user fluent-bit
+        http_passwd $${FLUENT_ELASTICSEARCH_PASSWORD}
+        logstash_format on
+        logstash_prefix logs-kubernetes
+        time_key_nanos on
+        buffer_size 2M
+        retry_limit 3
+
+    [OUTPUT]
+        name es
+        alias es-logs-audit
+        match audit.*
+        host logs-es-http.elastic-logs.svc
+        suppress_type_name on
+        http_user fluent-bit
+        http_passwd $${FLUENT_ELASTICSEARCH_PASSWORD}
+        logstash_format on
+        logstash_prefix logs-audit
+        time_key_nanos on
+        buffer_size 1M
+        retry_limit 3
+
+  customParsers: |
+    # The tail input for the container logs from Kubernetes implements a custom
+    # tagging structure to allow for more fine-grained filtering of streams
+    # (e.g. to target custom namespaces and/or containers in to dedicted
+    # indexes), so we need to be able to reconstruct this information within
+    # the kubernetes filter using this custom parser
+    [PARSER]
+        name kubernetes-tags
+        format regex
+        regex ^(?<namespace_name>[^_]+)\.(?<pod_name>[a-z0-9](?:[-a-z0-9]*[a-z0-9])?(?:\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)\.(?<container_name>.+)\.(?<container_id>[a-z0-9]{64})
+
+    [PARSER]
+        name audit
+        format json
+        time_key requestReceivedTimestamp
+        time_format %Y-%m-%dT%H:%M:%S.%L%z
+
+    [PARSER]
+        name containerd
+        format regex
+        regex ^(?<time>[^ ]+) (?<stream>stdout|stderr) (?<logtag>[^ ]*) (?<log>.*)$
+        time_key time
+        time_format %Y-%m-%dT%H:%M:%S.%L%z

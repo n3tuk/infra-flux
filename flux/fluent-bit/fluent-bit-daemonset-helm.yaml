@@ -2,17 +2,18 @@
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: cert-manager
+  name: fluent-bit-daemonset
+  namespace: elastic-logs
 spec:
   chart:
     spec:
       sourceRef:
         kind: HelmRepository
         namespace: flux-system
-        name: jetstack
-      chart: cert-manager
+        name: fluent
+      chart: fluent-bit
       interval: 5m
-      version: 1.16.4
+      version: 0.48.5
   interval: 3h
   install:
     crds: CreateReplace
@@ -32,4 +33,4 @@ spec:
 
   valuesFrom:
     - kind: ConfigMap
-      name: helm-cert-manager-values
+      name: helm-fluent-bit-daemonset-values

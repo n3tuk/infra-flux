@@ -1,0 +1,101 @@
+---
+kind: Deployment
+replicaCount: 1
+
+serviceAccount:
+  create: false
+  # This ServiceAccount will be created by the DaemonSet HelmRelease
+  name: fluent-bit
+rbac:
+  create: false
+
+serviceMonitor:
+  enabled: true
+prometheusRule:
+  enabled: true
+  additionalLabels:
+    alertmanager: metrics
+  rules:
+    - alert: NoKubernetesEventsProcessed
+      expr: |
+        rate(
+          fluentbit_output_proc_bytes_total{
+            name="es-logs-events"
+          }[1m]
+        ) == 0
+      annotations:
+        summary: No Kubernetes Events Processed
+        message: |
+          The fluent-bit Deployment Pod {{ $labels.namespace}}/{{ $labels.pod }}
+          has not processed any Kubernetes Events for at least the
+          last fifteen minutes.
+      for: 15m
+      labels:
+        severity: critical
+
+dashboards:
+  # This will be deployed by the DaemonSet HelmRelease
+  enabled: false
+
+resources:
+  limits:
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 16Mi
+
+hotReload:
+  enabled: true
+
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+
+# Ensure a new Pod is spun up by the Scheduler before allowing the existing Pod
+# to be removed should a Node need to drained, updated, or deleted
+podDisruptionBudget:
+  enabled: true
+  minAvilable: 1
+
+env:
+  - name: FLUENT_ELASTICSEARCH_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: fluent-bit-credentials
+        key: password
+
+config:
+  # yamllint disable rule:line-length
+  inputs: |
+    [INPUT]
+        name kubernetes_events
+        alias kubernetes-events
+        tag kubernetes-events
+
+  filters: |
+    # All cluster field with the name of the cluster to all log entries to
+    # ensure that we can search by cluster
+    [FILTER]
+        name modify
+        alias add-cluster-tag
+        match *
+        add cluster ${cluster}
+        remove logtag
+
+  outputs: |
+    [OUTPUT]
+        name es
+        alias es-logs-events
+        match kubernetes-events
+        host logs-es-http.elastic-logs.svc
+        # The _type field is not supported by Elasticsearch 8.0.0 or greater
+        suppress_type_name on
+        http_user fluent-bit
+        http_passwd $${FLUENT_ELASTICSEARCH_PASSWORD}
+        logstash_format on
+        logstash_prefix logs-events
+        # Enable nano-second precision as we're using Logstash formats
+        time_key_nanos on
+        buffer_size 1M
+        retry_limit 3

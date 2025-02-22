@@ -14,12 +14,17 @@ commonLabels:
   flux.kub3.uk/component: fluentbit
 
 resources:
-  - fluent-bit-helm.yaml
+  - fluent-bit-secrets.yaml
+  - fluent-bit-daemonset-helm.yaml
+  - fluent-bit-deployment-helm.yaml
 
 configMapGenerator:
-  - name: helm-fluent-bit-values
+  - name: helm-fluent-bit-daemonset-values
     files:
-      - values.yaml=fluent-bit-values.yaml
+      - values.yaml=fluent-bit-daemonset-values.yaml
+  - name: helm-fluent-bit-deployment-values
+    files:
+      - values.yaml=fluent-bit-deployment-values.yaml
 
 configurations:
   - kustomize-config.yaml
