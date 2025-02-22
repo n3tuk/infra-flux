@@ -3,6 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: alertmanager
+  namespace: prometheus-metrics
   labels:
     alertmanager: metrics
 spec:
