@@ -7,7 +7,7 @@ metadata:
 namespace: prometheus-metrics
 
 labels:
-  - includeSelectors: true
+  - includeSelectors: false
     pairs:
       flux.kub3.uk/organisation: n3tuk
       flux.kub3.uk/repository: infra-flux

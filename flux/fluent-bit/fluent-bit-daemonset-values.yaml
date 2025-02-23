@@ -25,13 +25,15 @@ prometheusRule:
         ) == 0
       annotations:
         summary: No Kubernetes Container Logs Processed
-        message: |
+        description: |
           The fluent-bit DaemonSet Pod {{ $labels.namespace}}/{{ $labels.pod }}
           has not processed any container logs from Kubernetes for at least the
           last five minutes.
       for: 5m
       labels:
         severity: critical
+        slack_channel: '#alerts'
+        pagerduty_service: kub3-production
 
     - alert: NoKubernetesMetadataProcessed
       expr: |
@@ -42,13 +44,15 @@ prometheusRule:
         ) == 0
       annotations:
         summary: No Kubernetes Metadata Processed
-        message: |
+        description: |
           The fluent-bit DaemonSet Pod {{ $labels.namespace}}/{{ $labels.pod }}
           has not processed the addition of any Kubernetes Metadata for the
           Kubernetes container logs FILTER for at least the last five minutes.
       for: 5m
       labels:
         severity: critical
+        slack_channel: '#alerts'
+        pagerduty_service: kub3-production
 
     - alert: NoKubernetesAuditLogsProcessed
       expr: |
@@ -61,13 +65,15 @@ prometheusRule:
         ) == 0
       annotations:
         summary: No Kubernetes Audit Logs Processed
-        message: |
+        description: |
           No fluent-bit DaemonSet Pod in {{ $labels.namespace}} has processed
           any data for the Kubernetes controller audit logs OUTPUT for at least
           the last fifteen minutes.
       for: 15m
       labels:
         severity: critical
+        slack_channel: '#alerts'
+        pagerduty_service: kub3-production
 
     - alert: OutputRetriesFailed
       expr: |
@@ -76,7 +82,7 @@ prometheusRule:
         ) >= 0.01
       annotations:
         summary: Retries Failed
-        message: |
+        description: |
           The fluent-bit Pod {{ $labels.namespace}}/{{ $labels.pod }} in the
           {{ $labels.job }} Job has retried multiple times to push log entries
           being processed by the {{ $labels.name }} OUTPUT over at least the
@@ -84,6 +90,8 @@ prometheusRule:
       for: 5m
       labels:
         severity: critical
+        slack_channel: '#alerts'
+        pagerduty_service: kub3-production
 
     - alert: OutputRecordsDropped
       # This will cover 3 or more logs per five-minute window, and will alert
@@ -94,7 +102,7 @@ prometheusRule:
         ) >= 0.01
       annotations:
         summary: Records Dropped
-        message: |
+        description: |
           The fluent-bit Pod {{ $labels.namespace}}/{{ $labels.pod }} in the
           {{ $labels.job }} Job has dropped mulitple log entries that are being
           processed by the {{ $labels.name }} OUTPUT over at least the last five
@@ -102,6 +110,8 @@ prometheusRule:
       for: 5m
       labels:
         severity: critical
+        slack_channel: '#alerts'
+        pagerduty_service: kub3-production
 
 dashboards:
   enabled: true

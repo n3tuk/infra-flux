@@ -25,13 +25,15 @@ prometheusRule:
         ) == 0
       annotations:
         summary: No Kubernetes Events Processed
-        message: |
+        description: |
           The fluent-bit Deployment Pod {{ $labels.namespace}}/{{ $labels.pod }}
           has not processed any Kubernetes Events for at least the
           last fifteen minutes.
       for: 15m
       labels:
         severity: critical
+        slack_channel: '#alerts'
+        pagerduty_service: kub3-production
 
 dashboards:
   # This will be deployed by the DaemonSet HelmRelease
