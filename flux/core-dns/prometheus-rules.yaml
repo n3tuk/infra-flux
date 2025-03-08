@@ -1,0 +1,306 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: core-dns
+  namespace: kube-system
+  labels:
+    alertmanager: metrics
+    k8s-app: kube-dns
+    app.kubernetes.io/name: core-dns
+spec:
+  groups:
+    - name: core-dns
+      rules:
+        - alert: CoreDNSAbsent
+          expr: |-
+            absent(
+              up{
+                job="kube-dns"
+              } == 1
+            )
+          for: 3m
+          annotations:
+            title: CoreDNS has Disappeared from Prometheus
+            summary: >-
+              The `kube-dns` job (i.e. CoreDNS) in the `{{$externalLabels.cluster}}` Cluster has
+              *dissappeared* from Prometheus' service discovery and may not be running, or the
+              `Service` may not be being scraped, and hence cannot be checked and monitored.
+            description: >-
+              `kube-system`/`kube-dns` has *disappeared*
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: never
+            # severity can be info, errors, warning, critical
+            severity: critical
+            # slack is the name of the channel to send messages to
+            slack: kub3-${cluster}-alerts-infra
+            # pagerduty can either be send or ignore for Alerts
+            pagerduty: send
+            # incidentio can either create incidents, send Alerts, or ignore
+            incidentio: create
+            # team sets the Team and Escalation Path to use for the incident
+            team: platform
+
+        - alert: CoreDNSRequestLatencyWarning
+          expr: |-
+            histogram_quantile(0.99,
+              sum by(pod, server, zone, le) (
+                rate(
+                  coredns_dns_request_duration_seconds_bucket{
+                    job="kube-dns"
+                  }[5m]
+                )
+              ) * on(pod) group_left(node, namespace)
+              kube_pod_info
+            ) > 0.2
+          for: 5m
+          annotations:
+            title: CoreDNS Request Latency
+            summary: >-
+              One of more of the CoreDNS `Pods` in the `{{$externalLabels.cluster}}` Cluster are
+              reporting a *99th percentile latency of 200ms or more* for one or more endpoints and
+              zones for at least the last five minutes, which is above the *warning* threshold.
+            description: >-
+              `{{$labels.pod}}` on `{{$labels.node}}` `Node` (*{{$value|humanizeDuration}}* to
+              `{{$labels.server}}` for `{{$labels.zone}}` Zone)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: CoreDNSRequestLatencyCritical
+          expr: |-
+            histogram_quantile(0.99,
+              sum by(pod, server, zone, le) (
+                rate(
+                  coredns_dns_request_duration_seconds_bucket{
+                    job="kube-dns"
+                  }[5m]
+                )
+              ) * on(pod) group_left(node, namespace)
+              kube_pod_info
+            ) > 0.5
+          for: 3m
+          annotations:
+            title: CoreDNS Request Latency
+            summary: >-
+              One of more of the CoreDNS `Pods` in the `{{$externalLabels.cluster}}` Cluster are
+              reporting a *99th percentile latency of 500ms or more* for one or more endpoints and
+              zones for at least the last three minutes, which is above the *critical* threshold.
+            description: >-
+              `{{$labels.pod}}` on `{{$labels.node}}` `Node` (*{{$value|humanizeDuration}}* to
+              `{{$labels.server}}` for `{{$labels.zone}}` Zone)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: never
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: CoreDNSErrorsWarning
+          expr: |-
+            sum by (pod, server, zone) (
+              rate(
+                coredns_dns_responses_total{
+                  job="kube-dns",
+                  rcode="SERVFAIL"
+                }[5m]
+              )
+            ) /
+            sum by (pod, server, zone) (
+              rate(
+                coredns_dns_responses_total{
+                  job="kube-dns"
+                }[5m]
+              )
+            ) * on(pod) group_left(node)
+            kube_pod_info
+            > 0.025
+          for: 5m
+          annotations:
+            title: CoreDNS Internal Error Rate
+            summary: >-
+              One or more of the CoreDNS `Pods` in the `{{$externalLabels.cluster}}` Cluster *are
+              returning `SERVFAIL` responses for at least 2.5% of requests*, which is above the
+              *warning* threshold.
+            description: >-
+              `{{$labels.pod}}` on `{{$labels.node}}` `Node` (*{{$value|humanizePercentage}}* to
+              `{{$labels.server}}` for `{{$labels.zone}}` Zone)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: CoreDNSErrorsCritical
+          expr: |-
+            sum by (pod, server, zone) (
+              rate(
+                coredns_dns_responses_total{
+                  job="kube-dns",
+                  rcode="SERVFAIL"
+                }[5m]
+              )
+            ) /
+            sum by (pod, server, zone) (
+              rate(
+                coredns_dns_responses_total{
+                  job="kube-dns"
+                }[5m]
+              )
+            ) * on(pod) group_left(node)
+            kube_pod_info
+            > 0.1
+          for: 5m
+          annotations:
+            title: CoreDNS Internal Error Rate
+            summary: >-
+              One or more of the CoreDNS `Pods` in the `{{$externalLabels.cluster}}` Cluster *are
+              returning `SERVFAIL` responses for at least 10% of requests*, which is above the
+              *critical* threshold.
+            description: >-
+              `{{$labels.pod}}` on `{{$labels.node}}` `Node` (*{{$value|humanizePercentage}}* to
+              `{{$labels.server}}` for `{{$labels.zone}}` Zone)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+    - name: core-dns-proxy
+      rules:
+        - alert: CoreDNSProxyLatencyWarning
+          expr: |-
+            histogram_quantile(0.99,
+              sum by(pod, proxy_name, to, le) (
+                rate(
+                  coredns_proxy_request_duration_seconds_bucket{
+                    job="kube-dns"
+                  }[5m]
+                )
+              )
+            ) * on(pod) group_left(node)
+            kube_pod_info
+            > 0.35
+          for: 10m
+          annotations:
+            title: CoreDNS Proxy Latency
+            summary: >-
+              One or more of the CoreDNS `Pods` in the `{{$externalLabels.cluster}}` Cluster are
+              reporting a *99th percentile latency of greeter than 350ms to a proxy* for at least
+              the last five minutes, which is above the *warning* threshold.
+            description: >-
+              `{{$labels.proxy_name}}` proxy to `{{$labels.to}}` via the `{{$labels.pod}}` on
+              `{{$labels.node}}` `Node` (*{{$value|humanizeDuration}}*)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: CoreDNSProxyLatencyCritical
+          expr: |-
+            histogram_quantile(0.99,
+              sum by(pod, proxy_name, to, le) (
+                rate(
+                  coredns_proxy_request_duration_seconds_bucket{
+                    job="kube-dns"
+                  }[5m]
+                )
+              )
+            ) * on(pod) group_left(node)
+            kube_pod_info
+            > 0.75
+          for: 3m
+          annotations:
+            title: CoreDNS Proxy Latency
+            summary: >-
+              One or more of the CoreDNS `Pods` in the `{{$externalLabels.cluster}}` Cluster are
+              reporting a *99th percentile latency of greeter than 750ms to a proxy* for at least
+              the last three minutes, which is above the *critical* threshold.
+            description: >-
+              `{{$labels.proxy_name}}` proxy to `{{$labels.to}}` via the `{{$labels.pod}}` on
+              `{{$labels.node}}` `Node` (*{{$value|humanizeDuration}}*)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: never
+            severity: info
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: ignore
+            incidentio: ignore
+            team: platform
+
+        - alert: CoreDNSProxyHealthcheckFailure
+          expr: |-
+            sum by (pod, proxy_name, to) (
+              rate(
+                coredns_proxy_healthcheck_failures_total{
+                  job="kube-dns"
+                }[2m]
+              )
+            ) * on(pod)
+                group_left(node)
+                kube_pod_info
+            > 1
+          for: 3m
+          annotations:
+            title: CoreDNS Proxy Health Checks Failures
+            summary: >-
+              One or more of the CoreDNS `Pods` in the `{{$externalLabels.cluster}}` Cluster are
+              reporting *the multiple failures of one or more proxy health checks* to endpoints
+              during at least the last three minutes, which meets the *warning* threshold.
+            description: >-
+              `{{$labels.proxy_name}}` proxy to `{{$labels.to}}` via the `{{$labels.pod}}` on
+              `{{$labels.node}}` `Node` (*{{$value|humanize}}* failures)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: CoreDNSProxyFailure
+          expr: |-
+            rate(
+              coredns_forward_healthcheck_broken_total{
+                job="kube-dns"
+              }[5m]
+            ) * on(pod)
+                group_left(node, created_by_kind, created_by_name)
+                kube_pod_info
+            > 0
+          for: 2m
+          annotations:
+            title: CoreDNS Proxy Health Checks Failures
+            summary: >-
+              One or more of the CoreDNS `Pods` in the `{{$externalLabels.cluster}}` Cluster are
+              reporting *the failure of all health checks* for *all upstream endpoints* during at
+              least the last two minutes, which meets the *critical* threshold.
+            description: >-
+              `{{$labels.pod}}` on `{{$labels.node}}` `Node`
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: never
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform

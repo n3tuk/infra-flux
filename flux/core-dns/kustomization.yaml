@@ -18,3 +18,4 @@ labels:
 
 resources:
   - service-monitor.yaml
+  - prometheus-rules.yaml
