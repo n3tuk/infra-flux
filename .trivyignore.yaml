@@ -58,8 +58,10 @@ misconfigurations:
       the CoreDNS service through Prometheus, and the CoreDNS service operates
       within kube-system. As such, this namespace cannot be changed.
     paths:
-      # ServiceMonitor 'coredns' should not be set with 'kube-system' namespace
+      # ServiceMonitor 'core-dns' should not be set with 'kube-system' namespace
       - core-dns/service-monitor.yaml
+      # PrometheusRule 'core-dns' should not be set with 'kube-system' namespace
+      - core-dns/prometheus-rules.yaml
 
   - id: KSV041 # CRITICAL
     # Viewing secrets at the cluster-scope is akin to cluster-admin in most
