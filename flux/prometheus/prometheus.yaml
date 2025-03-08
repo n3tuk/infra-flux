@@ -51,10 +51,10 @@ spec:
 
   resources:
     limits: # Don't limit the CPU
-      memory: 1024Mi
+      memory: 1100Mi
     requests:
-      cpu: 500m
-      memory: 256Mi
+      cpu: 50m
+      memory: 850Mi
 
   logFormat: json
 
