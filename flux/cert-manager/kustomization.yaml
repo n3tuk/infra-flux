@@ -18,5 +18,6 @@ labels:
 
 resources:
   - namespace.yaml
+  - prometheus-rules.yaml
   - cert-manager
   - approver-policy
