@@ -53,8 +53,8 @@ spec:
     limits: # Don't limit the CPU
       memory: 1024Mi
     requests:
-      cpu: 500m
-      memory: 256Mi
+      cpu: 50m
+      memory: 1024Mi
 
   logFormat: json
 
