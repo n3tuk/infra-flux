@@ -1,0 +1,31 @@
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: incidentio
+  labels:
+    alertmanager: metrics
+spec:
+  route:
+    receiver: alerts
+    matchers:
+      - name: incidentio
+        matchType: =~
+        value: ^[a-z0-9._-]+$
+      - name: incidentio
+        matchType: '!='
+        value: ignore
+    repeatInterval: 1m
+    continue: true
+
+  receivers:
+    - name: alerts
+      webhookConfigs:
+        - url: >-
+            https://api.incident.io/v2/alert_events/alertmanager/01JP5TDYDQTRJAKSTKSWC0X116
+          sendResolved: true
+          httpConfig:
+            authorization:
+              credentials:
+                name: incidentio-credentials
+                key: credentials

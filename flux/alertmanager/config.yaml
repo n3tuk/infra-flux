@@ -10,8 +10,8 @@ type: Opaque
 stringData:
   alertmanager.yaml: |
     ---
-    # Set a default, empty configuration which can be expended by the
-    # AlertmanagerConfig resources deployed on the Kubernetes Cluster
+    # Set a default, empty configuration with a "null" receiver which can be
+    # expanded upon by the AlertmanagerConfig resources deployed
     global:
       resolve_timeout: 1m
       pagerduty_url: https://events.eu.pagerduty.com/v2/enqueue
@@ -24,124 +24,25 @@ stringData:
         - alertname
       group_interval: 3m
       group_wait: 15s
-      receiver: empty
+      receiver: "null"
     receivers:
-      - name: empty
----
-apiVersion: monitoring.coreos.com/v1alpha1
-kind: AlertmanagerConfig
-metadata:
-  name: slack
-  labels:
-    alertmanager: metrics
-spec:
-  route:
-    receiver: slack
-    matchers:
-      - name: slack_channel
-        matchType: =~
-        value: ^#[a-z0-9._-]+$
-    repeatInterval: 24h
-    continue: true
-
-  receivers:
-    - name: slack
-      slackConfigs:
-        - apiURL:
-            name: slack-webhooks
-            key: alerts
-          httpConfig: {}
-          channel: '#alerts'
-          sendResolved: true
-          shortFields: false
-          iconEmoji: ':alertmanager:'
-          iconURL: https://alerts.p.kub3.uk/
-          color: >-
-            {{ template "slack_color" . }}
-          username: >-
-            {{ template "slack_username" . }}
-          title: >-
-            {{ template "slack_summary" . }}
-          titleLink: >-
-            {{ template "slack_link" . }}
-          text: |
-            {{ template "slack_description" . }}
-          footer: |
-            {{ template "slack_footer" . }}
-          fallback: >-
-            {{ template "slack_fallback" . }}
-          fields: []
-          actions:
-            - text: Runbook
-              type: button
-              url: >-
-                {{ (index .Alerts 0).Annotations.runbook_url }}
-            - text: Query
-              type: button
-              url: >-
-                {{ (index .Alerts 0).GeneratorURL }}
-            - text: Dashboard
-              type: button
-              url: >-
-                {{ (index .Alerts 0).Annotations.dashboard }}
-            - text: Silence
-              type: button
-              url: >-
-                {{ template "__alert_silence_link" . }}
-          linkNames: false
-          mrkdwnIn:
-            - title
-            - text
-            - footer
-            - fallback
----
-apiVersion: monitoring.coreos.com/v1alpha1
-kind: AlertmanagerConfig
-metadata:
-  name: pagerduty
-  labels:
-    alertmanager: metrics
-spec:
-  route:
-    receiver: pagerduty
-    matchers:
-      - name: pagerduty_service
-        matchType: =~
-        value: ^[a-z0-9._-]+$
-    repeatInterval: 1h
-    continue: true
-
-  receivers:
-    - name: pagerduty
-      pagerdutyConfigs:
-        - serviceKey:
-            name: pagerduty-keys
-            key: service-key
-          sendResolved: true
-          client: >-
-            {{ template "pagerduty_client" . }}
-          clientURL: >-
-            {{ template "pagerduty_client_url" . }}
-          description: >-
-            {{ template "pagerduty_description" . }}
-          severity: error
-          source: client
-          details: []
-          pagerDutyLinkConfigs:
-            - alt: Runbooks
-              href: >-
-                {{ .CommonAnnotations.runbook }}
-            - alt: Dashboard
-              href: >-
-                {{ .CommonAnnotations.dashboard }}
-            - alt: Prometheus
-              href: >-
-                {{ (index .Alerts 0).GeneratorURL }}
-            - alt: Alertmanager
-              href: https://alerts.p.kub3.uk/
-            - alt: Silence
-              href: >-
-                {{ template "__alert_silence_link" . }}
-          component: cluster-production
-          # group: <tmpl_string>
-          # class: <tmpl_string>
+      - name: "null"
+    inhibit_rules:
+      - target_matchers:
+          - ignore="always"
+      - source_matchers:
+          - alertname="OutsideWorkingHours"
+        target_matchers:
+          - ignore="outside-working-hours"
+      - source_matchers:
+          - alertname="OutsideExtendedHours"
+        target_matchers:
+          - ignore="outside-extended-hours"
+      - source_matchers:
+          - alertname="OutsideNonWorkingHours"
+        target_matchers:
+          - ignore="outside-non-working-hours"
+      - source_matchers:
+          - alertname="OutsideWeekendHours"
+        target_matchers:
+          - ignore="outside-weekend-hours"
