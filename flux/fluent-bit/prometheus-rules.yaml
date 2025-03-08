@@ -1,0 +1,237 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: fluent-bit
+  namespace: prometheus-metrics
+  labels:
+    alertmanager: metrics
+spec:
+  groups:
+    - name: fluent-bit-common
+      rules:
+        - alert: FluentBitOutputRetriesFailed
+          expr: |-
+            rate(
+              fluentbit_output_retries_failed_total[1m]
+            ) * on(pod) group_left(node)
+            kube_pod_info
+            > 0.1
+          for: 5m
+          annotations:
+            title: Excessive Retries Detected for Logs in Fluent Bit
+            summary: >-
+              One or more of the `fluent-bit` `Pods` in the `{{$externalLabels.cluster}}` Cluster
+              have reported *excessive retires when pushing log entries* being processed by the
+              `OUTPUT` configurations during at least the last five minutes.
+            description: >-
+              `{{$labels.pod}}` on `{{$labels.node}}` `Node` (`{{$labels.name}}` `OUTPUT`)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            # severity can be info, errors, warning, critical
+            severity: info
+            # slack is the name of the channel to send messages to
+            slack: alerts
+            # pagerduty can either be send or ignore for Alerts
+            pagerduty: ignore
+            # incidentio can either create incidents, send Alerts, or ignore
+            incidentio: ignore
+            # team sets the Team and Escalation Path to use for the incident
+            team: platform
+
+        - alert: FluentBitOutputRecordsDropped
+          expr: |-
+            rate(
+              fluentbit_output_dropped_records_total[1m]
+            ) * on(pod) group_left(node)
+            kube_pod_info
+            > 0
+          for: 5m
+          annotations:
+            title: Excessive Drops Detected for Logs in Fluent Bit
+            summary: >-
+              One or more of the `fluent-bit` `Pods` in the `{{$externalLabels.cluster}}` Cluster
+              have *dropped log entries* being processed by the `OUTPUT` configurations during at
+              least the last five minutes.
+            description: >-
+              `{{$labels.pod}}` on `{{$labels.node}}` `Node` (`{{$labels.name}}` `OUTPUT`)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: alerts
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+    - name: fluent-bit-daemonset
+      rules:
+        - alert: FluentBitDaemonSetAbsent
+          expr: |-
+            absent(
+              up{
+                job="fluent-bit-daemonset"
+              } == 1
+            )
+          for: 3m
+          annotations:
+            title: Fluent Bit `DaemonSet` has Disappeared from Prometheus
+            summary: >-
+              The FluentBit `DaemonSet` job in the `{{$externalLabels.cluster}}` Cluster has
+              *dissappeared* from Prometheus' service discovery and may not be running, or the
+              `Service` may not be being scraped, and hence cannot be checked and monitored.
+            description: >-
+              `elastic-logs`/`fluent-bit-daemonset` has *disappeared*
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: never
+            severity: critical
+            slack: alerts
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: FluentBitKubernetesContainerLogsNotProcessed
+          expr: |-
+            rate(
+              fluentbit_input_records_total{
+                name="kubernetes-logs"
+              }[1m]
+            ) * on(pod) group_left(node)
+            kube_pod_info
+            == 0
+          for: 5m
+          annotations:
+            title: No Kubernetes Container Logs Processed by Fluent Bit
+            summary: >-
+              One or more of the `fluent-bit` `Pods` in the `{{$externalLabels.cluster}}` Cluster
+              have *not processed any* `containerd` *logs* by the `{{$labels.name}}` `INPUT`
+              configuration during at least the last five minutes.
+            description: >-
+              `{{$labels.pod}}` on `{{$labels.node}}` `Node`
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: alerts
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: FluentBitKubernetesMetadatNotProcessed
+          expr: |-
+            (
+              rate(
+                fluentbit_filter_records_total{
+                  name="kubernetes-metadata-add"
+                }[1m]
+              ) == 0
+              and ignoring (name)
+              rate(
+                fluentbit_input_records_total{
+                  name="kubernetes-logs"
+                }[1m]
+              ) > 0
+            ) * on(pod) group_left(node)
+            kube_pod_info
+            == 0
+          for: 5m
+          annotations:
+            title: No Kubernetes Metadata Processed for Logs by Fluent Bit
+            summary: >-
+              One or more of the `fluent-bit` `Pods` in the `{{$externalLabels.cluster}}` Cluster
+              have *not processed any Kubernetes metadata for the container logs* by the
+              `{{$labels.name}}` `INPUT` configuration during at least the last five minutes.
+            description: >-
+              `{{$labels.pod}}` on `{{$labels.node}}` `Node`
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: alerts
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: FluentBitKubernetesAuditLogsNotProcessed
+          expr: |-
+            sum by (name) (
+              rate(
+                fluentbit_input_records_total{
+                  name="kubernetes-audit"
+                }[1m]
+              ) * on(pod) group_left(node)
+              kube_pod_info
+            ) == 0
+          for: 5m
+          annotations:
+            title: No Kubernetes Audit Logs Processed by Fluent Bit
+            summary: >-
+              One or more of the `fluent-bit` `Pods` in the `{{$externalLabels.cluster}}` Cluster
+              have *not processed any Kubernetes Audit logs* by the `{{$labels.name}}` `INPUT`
+              configuration during at least the last five minutes.
+            description: >-
+              `{{$labels.pod}}` on `{{$labels.node}}` `Node`
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: alerts
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+    - name: fluent-bit-deployment
+      rules:
+        - alert: FluentBitDeploymentAbsent
+          expr: |-
+            absent(
+              up{
+                job="fluent-bit-deployment"
+              } == 1
+            )
+          for: 3m
+          annotations:
+            title: Fluent Bit `Deployment` has Disappeared from Prometheus
+            summary: >-
+              The FluentBit `Deployment` job in the `{{$externalLabels.cluster}}` Cluster has
+              *dissappeared* from Prometheus' service discovery and may not be running, or the
+              `Service` may not be being scraped, and hence cannot be checked and monitored.
+            description: >-
+              `elastic-logs`/`fluent-bit-deployment` has *disappeared*
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: never
+            severity: critical
+            slack: alerts
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: FluentBitKubernetesEventsNotProcessed
+          expr: |-
+            rate(
+              fluentbit_input_records_total{
+                name="kubernetes-events"
+              }[1m]
+            ) * on(pod) group_left(node)
+            kube_pod_info
+            == 0
+          for: 15m
+          annotations:
+            title: No Kubernetes Events Processed by Fluent Bit
+            summary: >-
+              One or more of the `fluent-bit` `Pods` in the `{{$externalLabels.cluster}}` Cluster
+              have *not processed any Kubernetes Events* by the `{{$labels.name}}` `INPUT`
+              configuration during at least the last fifteen minutes.
+            description: >-
+              `{{$labels.pod}}` on `{{$labels.node}}` `Node`
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: alerts
+            pagerduty: send
+            incidentio: create
+            team: platform

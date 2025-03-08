@@ -11,32 +11,8 @@ rbac:
 
 serviceMonitor:
   enabled: true
-prometheusRule:
-  enabled: true
-  additionalLabels:
-    alertmanager: metrics
-  rules:
-    - alert: NoKubernetesEventsProcessed
-      expr: |
-        rate(
-          fluentbit_output_proc_bytes_total{
-            name="es-logs-events"
-          }[1m]
-        ) == 0
-      annotations:
-        summary: No Kubernetes Events Processed
-        description: |
-          The fluent-bit Deployment Pod {{ $labels.namespace}}/{{ $labels.pod }}
-          has not processed any Kubernetes Events for at least the
-          last fifteen minutes.
-      for: 15m
-      labels:
-        severity: critical
-        slack_channel: '#alerts'
-        pagerduty_service: kub3-production
 
 dashboards:
-  # This will be deployed by the DaemonSet HelmRelease
   enabled: false
 
 resources:
@@ -54,8 +30,8 @@ updateStrategy:
   rollingUpdate:
     maxSurge: 1
 
-# Ensure a new Pod is spun up by the Scheduler before allowing the existing Pod
-# to be removed should a Node need to drained, updated, or deleted
+# Ensure a new Pod is spun up by the Scheduler before allowing the existing Pod to be removed should
+# a Node need to drained, updated, or deleted
 podDisruptionBudget:
   enabled: true
   minAvilable: 1
