@@ -10,8 +10,8 @@ type: Opaque
 stringData:
   alertmanager.yaml: |
     ---
-    # Set a default, empty configuration which can be expended by the
-    # AlertmanagerConfig resources deployed on the Kubernetes Cluster
+    # Set a default, empty configuration with a "null" receiver which can be
+    # expanded upon by the AlertmanagerConfig resources deployed
     global:
       resolve_timeout: 1m
       pagerduty_url: https://events.eu.pagerduty.com/v2/enqueue
@@ -24,9 +24,28 @@ stringData:
         - alertname
       group_interval: 3m
       group_wait: 15s
-      receiver: empty
+      receiver: "null"
     receivers:
-      - name: empty
+      - name: "null"
+    inhibit_rules:
+      - target_matchers:
+          - ignore="always"
+      - source_matchers:
+          - alertname="OutsideWorkingHours"
+        target_matchers:
+          - ignore="outside-working-hours"
+      - source_matchers:
+          - alertname="OutsideExtendedHours"
+        target_matchers:
+          - ignore="outside-extended-hours"
+      - source_matchers:
+          - alertname="OutsideNonWorkingHours"
+        target_matchers:
+          - ignore="outside-non-working-hours"
+      - source_matchers:
+          - alertname="OutsideWeekendHours"
+        target_matchers:
+          - ignore="outside-weekend-hours"
 ---
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
@@ -38,10 +57,13 @@ spec:
   route:
     receiver: slack
     matchers:
-      - name: slack_channel
+      - name: slack
         matchType: =~
-        value: ^#[a-z0-9._-]+$
-    repeatInterval: 24h
+        value: ^[a-z0-9._-]+$
+      - name: slack
+        matchType: '!='
+        value: ignore
+    repeatInterval: 3h
     continue: true
 
   receivers:
@@ -51,31 +73,54 @@ spec:
             name: slack-webhooks
             key: alerts
           httpConfig: {}
-          channel: '#alerts'
+          channel: >-
+            {{ template "slack.n3tuk.channel" . }}
           sendResolved: true
           shortFields: false
           iconEmoji: ':alertmanager:'
-          iconURL: https://alerts.p.kub3.uk/
+          iconURL: https://alerts.${cluster_domain}/
           color: >-
-            {{ template "slack_color" . }}
+            {{ template "slack.n3tuk.color" . }}
           username: >-
-            {{ template "slack_username" . }}
+            {{ template "slack.n3tuk.username" . }}
           title: >-
-            {{ template "slack_summary" . }}
+            {{ template "slack.n3tuk.title" . }}
           titleLink: >-
-            {{ template "slack_link" . }}
+            {{ template "slack.n3tuk.link" . }}
+          pretext: |
+            {{ template "slack.n3tuk.pretext" .Alerts }}
           text: |
-            {{ template "slack_description" . }}
+            {{ template "slack.n3tuk.text" . }}
           footer: |
-            {{ template "slack_footer" . }}
+            {{ template "slack.n3tuk.footer" . }}
           fallback: >-
-            {{ template "slack_fallback" . }}
-          fields: []
+            {{ template "slack.n3tuk.fallback" . }}
+          fields:
+            - title: Alert Name
+              value: >-
+                {{ .GroupLabels.alertname }}
+              short: false
+            - title: Cluster
+              value: >-
+                {{ template "slack.n3tuk.cluster" . }}
+              short: true
+            - title: Namespace
+              value: >-
+                {{ template "slack.n3tuk.namespace" . }}
+              short: true
+            - title: Severity
+              value: >-
+                {{ template "slack.n3tuk.severity" . }}
+              short: true
+            - title: Since
+              value: >-
+                {{ (index .Alerts 0).StartsAt | since | humanizeDuration }}
+              short: true
           actions:
             - text: Runbook
               type: button
               url: >-
-                {{ (index .Alerts 0).Annotations.runbook_url }}
+                {{ (index .Alerts 0).Annotations.runbook }}
             - text: Query
               type: button
               url: >-
@@ -88,12 +133,11 @@ spec:
               type: button
               url: >-
                 {{ template "__alert_silence_link" . }}
-          linkNames: false
+          linkNames: true
           mrkdwnIn:
             - title
+            - pretext
             - text
-            - footer
-            - fallback
 ---
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
@@ -105,10 +149,13 @@ spec:
   route:
     receiver: pagerduty
     matchers:
-      - name: pagerduty_service
+      - name: pagerduty
         matchType: =~
-        value: ^[a-z0-9._-]+$
-    repeatInterval: 1h
+        value: ^P[0-9]$
+      - name: pagerduty
+        matchType: '!='
+        value: ignore
+    repeatInterval: 15m
     continue: true
 
   receivers:
@@ -119,29 +166,86 @@ spec:
             key: service-key
           sendResolved: true
           client: >-
-            {{ template "pagerduty_client" . }}
+            {{ template "pagerduty.n3tuk.client" . }}
           clientURL: >-
-            {{ template "pagerduty_client_url" . }}
+            {{ template "pagerduty.n3tuk.client_url" . }}
           description: >-
-            {{ template "pagerduty_description" . }}
-          severity: error
-          source: client
-          details: []
+            {{ template "pagerduty.n3tuk.title" . }}
+          severity: >-
+            {{ template "pagerduty.n3tuk.priority" . }}
+          source: >-
+            {{ template "pagerduty.n3tuk.username" . }}
+          details:
+            - key: alert name
+              value: >-
+                {{ template "pagerduty.n3tuk.alert_name" . }}
+            - key: summary
+              value: >-
+                {{ template "pagerduty.n3tuk.summary" . }}
+            - key: priority
+              value: >-
+                {{ template "pagerduty.n3tuk.priority" . }}
+            - key: cluster
+              value: >-
+                {{ template "pagerduty.n3tuk.cluster" . }}
+            - key: namespace
+              value: >-
+                {{ template "pagerduty.n3tuk.namespace" . }}
+            - key: severity
+              value: >-
+                {{ template "pagerduty.n3tuk.severity" . }}
+            - key: firing
+              value: >-
+                {{ template "pagerduty.n3tuk.firing" . }}
+            - key: resolved
+              value: >-
+                {{ template "pagerduty.n3tuk.resolved" . }}
           pagerDutyLinkConfigs:
             - alt: Runbooks
               href: >-
-                {{ .CommonAnnotations.runbook }}
+                {{ template "pagerduty.n3tuk.runbook" . }}
             - alt: Dashboard
               href: >-
-                {{ .CommonAnnotations.dashboard }}
+                {{ template "pagerduty.n3tuk.dashboard" . }}
             - alt: Prometheus
               href: >-
                 {{ (index .Alerts 0).GeneratorURL }}
             - alt: Alertmanager
-              href: https://alerts.p.kub3.uk/
+              href: >-
+                https://alerts.${cluster_domain}/
             - alt: Silence
               href: >-
                 {{ template "__alert_silence_link" . }}
-          component: cluster-production
-          # group: <tmpl_string>
-          # class: <tmpl_string>
+          component: kub3-${cluster}
+          group: ${cluster}
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: incident-io
+  labels:
+    alertmanager: metrics
+spec:
+  route:
+    receiver: incident.io
+    matchers:
+      - name: incident
+        matchType: =~
+        value: ^[a-z0-9._-]+$
+      - name: incident
+        matchType: '!='
+        value: ignore
+    repeatInterval: 1m
+    continue: true
+
+  receivers:
+    - name: incident.io
+      webhookConfigs:
+        - url: >-
+            https://api.incident.io/v2/alert_events/alertmanager/01JP5TDYDQTRJAKSTKSWC0X116
+          sendResolved: true
+          httpConfig:
+            authorization:
+              credentials:
+                name: incidentio-credentials
+                key: credentials

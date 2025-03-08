@@ -22,7 +22,6 @@ Source: {{ .GeneratorURL }}
   {{- end }}
 {{- end }}
 
-
 {{ define "custom_multiple_alerts_message" }}
   {{- if gt (len .Firing) 0 }}
   {{- "\n*Alerts Firing:*" }}
@@ -54,56 +53,46 @@ Source: {{ .GeneratorURL }}
 # to avoid the issue of having trailing comma separator (%2C) at the end
 # of the generated URL
 {{ define "__alert_silence_link" -}}
-    {{ .ExternalURL }}/#/silences/new?filter=%7B
-    {{- range .CommonLabels.SortedPairs -}}
-        {{- if ne .Name "alertname" -}}
-            {{- .Name }}%3D"{{- .Value -}}"%2C%20
-        {{- end -}}
+  {{ .ExternalURL }}/#/silences/new?filter=%7B
+  {{- range .CommonLabels.SortedPairs -}}
+    {{- if ne .Name "alertname" -}}
+      {{- .Name }}%3D"{{- .Value -}}"%2C%20
     {{- end -}}
-    alertname%3D"{{ .CommonLabels.alertname }}"%7D
+  {{- end -}}
+  alertname%3D"{{ .CommonLabels.alertname }}"%7D
 {{- end }}
 
 # This builds the run book URL.
 {{ define "__runbook_link" -}}
-  {{- "https://confluence.mot-solutions.com/display/AWARE" }}
-  {{- if .CommonAnnotations.ava_runbook }}
-    {{- "/" }}{{ .CommonAnnotations.ava_runbook | toLower }}
-  {{- else }}
-    {{- "/Runbooks#" }}{{ .CommonLabels.alertname | toLower }}
+  {{- if .CommonAnnotations.runbook }}
+    {{ .CommonAnnotations.runbook }}
   {{- end }}
-{{- end }}
-
-# This builds the Thanos URL.
-{{ define "__thanos_link" -}}
-  {{- reReplaceAll "https://.*/graph" "https://thanos.platform.vaion.com/graph" ( index
-.Alerts 0 ).GeneratorURL }}
-
 {{- end }}
 
 # Allow indication of severity
 {{ define "__alert_severity" -}}
-    {{ if ne .Status "firing" -}}
-    {{- else if eq .CommonLabels.severity "critical" -}}
-    *Severity:* Critical
-    {{- else if eq .CommonLabels.severity "warning" -}}
-    *Severity:* Warning
-    {{- else if eq .CommonLabels.severity "info" -}}
-    *Severity:* Info
-    {{- else -}}
-    *Severity:* :question: {{ .CommonLabels.severity }}
-    {{- end }}
+  {{ if ne .Status "firing" -}}
+  {{- else if eq .CommonLabels.severity "critical" -}}
+  *Severity*: Critical
+  {{- else if eq .CommonLabels.severity "warning" -}}
+  *Severity*: Warning
+  {{- else if eq .CommonLabels.severity "info" -}}
+  *Severity*: Info
+  {{- else -}}
+  *Severity*: :question: ({{ .CommonLabels.severity }})
+  {{- end }}
 {{- end }}
 
 {{ define "custom_color" -}}
-    {{ if eq .Status "firing" -}}
-        {{ if eq .CommonLabels.severity "warning" -}}
-            warning
-        {{- else if eq .CommonLabels.severity "critical" -}}
-            danger
-        {{- else -}}
-            #439FE0
-        {{- end -}}
-    {{ else -}}
+  {{ if eq .Status "firing" -}}
+    {{ if eq .CommonLabels.severity "warning" -}}
+      warning
+    {{- else if eq .CommonLabels.severity "critical" -}}
+      danger
+    {{- else -}}
+      #439FE0
+    {{- end -}}
+  {{ else -}}
     good
-    {{- end }}
+  {{- end }}
 {{- end }}
