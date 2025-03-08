@@ -1,0 +1,362 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: alertmanager
+  namespace: prometheus-metrics
+  labels:
+    alertmanager: metrics
+spec:
+  groups:
+    - name: alertmanager-config
+      rules:
+        - alert: AlertmanagerConfigReloadFailure
+          expr: |-
+            # Without max_over_time, failed scrapes could create false negatives, see
+            # https://www.robustperception.io/alerting-on-gauges-in-prometheus-2-0 for details.
+            max_over_time(
+              alertmanager_config_last_reload_successful{
+                job="alertmanager"
+              }[5m]
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+            == 0
+          for: 10m
+          annotations:
+            title: Alertmanager Configuration Reload Failed
+            summary: >-
+              One or more of the Alertmanager `Pods` in the `{{$externalLabels.cluster}}` Cluster
+              *have failed to reload its configuration file*, meaning there is either a bad
+              configuration file, or some Alertmanager instances are not operating correctly.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}` has failed to reload its configuration
+              file
+          labels:
+            ignore: outside-extended-hours
+            # severity can be info, errors, warning, critical
+            severity: errors
+            # slack is the name of the channel to send messages to
+            slack: kub3-${cluster}-alerts-infra
+            # pagerduty can either be send or ignore for Alerts
+            pagerduty: send
+            # incidentio can either create incidents, send Alerts, or ignore
+            incidentio: create
+            # team sets the Team and Escalation Path to use for the incident
+            team: platform
+
+        - alert: AlertmanagerConfigInconsistent
+          expr: |-
+            count by (job) (
+              count_values by (job) (
+                "config_hash",
+                alertmanager_config_hash{
+                  job="alertmanager"
+                }
+              )
+            ) != 1
+          for: 20m
+          annotations:
+            title: Alertmanager Configuration Inconsistent
+            summary: >-
+              Two or more of the Alertmanager `Pods` of the `{{$labels.job}}` Alertmanager cluster,
+              in the `{{$externalLabels.cluster}}` Kubernetes Cluster, have different configurations
+              within each Alertmanager cluster, and therefore may behave in different ways.
+            description: >-
+              `{{$labels.job}}` Alertmanager cluster has inconsistent configuration
+          labels:
+            ignore: outside-extended-hours
+            severity: errors
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: AlertmanagerMembersInconsistent
+          expr: |-
+            # Without max_over_time, failed scrapes could create false negatives, see
+            # https://www.robustperception.io/alerting-on-gauges-in-prometheus-2-0 for details.
+            (
+              max_over_time(
+                alertmanager_cluster_members{
+                  job="alertmanager"
+                }[5m]
+              ) * on (namespace, pod) group_left (node)
+              kube_pod_info
+            ) < on (job) group_left
+            count by (job) (
+              max_over_time(
+                alertmanager_cluster_members{
+                  job="alertmanager"
+                }[5m]
+              )
+            )
+          for: 15m
+          annotations:
+            title: Inconsistent Alertmanager Membership
+            summary: >-
+              One or more of the Alertmanager `Pods` of the `{{$labels.job}}` Alertmanager cluster,
+              in the `{{$externalLabels.cluster}}` Kubernetes cluster, have not found all of the
+              other members of the Alertmanager cluster.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}` (*{{$value}}* found)
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+    - name: alertmanager-failures
+      rules:
+        - alert: AlertmanagerClusterAlertsFailuresWarning
+          expr: |-
+            min by (job, integration, pod, reason) (
+              (
+                rate(
+                  alertmanager_notifications_failed_total{
+                    job="alertmanager",
+                    integration!~"pagerduty|slack|webhook"
+                  }[5m]
+                ) * on (namespace, pod) group_left (node)
+                kube_pod_info
+              ) / ignoring (pod, reason) group_left
+              rate(
+                alertmanager_notifications_total{
+                  job="alertmanager",
+                  integration!~"pagerduty|slack|webhook"
+                }[5m]
+              )
+            ) > 0.01
+          for: 5m
+          annotations:
+            title: Alertmanager Non-Critical Alert Failures
+            summary: >-
+              One of more of the Alertmanager `Pods` of the `{{$labels.job}}` Alertmanager cluster,
+              in the `{{$externalLabels.cluster}}` Kubernetes Cluster, have *failed to send
+              notifications to configured non-critical integrations* at a rate of above 1% of
+              requests, during at least the last five minutes, which is above the *warning*
+              threshold.
+            description: >-
+              `{{$labels.pod}}` on `Host` `{{$labels.host}}` (*{{$value|humanizePercentage}}*
+              `{{$labels.integration }}`: `{{$labels.reason}}`)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: AlertmanagerClusterAlertsFailuresSlack
+          expr: |-
+            min (
+              (
+                rate(
+                  alertmanager_notifications_failed_total{
+                    job="alertmanager",
+                    integration="slack"
+                  }[5m]
+                ) * on (namespace, pod) group_left (node)
+                kube_pod_info
+              ) / ignoring (reason)
+                  group_left
+                  rate(
+                    alertmanager_notifications_total{
+                      job="alertmanager",
+                      integration="slack"
+                    }[5m]
+                  )
+            ) > 0
+          for: 5m
+          annotations:
+            title: Alertmanager Slack Alert Failures
+            summary: >-
+              One of more of the Alertmanager `Pods` of the `{{$labels.job}}` Alertmanager cluster,
+              in the `{{$externalLabels.cluster}}` Kubernetes Cluster, have *failed to send at least
+              one notification to the* `{{$labels.integration}}` *integration* during the last five
+              minutes, which is above the *critical* threshold.
+            description: >-
+              `{{$labels.pod}}` on `Host` `{{$labels.host}}` (*{{$value|humanizePercentage}}*
+              `{{$labels.integration}}`: `{{$labels.reason}}`)
+          labels:
+            ignore: never
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: AlertmanagerClusterAlertsFailedPagerduty
+          expr: |-
+            min by (job, integration) (
+              (
+                rate(
+                  alertmanager_notifications_failed_total{
+                    job="alertmanager",
+                    integration=~"pagerduty"
+                  }[5m]
+                ) * on (namespace, pod) group_left (node)
+                kube_pod_info
+              ) / ignoring (reason)
+                  group_left
+                  rate(
+                    alertmanager_notifications_total{
+                      job="alertmanager",
+                      integration=~"pagerduty"
+                    }[5m]
+                  )
+            ) > 0
+          for: 5m
+          annotations:
+            title: Alertmanager PagerDuty Alert Failures
+            summary: >-
+              One of more of the Alertmanager `Pods` of the `{{$labels.job}}` Alertmanager cluster,
+              in the `{{$externalLabels.cluster}}` Kubernetes Cluster, have *failed to send at least
+              one notification to the* `{{$labels.integration}}` *integration* during the last five
+              minutes, which is above the *critical* threshold.
+            description: >-
+              `{{$labels.pod}}` on `Host` `{{$labels.host}}` (*{{$value|humanizePercentage}}*
+              `{{$labels.integration }}`: `{{$labels.reason}}`)
+          labels:
+            ignore: never
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: AlertmanagerClusterAlertsFailedWebhook
+          expr: |-
+            min by (job, integration) (
+              (
+                rate(
+                  alertmanager_notifications_failed_total{
+                    job="alertmanager",
+                    integration=~"webhook"
+                  }[5m]
+                ) * on (namespace, pod) group_left (node)
+                kube_pod_info
+              ) / ignoring (reason)
+                  group_left
+                  rate(
+                    alertmanager_notifications_total{
+                      job="alertmanager",
+                      integration=~"webhook"
+                    }[5m]
+                  )
+            ) > 0
+          for: 5m
+          annotations:
+            title: Alertmanager Webhook Alert Failures (for incident.io)
+            summary: >-
+              One of more of the Alertmanager `Pods` of the `{{$labels.job}}` Alertmanager cluster,
+              in the `{{$externalLabels.cluster}}` Kubernetes Cluster, have *failed to send at least
+              one notification to the* `{{$labels.integration}}` *integration* during the last five
+              minutes, which is above the *critical* threshold.
+            description: >-
+              `{{$labels.pod}}` on `Host` `{{$labels.host}}` (*{{$value|humanizePercentage}}*
+              `{{$labels.integration }}`: `{{$labels.reason}}`)
+          labels:
+            ignore: never
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+    - name: alertmanager-cluster
+      rules:
+        - alert: AlertmanagerClusterDown
+          expr: |-
+            absent(
+              up{
+                job="alertmanager"
+              } == 1
+            )
+          for: 5m
+          annotations:
+            title: Alertmanager Cluster is Down
+            summary: >-
+              The `{{$labels.job}}` `Job` (i.e. Alertmanager) in the `{{$externalLabels.cluster}}`
+              Cluster has *dissappeared* from Prometheus' service discovery and may not be running,
+              or the `Service` may not be being scraped, and hence cannot be checked and monitored.
+            description: >-
+              {{$labels.job}}` (`job` Not Found)
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: AlertmanagerClusterUnstable
+          expr: |-
+            (
+              count by (job) (
+                avg_over_time(
+                  up{
+                    job="alertmanager"
+                  }[5m]
+                ) < 0.5
+              ) /
+              count by (job) (
+                up{
+                  job="alertmanager"
+                }
+              )
+            ) >= 0.5
+          for: 5m
+          annotations:
+            title: Alertmanager Cluster is Unstable
+            summary: >-
+              At least half of the Alertmanager `Pods` of the `{{$labels.job}}` Alertmanager
+              cluster, in the `{{$externalLabels.cluster}}` Kubernetes Cluster, have been up for
+              less than half of the last five minutes, reducing the stability and availability of
+              the cluster and its Alerts.
+            description: >-
+              `{{$labels.job}}` (*{{$value|humanizePercentage}}* of instances)
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: AlertmanagerClusterCrashing
+          expr: |-
+            (
+              count by (job, namespace, pod) (
+                changes(
+                  process_start_time_seconds{
+                    job="alertmanager"
+                  }[10m]
+                ) > 4
+              ) /
+              count by (job, namespace, pod) (
+                up{
+                  job="alertmanager"
+                }
+              )
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+            >= 0.5
+          for: 5m
+          annotations:
+            title: Alertmanager Instances Crashing
+            summary: >-
+              Half or more of the Alertmanager `Pods` of the `{{$labels.job}}` Alertmanager cluster,
+              if the `{{$externalLabels.cluster}}` Kubernetes Cluster, have *crashed and restarted
+              at least five times* in the last ten minutes, reducing the stability and availability
+              of the cluster and its Alerts.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}` (*{{$value|humanize}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform

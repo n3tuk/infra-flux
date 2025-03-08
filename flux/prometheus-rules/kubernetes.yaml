@@ -1,0 +1,82 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kubernetes
+  namespace: prometheus-metrics
+  labels:
+    alertmanager: metrics
+spec:
+  groups:
+    - name: kubernetes-system
+      rules:
+        - alert: KubeVersionMismatch
+          expr: |-
+            count(
+              count by (git_version) (
+                label_replace(
+                  kubernetes_build_info{
+                    job!~"kube-dns|coredns"
+                  },
+                  "gitVersion", "$1", "gitVersion", "(v[0-9]*.[0-9]*.[0-9]*).*"
+                )
+              )
+            ) > 1
+          for: 1h
+          annotations:
+            title: Mulitple Versions of Kubernetes Components
+            summary: >-
+              Multiple different semantic versions of the Kubernetes components have been found
+              running on the `{{$externalLabels.cluster}}` Cluster during at least the last hour.
+            decription: >-
+              *{{$value}}* versions found
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-non-work-hours
+            # severity can be info, errors, warning, critical
+            severity: warning
+            # slack is the name of the channel to send messages to
+            slack: kub3-${cluster}-alerts-infra
+            # pagerduty can either be send or ignore for Alerts
+            pagerduty: send
+            # incidentio can either create incidents, send Alerts, or ignore
+            incidentio: create
+            # team sets the Team and Escalation Path to use for the incident
+            team: platform
+
+    - name: kubernetes-clients
+      rules:
+        - alert: KubeClientErrors
+          expr: |-
+            (
+              sum by (instance, namespace, job, pod) (
+                rate(
+                  rest_client_requests_total{
+                    code=~"5.."
+                  }[5m]
+                )
+              ) /
+              sum by (instance, namespace, job, pod) (
+                rate(
+                  rest_client_requests_total[5m]
+                )
+              ) * on(namespace, pod) group_left(node)
+              kube_pod_info
+            ) > 0.01
+          for: 15m
+          annotations:
+            title: Kubernetes API Client 5xx Errors
+            summary: >-
+              One or more of the Kubernetes API endpoints on the `{{$externalLabels.cluster}}`
+              Cluster is reporting *an excessive number of* `5xx` *HTTP errors* back to its clients.
+            description: >
+              {{- if ne "" $labels.pod}}`{{$labels.pod}}` `Pod` on `Host` `{{$labels.host}}`
+              {{- else}}`{{$labels.job}}` `Job`{{end}} (*{{$value|humanizePercentage}}*)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform

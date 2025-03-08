@@ -1,0 +1,535 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: workloads
+  namespace: prometheus-metrics
+  labels:
+    alertmanager: metrics
+spec:
+  groups:
+    - name: workloads-pods
+      rules:
+        - alert: PodCrashLooping
+          expr: |-
+            (
+              sum by (namespace, pod, container) (
+                round(
+                  increase(
+                    kube_pod_container_status_restarts_total[10m]
+                  )
+                )
+              ) * on (namespace, pod) group_left (node)
+              kube_pod_info
+            ) > 1
+          for: 10m
+          annotations:
+            title: Containter in `Pod` Crash Looping
+            summary: >-
+              One or more of the `Pods` on the `{{$externalLabels.cluster}}` Cluster have containers
+              which have *restarted multiple times* in the last ten minutes that may indicate a
+              configuration or container issue with the `Pod` preventing stable operation.
+            description: >-
+              `{{$labels.container}}` Container in the `{{$labels.pod}}` `Pod` on the `Node`
+              `{{$labels.node}}` (*{{$value|humanize}} time{{if ne $value 1.0}}s{{end}}*)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            # severity can be info, errors, warning, critical
+            severity: critical
+            # slack is the name of the channel to send messages to
+            slack: kub3-${cluster}-alerts-infra
+            # pagerduty can either be send or ignore for Alerts
+            pagerduty: send
+            # incidentio can either create incidents, send Alerts, or ignore
+            incidentio: create
+            # team sets the Team and Escalation Path to use for the incident
+            team: platform
+
+        - alert: PodNotReady
+          expr: |-
+            sum by (namespace, pod, phase) (
+              max by (namespace, pod, phase) (
+                kube_pod_status_phase{
+                  phase!~"Running"
+                }
+              ) * on(namespace, pod)
+                  group_left(owner_kind)
+              max by(namespace, pod, phase, owner_kind) (
+                kube_pod_owner{
+                  owner_kind!="Job"
+                }
+              ) * on (namespace, pod) group_left (node)
+              kube_pod_info
+            ) > 0
+          for: 5m
+          annotations:
+            title: >-
+              `Pod` in `NotReady` State
+            summary: >-
+              One or more of the `Pods` on the `{{$externalLabels.cluster}}` Cluster are reporting
+              being *in a* `NotReady` *state* for at least the last five minutes.
+            description: >-
+              `{{$labels.pod}}` `Pod` on the `Node` `{{$labels.node}}` (*`{{$labels.phase}}`*)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            severity: critical
+            ignore: outside-extended-hours
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: ignore
+            incidentio: ignore
+            team: platform
+
+        - alert: ContainerWaiting
+          expr: |-
+            sum by (namespace, pod, container, reason) (
+              kube_pod_container_status_waiting_reason
+            ) * on(namespace, pod)
+                group_left(node)
+                kube_node_info
+            > 0
+          for: 15m
+          annotations:
+            title: >-
+              `Pod` Container in Waiting State
+            summary: >-
+              One or more of the `Pods` on the `{{$externalLabels.cluster}}` Cluster are reporting
+              their *containers in a waiting state*, preventing them from starting, for at least the
+              last fifteen minutes.
+            description: >-
+              `{{$labels.container}}` Container in the `{{$labels.pod}}` `Pod` on the `Node`
+              `{{$labels.node}}` (*{{$labels.reason}}*)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: ignore
+            incidentio: ignore
+            team: platform
+
+    - name: workloads-deployments
+      rules:
+        - alert: DeploymentGenerationMismatch
+          expr: |-
+            kube_deployment_status_observed_generation
+              !=
+            kube_deployment_metadata_generation
+          for: 15m
+          annotations:
+            title: >-
+              `Deployment` Version Mismatch
+            summary: >-
+              One or more of the `Deployments` on the `{{$externalLabels.cluster}}` Cluster *does
+              not match the currently observed version*, and may indicate that the `Deployment` has
+              failed in its rollout but has not been rolled back.
+            description: >-
+              `{{$labels.deployment}}` `Deployment`
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: DeploymentReplicasMismatch
+          expr: |-
+            kube_deployment_spec_replicas
+              !=
+            kube_deployment_status_replicas_available
+          for: 15m
+          annotations:
+            title: >-
+              `Deployment` Replicas Mismatch
+            summary: >-
+              One or more of the `Deployments` on the `{{$externalLabels.cluster}}` Cluster has a
+              *mismatch between the number of* `Ready` *and the number of expected replicas* for at
+              least the last fifteen minutes.
+            description: >-
+              `{{$labels.deployment}}` `Deployment`
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+    - name: workloads-statefulsets
+      rules:
+        - alert: StatefulSetGenerationMismatch
+          expr: |-
+            kube_statefulset_status_observed_generation
+              !=
+            kube_statefulset_metadata_generation
+          for: 15m
+          annotations:
+            title: >-
+              `StatefulSet` Version Mismatch
+            summary: >-
+              One or more of the `StatefulSets` on the `{{$externalLabels.cluster}}` Cluster *does
+              not match the currently observed version*, and may indicate that the `Statefulet` has
+              failed in its rollout but has not been rolled back.
+            description: >-
+              `{{$labels.statefulset}}` `StatefulSet`
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: StatefulSetReplicasMismatch
+          expr: |-
+            kube_statefulset_status_replicas_ready
+              !=
+            kube_statefulset_status_replicas
+          for: 15m
+          annotations:
+            title: >-
+              `StatefulSet` Replicas Mismatch
+            summary: >-
+              One or more of the `StatefulSets` on the `{{$externalLabels.cluster}}` Cluster has a
+              *mismatch between the number of ready and the number of expected replicas* for at
+              least the last fifteen minutes.
+            description: >-
+              `{{$labels.statefulset}}` `StatefulSet`
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: StatefulSetUpdateNotRolledOut
+          expr: |-
+            max without (revision) (
+              kube_statefulset_status_current_revision
+                unless
+              kube_statefulset_status_update_revision
+            ) * (
+              kube_statefulset_replicas
+                !=
+              kube_statefulset_status_replicas_updated
+            )
+          for: 15m
+          annotations:
+            title: >-
+              `StatefulSet` Not Rolled Out
+            summary: >-
+              One or more of the `StatefulSets` on the `{{$externalLabels.cluster}}` Cluster has
+              *not fully rolled out all* `Pods` *for the the next revision* within the last fifteen
+              minutes.
+            description: >-
+              `{{$labels.statefulset}}` `StatefulSet`
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+    - name: workloads-daemonsets
+      rules:
+        - alert: DaemonSetRolloutStuckWarning
+          expr: |-
+            ( kube_daemonset_status_number_ready
+                /
+              kube_daemonset_status_desired_number_scheduled
+            ) < 1.00
+          for: 15m
+          annotations:
+            title: >-
+              `DaemonSet` Rollout Stuck
+            summary: >-
+              One or more of the `DaemonSets` on the `{{$externalLabels.cluster}}` Cluster is stuck
+              during its rollout, having *failed to reach the* `Ready` *state* for all its `Pods`
+              within at least the last fifteen minutes, which is above the *warning* threshold.
+            description: >-
+              `{{$labels.daemonset}}` `DaemonSet` (*{{$value|humanizePercentage}}* of `Pods`)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: DaemonSetRolloutStuckCritical
+          expr: |-
+            ( kube_daemonset_status_number_ready
+                /
+              kube_daemonset_status_desired_number_scheduled
+            ) < 1.00
+          for: 1h
+          annotations:
+            title: >-
+              `DaemonSet` Rollout Stuck
+            summary: >-
+              One or more of the `DaemonSets` on the `{{$externalLabels.cluster}}` Cluster is stuck
+              during its rollout, having *failed to reach the* `Ready` *state* for all its `Pods`
+              within at least the hour, which is above the *critical* threshold.
+            description: >-
+              `{{$labels.daemonset}}` `DaemonSet` (*{{$value|humanizePercentage}}* of `Pods`)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: DaemonSetNotScheduled
+          expr: |-
+            ( kube_daemonset_status_desired_number_scheduled
+                -
+              kube_daemonset_status_current_number_scheduled
+            ) > 0
+          for: 5m
+          annotations:
+            title: >-
+              `DaemonSet` `Pods` are not Scheduled
+            summary: >-
+              One or more of the `DaemonSets` on the `{{$externalLabels.cluster}}` Cluster are
+              *missing {{$value}}* `Pods` *from its deployement* for at least the last five minutes.
+            description: >-
+              `{{$labels.daemonset}}` `DaemonSet` (*{{$value}}* `Pods`)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: DaemonSetMisscheduled
+          expr: |-
+            kube_daemonset_status_number_misscheduled > 0
+          for: 10m
+          annotations:
+            title: >-
+              `DaemonSet` `Pods` are Misscheduled
+            summary: >-
+              One or more of the `DaemonSets` on the `{{$externalLabels.cluster}}` Cluster have
+              *misscheduled {{$value}}* `Pods` *from one or more of its rollouts* for at least the
+              last ten minutes.
+            description: >-
+              `{{$labels.daemonset}}` `DaemonSet` (*{{$value}}* `Pods`)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: ignore
+            incidentio: ignore
+            team: platform
+
+    - name: workloads-jobs
+      rules:
+        - alert: CronJobRunning
+          expr: |-
+            ( time()
+                -
+              kube_cronjob_next_schedule_time
+            ) > 3600
+          for: 10m
+          annotations:
+            title: >-
+              Long Running `CronJob`
+            summary: >-
+              One or more `CronJobs` on the `{{$externalLabels.cluster}}` Cluster have been *running
+              continiously* for at least the last hour.
+            description: >-
+              `{{$labels.cronjob}}` `CronJob`
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: ignore
+            incidentio: ignore
+            team: platform
+
+        - alert: JobFailed
+          expr: |-
+            kube_job_failed > 0
+          for: 2m
+          annotations:
+            title: >-
+              `Job` has Failed to Complete
+            summary: >-
+              One or more of the recent `Jobs` on the `{{$externalLabels.cluster}}` Cluster have
+              finished, but failed to complete successfully.
+            description: >-
+              `{{$labels.job_name}}` `Job`
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: ignore
+            incidentio: ignore
+            team: platform
+
+    - name: workload-resources
+      rules:
+        - alert: PodMemoryRequests
+          expr: |-
+            (
+              max by (namespace, pod, container) (
+                container_memory_working_set_bytes{
+                  pod!~"^kube-apiserver-controller-0[1-3]$",
+                  container!=""
+                }
+              ) /
+              min by (namespace, pod, container) (
+                kube_pod_container_resource_requests{
+                  resource="memory"
+                }
+              ) * on(namespace, pod) group_left(node)
+              kube_pod_info
+            ) > 1
+          for: 3h
+          annotations:
+            title: >-
+              `Pods` Exceeding Memory Requests
+            summary: >-
+              One or more containers in `Pods` on the `{{$externalLabels.cluster}}` Cluster have
+              *exceeded 100% of their requested memory allocation* for the last three hours, which
+              is above the *warning* limit.
+            description: >-
+              `{{$labels.container}}` container in `Pod` `{{$labels.pod}}`
+              (*{{$value|humanizePercentage}}* of `requests`)
+            dashboard: https://grafana.p.kub3.uk/
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: ignore
+            incidentio: ignore
+            team: platform
+
+        - alert: PodMemoryLimits
+          expr: |-
+            (
+              max by (namespace, pod, container) (
+                container_memory_working_set_bytes{
+                  pod!~"^kube-apiserver-controller-0[1-3]$",
+                  container!=""
+                }
+              ) /
+              min by (namespace, pod, container) (
+                kube_pod_container_resource_limits{
+                  resource="memory"
+                }
+              ) * on(namespace, pod) group_left(node)
+              kube_pod_info
+            ) > 0.975
+          for: 5m
+          annotations:
+            title: >-
+              `Pods` Nearing Memory Limits
+            summary: >-
+              One or more containers in `Pods` on the `{{$externalLabels.cluster}}` Cluster have
+              *passed 97.5% of the configured memory limit* for at least the last five minutes,
+              which is above the *critical* limit.
+            description: >-
+              `{{$labels.container}}` container of `Pod` `{{$labels.pod}}`
+              (*{{$value|humanizePercentage}} of* `limits`)
+            dashboard: https://grafana.p.kub3.uk/
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-non-work-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PodCPURequests
+          expr: |-
+            (
+              max by (namespace, pod, container) (
+                rate(
+                  container_cpu_usage_seconds_total{
+                    container!=""
+                  }[3m]
+                )
+              ) /
+              min by (namespace, pod, container) (
+                kube_pod_container_resource_requests{
+                  resource="cpu"
+                }
+              ) * on(namespace, pod) group_left(node)
+              kube_pod_info
+            ) > 1
+          for: 3h
+          annotations:
+            title: >-
+              `Pods` Exceeding CPU Requests
+            summary: >-
+              One or more containers in `Pods` on the `{{$externalLabels.cluster}}` Cluster have
+              *exceeded 100% of their requested CPU allocation* for the last three hours, which is
+              above the *warning* limit.
+            description: >-
+              `{{$labels.container}}` container in `Pod` `{{$labels.pod}}`
+              (*{{$value|humanizePercentage}}* of `requests`)
+            dashboard: https://grafana.p.kub3.uk/
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: ignore
+            incidentio: ignore
+            team: platform
+
+        - alert: PodCPULimits
+          expr: |-
+            ( max by (namespace, pod, container) (
+                rate(
+                  container_cpu_usage_seconds_total{
+                    container!=""
+                  }[3m]
+                )
+              ) /
+              min by (namespace, pod, container) (
+                kube_pod_container_resource_limits{
+                  resource="cpu"
+                }
+              ) * on(namespace, pod) group_left(node)
+              kube_pod_info
+            ) > 0.975
+          for: 15m
+          annotations:
+            title: >-
+              `Pods` Nearing CPU Limits
+            summary: >-
+              One or more containers in `Pods` on the `{{$externalLabels.cluster}}` Cluster have
+              *passed 97.5% of the configured CPU limit* for at least the last fifteen minutes,
+              which is above the *critical* limit.
+            description: >-
+              `{{$labels.container}}` container in `Pod` `{{$labels.pod}}`
+              (*{{$value|humanizePercentage}}* of `limits`)
+            dashboard: https://grafana.p.kub3.uk/
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-non-work-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform

@@ -1,0 +1,79 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: general
+  namespace: prometheus-metrics
+  labels:
+    alertmanager: metrics
+spec:
+  groups:
+    - name: alerting-times
+      rules:
+        - alert: OutsideWorkingHours
+          expr: |-
+            day_of_week() == 0 or
+            day_of_week() == 6 or
+            hour() < 9 or
+            hour() >= 17
+          annotations:
+            title: Outside Working Hours
+            summary: >-
+              The current locale is outside of normal working hours (i.e between 09:00 to 16:59
+              during Monday to Friday), allowing the muting of alerts which should only trigger
+              during working hours.
+          labels:
+            ignore: always
+            severity: none
+
+        - alert: OutsideNonWorkingHours
+          expr: |-
+            ( ( day_of_week() >= 1 and
+                day_of_week() <= 5 ) and
+              ( hour() < 17 or
+                hour() >= 22 )
+            ) or (
+              ( day_of_week() == 0 or
+                day_of_week() == 6 ) and
+              ( hour() < 10 or
+                hour() >= 22 )
+            )
+          annotations:
+            title: Outside Non-Working Hours
+            summary: >-
+              The current locale is outside of non-working hours (i.e between 17:00 to 21:59 during
+              Monday to Friday, or between 10:00 and 21:59 on Saturday or Sunday), allowing the
+              muting of alerts which should only trigger during non-work hours.
+          labels:
+            ignore: always
+            severity: none
+
+        - alert: OutsideExtendedHours
+          expr: |-
+            hour() < 10 or
+            hour() >= 22
+          annotations:
+            title: Outside Extended Hours
+            summary: >-
+              The current locale is outside of extended hours (i.e between 10:00 to 21:59, any day
+              of the week), allowing the muting of alerts which should only trigger during extended
+              hours.
+          labels:
+            ignore: always
+            severity: none
+
+        - alert: OutsideWeekendHours
+          expr: |-
+            ( day_of_week() >= 1 and
+              day_of_week() <= 5 ) or
+            ( hour() < 10 or
+              hour() >= 22 )
+          annotations:
+            title: Outside Weekend Hours
+            summary: >-
+              The current locale is outside of daytime weekend hours (i.e. Saturday or Sunday,
+              between 10:00 and 21:59), allowing the muting of alerts which should only trigger
+              during weekend hours.
+          labels:
+            ignore: always
+            severity: none
