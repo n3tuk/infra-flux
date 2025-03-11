@@ -1,0 +1,40 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: keda
+  namespace: keda-system
+  labels:
+    alertmanager: metrics
+spec:
+  groups:
+    - name: keda-errors
+      rules:
+        - alert: KedaScalerErrors
+          expr: |-
+            sum by (scaledObject, scaler) (
+              rate(
+                keda_metrics_adapter_scaler_errors[2m]
+              )
+            )  > 0
+          for: 2m
+          annotations:
+            title: KEDA Scalar Errors
+            summary: >-
+              The KEDA Scalar in the `{{$externalLabels.cluster}}` Cluster is experiencing errors
+              with scaledObject resources, potentialy preventing necessary changes needed for
+              scaling operations.
+            description: >-
+              {{$labels.scaledObject}} `scaledObject` ({{$labels.scaler}} scaler)
+          labels:
+            ignore: outside-extended-hours
+            # severity can be info, errors, warning, critical
+            severity: error
+            # slack is the name of the channel to send messages to
+            slack: kub3-${cluster}-alerts-infra
+            # pagerduty can either be send or ignore for Alerts
+            pagerduty: send
+            # incidentio can either create incidents, send Alerts, or ignore
+            incidentio: create
+            # team sets the Team and Escalation Path to use for the incident
+            team: platform
