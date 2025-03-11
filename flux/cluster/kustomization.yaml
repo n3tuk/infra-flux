@@ -26,5 +26,6 @@ resources:
   - alertmanager.yaml
   - node-exporter.yaml
   - kube-state-metrics.yaml
+  - keda.yaml
   - grafana.yaml
   - podinfo.yaml
