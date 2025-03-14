@@ -26,8 +26,8 @@ controller:
     limits: # Don't limit the CPU
       memory: 256Mi
     requests:
-      cpu: 100m
-      memory: 64Mi
+      cpu: 25m
+      memory: 128Mi
 
   topologySpreadConstraints:
     - maxSkew: 1
