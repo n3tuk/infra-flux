@@ -10,7 +10,7 @@ spec:
   interval: 24h
   url: oci://ghcr.io/sergelogvinov/charts/proxmox-csi-plugin
   ref:
-    semver: 0.2.13
+    semver: 0.3.5
   layerSelector:
     mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
     operation: copy
