@@ -45,9 +45,9 @@ spec:
                   value: -Xms4g -Xmx4g
               resources:
                 limits:
-                  memory: 5Gi
+                  memory: 6Gi
                 requests:
-                  memory: 4Gi
+                  memory: 6Gi
                   cpu: 250m
       volumeClaimTemplates:
         - metadata:
