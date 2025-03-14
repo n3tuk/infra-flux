@@ -36,7 +36,7 @@ spec:
 
   serviceAccountName: prometheus
 
-  retention: 360h
+  retention: 2160h
   retentionSize: 112GiB
   disableCompaction: true
   storage:
