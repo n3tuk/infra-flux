@@ -35,3 +35,18 @@ nodeSelector:
 tolerations:
   - key: node-role.kubernetes.io/control-plane
     effect: NoSchedule
+
+controller:
+  podAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8080'
+  plugin:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 24Mi
+  provisioner:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 24Mi

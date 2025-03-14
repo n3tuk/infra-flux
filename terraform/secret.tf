@@ -17,3 +17,7 @@ data "google_secret_manager_secret_version" "alertmanager_slack_token" {
 data "google_secret_manager_secret_version" "alertmanager_pagerduty_key" {
   secret = "github-infra-flux-${terraform.workspace}-alertmanager-pagerduty-key"
 }
+
+data "google_secret_manager_secret_version" "alertmanager_incidentio_credentials" {
+  secret = "github-infra-flux-${terraform.workspace}-alertmanager-incidentio-credentials"
+}

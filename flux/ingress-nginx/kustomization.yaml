@@ -19,5 +19,6 @@ labels:
 resources:
   - namespace.yaml
   - certificates.yaml
+  - prometheus-rules.yaml
   - internal
   - external

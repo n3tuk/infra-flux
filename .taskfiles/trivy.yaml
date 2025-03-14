@@ -33,7 +33,7 @@ tasks:
       - terraform/*.tf
     cmds:
       - cmd: |-
-          trivy config flux \
+          trivy config terraform \
             --config .trivy.yaml \
             --exit-code 1 \
             2> >(grep -v INFO)

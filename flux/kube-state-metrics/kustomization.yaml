@@ -20,6 +20,7 @@ labels:
 resources:
   - kube-state-metrics-helm.yaml
   - service-monitors.yaml
+  - prometheus-rules.yaml
 
 configMapGenerator:
   - name: helm-kube-state-metrics-values

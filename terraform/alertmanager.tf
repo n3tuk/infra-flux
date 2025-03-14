@@ -33,3 +33,21 @@ resource "kubernetes_secret_v1" "prometheus_metrics_pagerduty_keys" {
     service-key = data.google_secret_manager_secret_version.alertmanager_pagerduty_key.secret_data
   }
 }
+
+resource "kubernetes_secret_v1" "prometheus_metrics_incidentio_credentials" {
+  metadata {
+    name      = "incidentio-credentials"
+    namespace = "prometheus-metrics"
+
+    labels = merge(local.kubernetes_labels, {
+      "flux.kub3.uk/name"     = "alertmanager"
+      "flux.kub3.uk/instance" = "incidentio"
+    })
+  }
+
+  type = "Opaque"
+
+  data = {
+    credentials = data.google_secret_manager_secret_version.alertmanager_incidentio_credentials.secret_data
+  }
+}
