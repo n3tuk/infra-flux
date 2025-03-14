@@ -1,0 +1,84 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ingress-nginx
+  namespace: ingress-system
+  labels:
+    alertmanager: metrics
+spec:
+  groups:
+    - name: ingress-nginx-ingresses
+      rules:
+        - alert: IngressNginxErrorRates
+          expr: |-
+            label_replace(
+              sum by (job, exported_namespace, ingress, host, status) (
+                rate(
+                  nginx_ingress_controller_requests{
+                    host!~"(prometheus|grafana).${cluster_domain}",
+                    status=~"^[45]..$"
+                  }[5m]
+                )
+              ) / ignoring(status) group_left
+              sum by (job, exported_namespace, ingress, host) (
+                rate(
+                  nginx_ingress_controller_requests[5m]
+                )
+              ),
+              "job", "$1", "job", "^(.*)-metrics$"
+            ) > 0.05
+          for: 3m
+          annotations:
+            title: Elevated `Ingress` Error Rates
+            summary: >-
+              One or more of the `Ingress` resources in the `{{$externalLabels.cluster}}` Cluster
+              have recorded *an elevated rate of HTTP errors* (i.e. `4xx` or `5xx`) during at least
+              the last five minutes.
+            description: >-
+              `{{$labels.exported_namespace}}`/`{{$labels.ingress}}` for `{{$labels.host}}` on
+              `{{$labels.job}}` (`{{$labels.status}}` *{{$value|humanizePercentage}}*)
+          labels:
+            ignore: outside-extended-hours
+            # severity can be info, errors, warning, critical
+            severity: info
+            # slack is the name of the channel to send messages to
+            slack: kub3-${cluster}-alerts-applications
+            # pagerduty can either be send or ignore for Alerts
+            pagerduty: ignore
+            # incidentio can either create incidents, send Alerts, or ignore
+            incidentio: ignore
+            # team sets the Team and Escalation Path to use for the incident
+            team: platform
+
+        - alert: IngressNginxLatency
+          expr: |-
+            label_replace(
+              histogram_quantile(0.99,
+                sum by (job, exported_namespace, ingress, host, le) (
+                  rate(
+                    nginx_ingress_controller_request_duration_seconds_bucket{
+                      host!~"(prometheus|grafana).${cluster_domain}",
+                    }[2m]
+                  )
+                )
+              ),
+              "job", "$1", "job", "^(.*)-metrics$"
+            ) > 0.1
+          for: 3m
+          annotations:
+            title: Elevated `Ingress` Latency
+            summary: >-
+              One or more of the `Ingress` resources in the `{{$externalLabels.cluster}}` Cluster
+              have recorded *an elevated latency when receiving HTTP responses from upstream*
+              `Services` during at least the last three minutes.
+            description: >-
+              `{{$labels.exported_namespace}}`/`{{$labels.ingress}}` for `{{$labels.host}}` on
+              `{{$labels.job}}` (*{{$value|humanizeDuration}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: info
+            slack: kub3-${cluster}-alerts-applications
+            pagerduty: ignore
+            incidentio: ignore
+            team: platform
