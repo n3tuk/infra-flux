@@ -18,4 +18,5 @@ labels:
 
 resources:
   - namespace.yaml
+  - prometheus-rules.yaml
   - cloudflare
