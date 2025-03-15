@@ -20,6 +20,7 @@ labels:
 resources:
   - namespace.yaml
   - metallb-helm.yaml
+  - prometheus-rules.yaml
 
 configMapGenerator:
   - name: helm-metallb-values
