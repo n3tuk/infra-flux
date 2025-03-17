@@ -19,6 +19,18 @@ labels:
 
 resources:
   - namespace.yaml
+  - elastic-roles.yaml
+  - elastic-users.yaml
   - elastic-secrets.yaml
   - elastic-server.yaml
   - ingress.yaml
+  - elasticsearch-exporter-helm.yaml
+  - prometheus-rules.yaml
+
+configMapGenerator:
+  - name: helm-elasticsearch-exporter-values
+    files:
+      - values.yaml=elasticsearch-exporter-values.yaml
+
+configurations:
+  - kustomize-config.yaml

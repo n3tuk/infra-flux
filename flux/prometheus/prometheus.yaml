@@ -65,10 +65,18 @@ spec:
     seccompProfile:
       type: RuntimeDefault
 
+  scrapeInterval: 15s
+
   podMonitorSelector: {}
   podMonitorNamespaceSelector: {}
   serviceMonitorSelector: {}
   serviceMonitorNamespaceSelector: {}
+
+  probeSelector: {}
+  probeNamespaceSelector: {}
+
+  scrapeConfigSelector: {}
+  scrapeConfigNamespaceSelector: {}
 
   ruleSelector:
     matchLabels:

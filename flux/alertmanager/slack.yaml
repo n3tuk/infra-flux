@@ -20,10 +20,12 @@ spec:
         matchers:
           - name: slack
             value: kub3-${cluster}-alerts-infra
+        continue: true
       - receiver: applications
         matchers:
           - name: slack
             value: kub3-${cluster}-alerts-applications
+        continue: true
     repeatInterval: 3h
     continue: true
 

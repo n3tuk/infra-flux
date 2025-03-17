@@ -1,0 +1,631 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: elasticsearch
+  namespace: elastic-logs
+  labels:
+    alertmanager: metrics
+spec:
+  groups:
+    - name: elasticsearch-cluster
+      rules:
+        - alert: ElasticSearchClusterStatusRed
+          expr: |-
+            elasticsearch_cluster_health_status{
+              namespace="elastic-logs",
+              cluster="logs",
+              color="red"
+            } == 1
+          for: 2m
+          annotations:
+            title: ElasticSearch Cluster is in the Red State
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *the status of the cluster is* `{{$labels.color}}` during at least the last
+              two minutes. This means that the cluster has some unassigned primary shards, and as
+              such some operations such as searches and indexing may fail.
+            description: >-
+              `{{$labels.namespace}}`/`{{$labels.cluster}}` ElasticSearch cluster is
+              `{{$labels.color|title}}`
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            # severity can be info, errors, warning, critical
+            severity: critical
+            # slack is the name of the channel to send messages to
+            slack: kub3-${cluster}-alerts-infra
+            # pagerduty can either be send or ignore for Alerts
+            pagerduty: send
+            # incidentio can either create incidents, send Alerts, or ignore
+            incidentio: send
+            # team sets the Team and Escalation Path to use for the incident
+            team: platform
+
+        - alert: ElasticSearchClusterStatusYellow
+          expr: |-
+            elasticsearch_cluster_health_status{
+              namespace="elastic-logs",
+              cluster="logs",
+              color="yellow"
+            } == 1
+          for: 2m
+          annotations:
+            title: ElasticSearch Cluster is in the Yellow State
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *the status of the cluster is* `{{$labels.color}}` during at least the last
+              two minutes. This means that the cluster has no unassigned primary shards but some
+              unassigned replica shards and therefore increases the risk of data loss and can
+              degrade the cluster's performance.
+            description: >-
+              `{{$labels.namespace}}`/`{{$labels.cluster}}` ElasticSearch Cluster is
+              `{{$labels.color|title}}`
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: info
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: ignore
+            incidentio: ignore
+            team: platform
+
+        - alert: ElasticSearchClusterBreakersTripped
+          expr: |-
+            elasticsearch_breakers_tripped{
+              namespace="elastic-logs",
+              cluster="logs"
+            } == 1
+          for: 2m
+          annotations:
+            title: ElasticSearch Cluster Breakers Have Tripped
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *their breakers having tripped* during at least the last two minutes. This
+              means there could potentially be network or system issues preventing the ElasticSearch
+              cluster from operating correctly.
+            description: >-
+              Breaker `{{$labels.breaker}}` tripped in `{{$labels.namespace}}`/`{{$labels.cluster}}`
+              cluster on node `{{$labels.name}}`
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: ElasticSearchPendingTasks
+          expr: |-
+            elasticsearch_cluster_health_number_of_pending_tasks{
+              namespace="elastic-logs",
+              cluster="logs"
+            } > 0
+          for: 15m
+          annotations:
+            title: ElasticSearch Cluster has Pending Tasks
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *they have pending tasks* during at least the last fifteen minutes, which may
+              mean there are cluster issues which can degrate the cluster's performance, preventing
+              the tasks from running.
+            description: >-
+              `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster (*{{$value|humanize}}* tasks)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: ElasticSearchClusterDataNodes
+          expr: |-
+            elasticsearch_cluster_health_number_of_data_nodes{
+              namespace="elastic-logs",
+              cluster="logs"
+            } < 3
+          for: 3m
+          annotations:
+            title: ElasticSearch Cluster has Reduced Data Nodes
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *the there are a reduced number of* `data` *nodes* over at least the last
+              three minutes, and this has fallen below the required minimum, increasing the risk of
+              data loss and may degrade the cluster's performance.
+            description: >-
+              `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster (*{{$value|humanize}}* nodes)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+    - name: elasticsearch-shards
+      rules:
+        - alert: ElasticSearchRelocatingShardsInfo
+          expr: |-
+            elasticsearch_cluster_health_relocating_shards{
+              namespace="elastic-logs",
+              cluster="logs"
+            } > 0
+          # Scraping is done every 15s, so this will only alert if the relocation of the shards
+          # takes longer than approx. 30s, which should help reduce some noise
+          for: 30s
+          annotations:
+            title: ElasticSearch Cluster is Relocating Shards
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *they are relocating shards across the* `data` *nodes*, which can degrate the
+              cluster's performance.
+            description: >-
+              `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster (*{{$value|humanize}}* nodes)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: info
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: ignore
+            incidentio: ignore
+            team: platform
+
+        - alert: ElasticSearchRelocatingShardsWarning
+          expr: |-
+            elasticsearch_cluster_health_relocating_shards{
+              namespace="elastic-logs",
+              cluster="logs"
+            } > 0
+          for: 15m
+          annotations:
+            title: ElasticSearch Cluster is Relocating Shards
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *they are relocating shards across the* `data` *nodes* continiously during at
+              least the last fifteen minutes, which may mean there are cluster issues which can
+              degrate the cluster's performance and increase the risk of data loss.
+            description: >-
+              `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster (*{{$value|humanize}}* shards)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: ElasticSearchInitializingShardsInfo
+          expr: |-
+            elasticsearch_cluster_health_initializing_shards{
+              namespace="elastic-logs",
+              cluster="logs"
+            } > 0
+          # Scraping is done every 15s, so this will only alert if the initialising of the shards
+          # takes longer than approx. 30s, which should help reduce some noise
+          for: 30s
+          annotations:
+            title: ElasticSearch Cluster is Initialising Shards
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *they are initialising shards across the* `data` nodes.
+            description: >-
+              `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster (*{{$value|humanize}}* shards)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: info
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: ignore
+            incidentio: ignore
+            team: platform
+            runbook: https://d.n3t.uk/runbooks/
+
+        - alert: ElasticSearchInitializingShardsWarning
+          expr: |-
+            elasticsearch_cluster_health_initializing_shards{
+              namespace="elastic-logs",
+              cluster="logs"
+            } > 0
+          for: 15m
+          annotations:
+            title: ElasticSearch Cluster is Initialising Shards
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *they are initialising shards across the* `data` *nodes* continiously during
+              at least the last fifteen minutes, which may mean there are cluster issues which can
+              degrade the cluster's performance and increase the risk of data loss.
+            description: >-
+              `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster (*{{$value|humanize}}* shards)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+    - name: elasticsearch-usage
+      rules:
+        - alert: ElasticSearchNoNewDocumentsWarning
+          expr: |-
+            sum by (namespace, cluster, name) (
+              increase(
+                elasticsearch_indices_indexing_index_total{
+                  namespace="elastic-logs",
+                  cluster="logs",
+                  es_data_node="true"
+                }[10m]
+              )
+            ) < 1
+          for: 1m
+          annotations:
+            title: ElasticSearch Cluster has No New Documents
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *at least one of the data nodes have not received any new doucmentes* during
+              at least the last ten minutes.
+            description: >-
+              `{{$labels.name}}` node in `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: ElasticSearchNoNewDocumentsCritical
+          expr: |-
+            sum by (namespace, cluster) (
+              increase(
+                elasticsearch_indices_indexing_index_total{
+                  namespace="elastic-logs",
+                  cluster="logs",
+                  es_data_node="true"
+                }[5m]
+              )
+            ) < 1
+          for: 1m
+          annotations:
+            title: ElasticSearch Cluster has No New Documents
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *all the data nodes have not received any new doucmentes* during at least the
+              last five minutes.
+            description: >-
+              `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster (*{{$value|humanize}}* nodes)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: ElasticSearchHighIndexingLatency
+          expr: |-
+            # Use avg() here to handle changes (i.e. rollouts) to the elasticsearch-exporter job
+            # which can create new series, even if the ElasticSearch cluster hasn't changed
+            avg by (namespace, cluster, name) (
+              (
+                elasticsearch_indices_indexing_index_time_seconds_total
+                /
+                elasticsearch_indices_indexing_index_total
+              )
+            ) > 0.0005
+          for: 10m
+          annotations:
+            title: ElasticSearch Cluster High Indexing Latency
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *a high latency during indexing on some or all of its nodes* during at least
+              the last ten minutes, which may mean there are cluster issues that can degrade the
+              cluster's performance.
+            description: >-
+              `{{$labels.name}}` in `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster
+              (*{{$value|humanizeDuration}}*)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: ElasticSearchHeapUsageWarning
+          expr: |-
+            avg by (namespace, cluster, name) (
+              elasticsearch_jvm_memory_used_bytes{
+                area="heap"
+              } /
+              elasticsearch_jvm_memory_max_bytes{
+                area="heap"
+              }
+            ) > 0.75
+          for: 2m
+          annotations:
+            title: ElasticSearch Cluster High Heap Usage
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *a usage of over 75% of the JVM heap on some or all of its nodes* during at
+              least the last two minutes, which is above the *warning* threshold.
+            description: >-
+              `{{$labels.name}}` in `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster
+              (*{{$value|humanizePercentage}}*)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: ElasticSearchHeapUsageCritical
+          expr: |-
+            avg by (namespace, cluster, name) (
+              elasticsearch_jvm_memory_used_bytes{
+                area="heap"
+              } /
+              elasticsearch_jvm_memory_max_bytes{
+                area="heap"
+              }
+            ) > 0.9
+          for: 2m
+          annotations:
+            title: ElasticSearch Cluster High Heap Usage
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *a usage of over 90% of the JVM heap on some or all of its nodes* during at
+              least the last two minutes, which is above the *critical* threshold.
+            description: >-
+              `{{$labels.name}}` in `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster
+              (*{{$value|humanizePercentage}}*)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: ElasticSearchDiskIOWarning
+          expr: |-
+            sum by (namespace, cluster, name) (
+              ceil(
+                rate(
+                  elasticsearch_filesystem_io_stats_device_operations_count[5m]
+                )
+              )
+            ) >=
+            sum by (namespace, cluster, name) (
+              # To work out the maximum IOPS possible for the PVC created, allow 45 IOPS per GiB
+              # allocated to the storge device, and then take 70% of that for the warning threshold
+              (45 * 0.7) * (
+                elasticsearch_filesystem_data_size_bytes
+                / (1024*1024*1024)
+              )
+            )
+          for: 2m
+          annotations:
+            title: ElasticSearch Cluster Disk I/O Usage
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *their I/O usage is over 70% of the limit allocated to the storage
+              device* during at least the last five minutes, which is above the *warning* threshold.
+            description: >-
+              `{{$labels.name}}` in `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster
+              (*{{$value|humanize}}* IOPS)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: ElasticSearchDiskIOCritical
+          expr: |-
+            sum by (namespace, cluster, name) (
+              ceil(
+                rate(
+                  elasticsearch_filesystem_io_stats_device_operations_count[5m]
+                )
+              )
+            ) >=
+            sum by (namespace, cluster, name) (
+              # To work out the maximum IOPS possible for the PVC created, allow 45 IOPS per GiB
+              # allocated to the storge device, and then take 97.5% of that for the critical
+              # threshold
+              (45 * 0.975) * (
+                elasticsearch_filesystem_data_size_bytes
+                / (1024*1024*1024)
+              )
+            )
+          for: 2m
+          annotations:
+            title: ElasticSearch Cluster Disk I/O Usage
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *their I/O usage is over 97.5% of the limit allocated to the storage device*
+              during at least the last five minutes, which is above the *critical* threshold.
+            description: >-
+              `{{$labels.name}}` in `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster
+              (*{{$value|humanize}}* IOPS)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: ElasticSearchDiskUsageWarning
+          expr: |-
+            avg by (namespace, cluster, name, path) (
+              elasticsearch_filesystem_data_available_bytes
+              /
+              elasticsearch_filesystem_data_size_bytes
+            ) > 0.75
+          for: 2m
+          annotations:
+            title: ElasticSearch Cluster Disk Usage
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *their disk usage at over 75%* during at least the last two minutes, which is
+              above the *warning* threshold.
+            description: >-
+              `{{$labels.name}}` in `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster
+              (*{{$value|humanizePercentage}}* for `{{$labels.path}}`)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: ElasticSearchDiskUsageCritical
+          expr: |-
+            avg by (namespace, cluster, name, path) (
+              elasticsearch_filesystem_data_available_bytes
+              /
+              elasticsearch_filesystem_data_size_bytes
+            ) > 0.9
+          for: 2m
+          annotations:
+            title: ElasticSearch Cluster Disk Usage
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *their disk usage at over 90%* during at least the last two minutes, which is
+              above the *critical* threshold.
+            description: >-
+              `{{$labels.name}}` in `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster
+              (*{{$value|humanizePercentage}}* for `{{$labels.path}}`)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: ElasticSearchQueryRateWarning
+          expr: |-
+            sum by (namespace, cluster) (
+              rate(
+                elasticsearch_indices_search_query_total[1m]
+              )
+            ) > 25
+          for: 2m
+          annotations:
+            title: ElasticSearch Cluster Query Rate
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *their query rate as above 25 per second* during at least the last two
+              minutes, which is above the *warning* threshold.
+            description: >-
+              `{{$labels.name}}` in `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster
+              (*{{$value|humanize}}* per second)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: ElasticSearchQueryRateCritical
+          expr: |-
+            sum by (namespace, cluster) (
+              rate(
+                elasticsearch_indices_search_query_total[1m]
+              )
+            ) > 100
+          for: 2m
+          annotations:
+            title: ElasticSearch Cluster Query Rate
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *their query rate as above 100 per second* during at least the last two
+              minutes, which is above the *warning* threshold.
+            description: >-
+              `{{$labels.name}}` in `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster
+              (*{{$value|humanize}}* per second)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: ElasticSearchQueryLatencyWarning
+          expr: |-
+            max by (namespace, cluster, name) (
+              elasticsearch_indices_search_fetch_time_seconds{
+                es_data_node="true"
+              } /
+              elasticsearch_indices_search_fetch_total
+            ) > 0.1
+          for: 2m
+          annotations:
+            title: ElasticSearch Cluster Query Rate
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *their average latency for queries at above 100m* during at least the last
+              two minutes, which is above the *warning* threshold.
+            description: >-
+              `{{$labels.name}}` in `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster
+              (*{{$value|humanizeDuration}}*)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: ElasticSearchQueryLatencyCritical
+          expr: |-
+            max by (namespace, cluster, name) (
+              elasticsearch_indices_search_fetch_time_seconds{
+                es_data_node="true"
+              } /
+              elasticsearch_indices_search_fetch_total
+            ) > 1
+          for: 2m
+          annotations:
+            title: ElasticSearch Cluster Query Rate
+            summary: >-
+              One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
+              reported *their average latency for queries at above one second* during at least the
+              last two minutes, which is above the *warning* threshold.
+            description: >-
+              `{{$labels.name}}` in `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster
+              (*{{$value|humanizeDuration}}*)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform

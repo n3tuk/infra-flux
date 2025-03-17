@@ -19,3 +19,5 @@ spec:
     substituteFrom:
       - kind: ConfigMap
         name: common-substitutions
+      - kind: Secret
+        name: elastic-logs-substitutions

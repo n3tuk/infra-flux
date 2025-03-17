@@ -1,0 +1,36 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: elastic-user-exporter
+  namespace: elastic-logs
+type: kubernetes.io/basic-auth
+stringData:
+  username: exporter
+  password: >-
+    ${elasticsearch_exporter_password}
+  roles: exporters
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: elastic-user-fluent-bit
+  namespace: elastic-logs
+type: kubernetes.io/basic-auth
+stringData:
+  username: fluent-bit
+  password: >-
+    ${elasticsearch_fluent_bit_password}
+  roles: log_writers
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: elastic-user-grafana
+  namespace: elastic-logs
+type: kubernetes.io/basic-auth
+stringData:
+  username: grafana
+  password: >-
+    ${elasticsearch_grafana_password}
+  roles: dashboards
