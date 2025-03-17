@@ -11,6 +11,7 @@ spec:
   path: flux
   dependsOn:
     - name: sources
+    - name: prometheus-crds
     - name: cert-manager-crds
   interval: 1h
   retryInterval: 10m
