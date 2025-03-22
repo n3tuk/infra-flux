@@ -42,9 +42,27 @@ controller:
     resources:
       requests:
         cpu: 10m
-        memory: 24Mi
+        memory: 64Mi
   provisioner:
     resources:
       requests:
         cpu: 10m
-        memory: 24Mi
+        memory: 64Mi
+  attacher:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+
+node:
+  driverRegistrar:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+
+livenessprobe:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
