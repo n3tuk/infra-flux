@@ -40,7 +40,8 @@ serviceMonitor:
   enabled: true
 
 resources:
-  limits: {}
+  limits: # Don't limit the CPU
+    memory: 128Mi
   requests:
-    memory: 64Mi
     cpu: 10m
+    memory: 96Mi
