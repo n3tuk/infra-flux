@@ -41,7 +41,7 @@ disableAutoApproval: true
 resources:
   requests:
     cpu: 10m
-    memory: 64Mi
+    memory: 96Mi
 
 topologySpreadConstraints:
   # With three Proxmox nodes and two workers per node, this will ensure that
@@ -81,7 +81,7 @@ webhook:
   resources:
     requests:
       cpu: 10m
-      memory: 32Mi
+      memory: 64Mi
 
   topologySpreadConstraints:
     - maxSkew: 1
@@ -176,3 +176,11 @@ startupapicheck:
     requests:
       cpu: 10m
       memory: 32Mi
+
+cainjector:
+  resources:
+    limits: # Don't limit the CPU
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
