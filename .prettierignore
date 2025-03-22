@@ -3,6 +3,10 @@
 **/.terraform/*
 .trivy/*
 
+# Ignore extremely large Kubernetes manifests which provide the Custom Resource
+# Definitions for many of the deployed services (they can each take ~1s to run)
+flux/*-crds/resources.yaml
+
 # Ignore the Prettier cache file
 .prettiercache
 
