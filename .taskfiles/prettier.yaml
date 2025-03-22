@@ -10,12 +10,14 @@ tasks:
       - '**.yaml'
       - '**.yaml'
       - '**.json'
-      # Although prettier does not format these files, it does monitor them for
-      # files to skip processing on, so we'll monitor these too for triggers
+      # Exclude any Custom Resource Definition manifests as they each take ~1s to check
+      - flux/*-crds/resources.yaml
+      # Although prettier does not format these files, it does monitor them for files to skip
+      # processing on, so we'll monitor these too for triggers
       - '{{ .root }}/.prettierignore'
       - '{{ .root }}/.gitignore'
-      # This file is not a complete Markdown document, but a partial template
-      # which is used when creating pull requests within GitHub, so ignore it
+      # This file is not a complete Markdown document, but a partial template which is used when
+      # creating pull requests within GitHub, so ignore it
       - exclude: .github/PULL_REQUEST_TEMPLATE.md
       # Ignore the Terraform cache and any temporary files for Trivy
       - exclude: terraform/.terraform/**
@@ -36,8 +38,8 @@ tasks:
             \)   -printf '%P ' \
           2> /dev/null || echo 'README.md'
     cmds:
-      # There is no need to test if .files is empty as it guaranteed to list at
-      # least one file - README.md - in the root of the repository
+      # There is no need to test if .files is empty as it guaranteed to list at least one file -
+      # README.md - in the root of the repository
       - cmd: |-
           prettier \
             --log-level log \
