@@ -1,0 +1,244 @@
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: slack
+  labels:
+    alertmanager: metrics
+spec:
+  route:
+    receiver: alerts
+    matchers:
+      - name: slack
+        matchType: =~
+        value: ^[a-z0-9._-]+$
+      - name: slack
+        matchType: '!='
+        value: ignore
+    routes:
+      - receiver: infrastructure
+        matchers:
+          - name: slack
+            value: kub3-${cluster}-alerts-infra
+        continue: true
+      - receiver: applications
+        matchers:
+          - name: slack
+            value: kub3-${cluster}-alerts-applications
+        continue: true
+    repeatInterval: 3h
+    continue: true
+
+  receivers:
+    - name: alerts
+      slackConfigs:
+        - apiURL:
+            name: slack-webhooks
+            key: alerts
+          httpConfig: {}
+          channel: '#alerts'
+          sendResolved: true
+          shortFields: false
+          iconEmoji: ':alertmanager:'
+          iconURL: https://alerts.${cluster_domain}/
+          color: >-
+            {{ template "slack.n3tuk.color" . }}
+          username: >-
+            {{ template "slack.n3tuk.username" . }}
+          title: >-
+            {{ template "slack.n3tuk.title" . }}
+          titleLink: >-
+            {{ template "slack.n3tuk.link" . }}
+          pretext: |
+            {{ template "slack.n3tuk.pretext" .Alerts }}
+          text: |
+            {{ template "slack.n3tuk.text" . }}
+          footer: |
+            {{ template "slack.n3tuk.footer" . }}
+          fallback: >-
+            {{ template "slack.n3tuk.fallback" . }}
+          fields:
+            - title: Alert Name
+              value: >-
+                {{ .GroupLabels.alertname }}
+              short: false
+            - title: Cluster
+              value: >-
+                {{ template "slack.n3tuk.cluster" . }}
+              short: true
+            - title: Namespace
+              value: >-
+                {{ template "slack.n3tuk.namespace" . }}
+              short: true
+            - title: Severity
+              value: >-
+                {{ template "slack.n3tuk.severity" . }}
+              short: true
+            - title: Since
+              value: >-
+                {{ (index .Alerts 0).StartsAt | since | humanizeDuration }}
+              short: true
+          actions:
+            - text: Runbook
+              type: button
+              url: >-
+                {{ (index .Alerts 0).Annotations.runbook }}
+            - text: Query
+              type: button
+              url: >-
+                {{ (index .Alerts 0).GeneratorURL }}
+            - text: Dashboard
+              type: button
+              url: >-
+                {{ (index .Alerts 0).Annotations.dashboard }}
+            - text: Silence
+              type: button
+              url: >-
+                {{ template "__alert_silence_link" . }}
+          linkNames: false
+          mrkdwnIn:
+            - title
+            - pretext
+            - text
+
+    - name: infrastructure
+      slackConfigs:
+        - apiURL:
+            name: slack-webhooks
+            key: infrastructure
+          httpConfig: {}
+          channel: '#kub3-${cluster}-alerts-infra'
+          sendResolved: true
+          shortFields: false
+          iconEmoji: ':alertmanager:'
+          iconURL: https://alerts.${cluster_domain}/
+          color: >-
+            {{ template "slack.n3tuk.color" . }}
+          username: >-
+            {{ template "slack.n3tuk.username" . }}
+          title: >-
+            {{ template "slack.n3tuk.title" . }}
+          titleLink: >-
+            {{ template "slack.n3tuk.link" . }}
+          pretext: |
+            {{ template "slack.n3tuk.pretext" .Alerts }}
+          text: |
+            {{ template "slack.n3tuk.text" . }}
+          footer: |
+            {{ template "slack.n3tuk.footer" . }}
+          fallback: >-
+            {{ template "slack.n3tuk.fallback" . }}
+          fields:
+            - title: Alert Name
+              value: >-
+                {{ .GroupLabels.alertname }}
+              short: false
+            - title: Cluster
+              value: >-
+                {{ template "slack.n3tuk.cluster" . }}
+              short: true
+            - title: Namespace
+              value: >-
+                {{ template "slack.n3tuk.namespace" . }}
+              short: true
+            - title: Severity
+              value: >-
+                {{ template "slack.n3tuk.severity" . }}
+              short: true
+            - title: Since
+              value: >-
+                {{ (index .Alerts 0).StartsAt | since | humanizeDuration }}
+              short: true
+          actions:
+            - text: Runbook
+              type: button
+              url: >-
+                {{ (index .Alerts 0).Annotations.runbook }}
+            - text: Query
+              type: button
+              url: >-
+                {{ (index .Alerts 0).GeneratorURL }}
+            - text: Dashboard
+              type: button
+              url: >-
+                {{ (index .Alerts 0).Annotations.dashboard }}
+            - text: Silence
+              type: button
+              url: >-
+                {{ template "__alert_silence_link" . }}
+          linkNames: false
+          mrkdwnIn:
+            - title
+            - pretext
+            - text
+
+    - name: applications
+      slackConfigs:
+        - apiURL:
+            name: slack-webhooks
+            key: applications
+          httpConfig: {}
+          channel: '#kub3-${cluster}-alerts-applications'
+          sendResolved: true
+          shortFields: false
+          iconEmoji: ':alertmanager:'
+          iconURL: https://alerts.${cluster_domain}/
+          color: >-
+            {{ template "slack.n3tuk.color" . }}
+          username: >-
+            {{ template "slack.n3tuk.username" . }}
+          title: >-
+            {{ template "slack.n3tuk.title" . }}
+          titleLink: >-
+            {{ template "slack.n3tuk.link" . }}
+          pretext: |
+            {{ template "slack.n3tuk.pretext" .Alerts }}
+          text: |
+            {{ template "slack.n3tuk.text" . }}
+          footer: |
+            {{ template "slack.n3tuk.footer" . }}
+          fallback: >-
+            {{ template "slack.n3tuk.fallback" . }}
+          fields:
+            - title: Alert Name
+              value: >-
+                {{ .GroupLabels.alertname }}
+              short: false
+            - title: Cluster
+              value: >-
+                {{ template "slack.n3tuk.cluster" . }}
+              short: true
+            - title: Namespace
+              value: >-
+                {{ template "slack.n3tuk.namespace" . }}
+              short: true
+            - title: Severity
+              value: >-
+                {{ template "slack.n3tuk.severity" . }}
+              short: true
+            - title: Since
+              value: >-
+                {{ (index .Alerts 0).StartsAt | since | humanizeDuration }}
+              short: true
+          actions:
+            - text: Runbook
+              type: button
+              url: >-
+                {{ (index .Alerts 0).Annotations.runbook }}
+            - text: Query
+              type: button
+              url: >-
+                {{ (index .Alerts 0).GeneratorURL }}
+            - text: Dashboard
+              type: button
+              url: >-
+                {{ (index .Alerts 0).Annotations.dashboard }}
+            - text: Silence
+              type: button
+              url: >-
+                {{ template "__alert_silence_link" . }}
+          linkNames: false
+          mrkdwnIn:
+            - title
+            - pretext
+            - text

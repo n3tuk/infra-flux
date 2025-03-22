@@ -1,0 +1,156 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kube-state-metrics
+  namespace: kube-system
+  labels:
+    alertmanager: metrics
+spec:
+  groups:
+    - name: kube-state-metrics
+      rules:
+        - alert: KubeStateMetricsListErrors
+          expr: |-
+            (
+              sum by (namespace, pod) (
+                rate(
+                  kube_state_metrics_list_total{
+                    result="error"
+                  }[5m]
+                )
+              ) /
+              sum by (namespace, pod) (
+                rate(
+                  kube_state_metrics_list_total[5m]
+                )
+              )
+            ) * on(namespace, pod) group_left(node)
+            kube_pod_info
+            > 0.01
+          for: 15m
+          annotations:
+            title: >-
+              `kube-state-metrics` Errors during `List`
+            summary: >-
+              One or more of the `kube-state-metrics` `Pods` in the `{{$externalLabels.cluster}}`
+              Cluster are *receiving errors from the Kubernetes API at an elevated rate* in `list`
+              operations. This is likely causing it to not be able to expose metrics about
+              Kubernetes objects correctly, or at all.
+            description: >-
+              `{{$labels.pod}}` `Pod` on `Node` `{{$labels.node}}` (*{{$value|humanizePercentage}}*)
+            runbook: https://runbooks.prometheus-operator.dev/runbooks/kube-state-metrics/kubestatemetricslisterrors
+          labels:
+            ignore: outside-extended-hours
+            # severity can be info, errors, warning, critical
+            severity: warning
+            # slack is the name of the channel to send messages to
+            slack: kub3-${cluster}-alerts-infra
+            # pagerduty can either be send or ignore for Alerts
+            pagerduty: send
+            # incidentio can either create incidents, send Alerts, or ignore
+            incidentio: create
+            # team sets the Team and Escalation Path to use for the incident
+            team: platform
+
+        - alert: KubeStateMetricsWatchErrors
+          expr: |-
+            (
+              sum by (namespace, pod) (
+                rate(
+                  kube_state_metrics_watch_total{
+                    result="error"
+                }[5m])
+              ) /
+              sum by (namespace, pod) (
+                rate(
+                  kube_state_metrics_watch_total[5m]
+                )
+              )
+            ) * on(namespace, pod)
+                group_left(node)
+                kube_pod_info
+            > 0.01
+          for: 15m
+          annotations:
+            title: >-
+              `kube-state-metrics` Errors during `Watch`
+            summary: >-
+              One or more of the `kube-state-metrics` `Pods` in the `{{$externalLabels.cluster}}`
+              Cluster are *receiving errors from the Kubernetes API at an elevated rate* in `watch`
+              operations. This is likely causing it to not be able to expose metrics about
+              Kubernetes objects correctly, or at all.
+            description: >-
+              `{{$labels.pod}}` `Pod` on `Node` `{{$labels.node}}` (*{{$value|humanizePercentage}}*)
+            runbook: https://runbooks.prometheus-operator.dev/runbooks/kube-state-metrics/kubestatemetricswatcherrors
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: KubeStateMetricsShardingMismatch
+          expr: |
+            stdvar by (namespace, pod) (
+              kube_state_metrics_total_shards
+            ) * on(namespace, pod) group_left(node)
+            kube_pod_info
+            != 0
+          annotations:
+            title: >-
+              `kube-state-metrics` Sharding is Misconfigured
+            summary: >-
+              One or more of the `kube-state-metrics` `Pods` in the `{{$externalLabels.cluster}}`
+              Cluster is running with two or more different `--total-shards` arguments in their
+              configurations, and therefore Kubernetes objects may be exposed multiple times, or not
+              exposed at all.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}`
+            runbook: https://runbooks.prometheus-operator.dev/runbooks/kube-state-metrics/kubestatemetricsshardingmismatch
+          for: 15m
+          labels:
+            ignore: outside-non-work-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: KubeStateMetricsShardsMissing
+          expr: |-
+            (
+              2 ^ max by (namespace, pod) (
+                    kube_state_metrics_total_shards
+                  ) - 1
+            )
+            -
+            (
+              sum by (namespace, pod) (
+                2 ^ max by (namespace, pod, shard_ordinal) (
+                      kube_state_metrics_shard_ordinal
+                    )
+              )
+            ) * on(namespace, pod)
+                group_left(node)
+                kube_pod_info
+            != 0
+          for: 15m
+          annotations:
+            title: >-
+              `kube-state-metrics` Shards are Missing
+            summary: >-
+              One or more of the `kube-state-metrics` `Pods` in the `{{$externalLabels.cluster}}`
+              Cluster is running with one or more shards missing and therefore some Kubernetes
+              objects are not being exposed.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}`
+            runbook: https://runbooks.prometheus-operator.dev/runbooks/kube-state-metrics/kubestatemetricsshardsmissing
+          labels:
+            ignore: outside-non-work-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform

@@ -1,0 +1,80 @@
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: pagerduty
+  labels:
+    alertmanager: metrics
+spec:
+  route:
+    receiver: incidents
+    matchers:
+      - name: pagerduty
+        matchType: =~
+        value: ^[a-z0-9._-]+$
+      - name: pagerduty
+        matchType: '!='
+        value: ignore
+    repeatInterval: 15m
+    continue: true
+
+  receivers:
+    - name: incidents
+      pagerdutyConfigs:
+        - serviceKey:
+            name: pagerduty-keys
+            key: service-key
+          sendResolved: true
+          client: >-
+            {{ template "pagerduty.n3tuk.client" . }}
+          clientURL: >-
+            {{ template "pagerduty.n3tuk.client_url" . }}
+          description: >-
+            {{ template "pagerduty.n3tuk.title" . }}
+          severity: >-
+            {{ template "pagerduty.n3tuk.priority" . }}
+          source: >-
+            {{ template "pagerduty.n3tuk.username" . }}
+          details:
+            - key: alert name
+              value: >-
+                {{ template "pagerduty.n3tuk.alert_name" . }}
+            - key: summary
+              value: >-
+                {{ template "pagerduty.n3tuk.summary" . }}
+            - key: priority
+              value: >-
+                {{ template "pagerduty.n3tuk.priority" . }}
+            - key: cluster
+              value: >-
+                {{ template "pagerduty.n3tuk.cluster" . }}
+            - key: namespace
+              value: >-
+                {{ template "pagerduty.n3tuk.namespace" . }}
+            - key: severity
+              value: >-
+                {{ template "pagerduty.n3tuk.severity" . }}
+            - key: firing
+              value: >-
+                {{ template "pagerduty.n3tuk.firing" . }}
+            - key: resolved
+              value: >-
+                {{ template "pagerduty.n3tuk.resolved" . }}
+          pagerDutyLinkConfigs:
+            - alt: Runbooks
+              href: >-
+                {{ template "pagerduty.n3tuk.runbook" . }}
+            - alt: Dashboard
+              href: >-
+                {{ template "pagerduty.n3tuk.dashboard" . }}
+            - alt: Prometheus
+              href: >-
+                {{ (index .Alerts 0).GeneratorURL }}
+            - alt: Alertmanager
+              href: >-
+                https://alerts.${cluster_domain}/
+            - alt: Silence
+              href: >-
+                {{ template "__alert_silence_link" . }}
+          component: kub3-${cluster}
+          group: ${cluster}

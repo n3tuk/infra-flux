@@ -5,6 +5,12 @@ prometheusScrape: true
 prometheus:
   monitor:
     enabled: true
+    http:
+      honorLabels: true
+    metrics:
+      honorLabels: true
+selfMonitor:
+  enabled: true
 
 rbac:
   create: true
@@ -12,6 +18,13 @@ rbac:
 
 networkPolicy:
   enabled: false
+
+metricLabelsAllowlist:
+  - nodes=[topology.kubernetes.io/region,topology.kubernetes.io/zone,kubernetes.io/hostname]
+  - pods=[app,helm.sh/chart,app.kubernetes.io/name,app.kubernetes.io/instance,app.kubernetes.io/version]
+  - deployments=[app,helm.sh/chart,app.kubernetes.io/name,app.kubernetes.io/instance,app.kubernetes.io/version]
+  - statefulsets=[app,helm.sh/chart,app.kubernetes.io/name,app.kubernetes.io/instance,app.kubernetes.io/version]
+  - daemonsets=[app,helm.sh/chart,app.kubernetes.io/name,app.kubernetes.io/instance,app.kubernetes.io/version]
 
 resources:
   limits: # Don't limit the CPU

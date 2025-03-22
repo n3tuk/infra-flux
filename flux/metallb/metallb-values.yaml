@@ -37,5 +37,7 @@ crds:
   enabled: true
   validationFailurePolicy: Fail
 
-serviceMonitor:
-  enabled: true
+prometheus:
+  rbacPrometheus: false
+  serviceMonitor:
+    enabled: true

@@ -12,6 +12,15 @@ spec:
         disabled: true
   secureSettings:
     - secretName: elastic-credentials
+  auth:
+    roles:
+      - secretName: elastic-role-exporters
+      - secretName: elastic-role-log-writers
+      - secretName: elastic-role-dashboards
+    fileRealm:
+      - secretName: elastic-user-exporter
+      - secretName: elastic-user-fluent-bit
+      - secretName: elastic-user-grafana
   nodeSets:
     - name: data
       count: 3
@@ -45,9 +54,9 @@ spec:
                   value: -Xms4g -Xmx4g
               resources:
                 limits:
-                  memory: 5Gi
+                  memory: 6Gi
                 requests:
-                  memory: 4Gi
+                  memory: 6Gi
                   cpu: 250m
       volumeClaimTemplates:
         - metadata:

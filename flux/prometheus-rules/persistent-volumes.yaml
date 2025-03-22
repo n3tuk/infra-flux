@@ -1,0 +1,201 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: persistent-volumes
+  namespace: prometheus-metrics
+  labels:
+    alertmanager: metrics
+spec:
+  groups:
+    - name: persistent-volume-claims
+      rules:
+        - alert: PersistentVolumeClaimUsageWarning
+          expr: |-
+            kubelet_volume_stats_available_bytes{
+              job="kubelet",
+              metrics_path="/metrics"
+            } /
+            kubelet_volume_stats_capacity_bytes{
+              job="kubelet",
+              metrics_path="/metrics"
+            } < 0.25
+          for: 1m
+          annotations:
+            summary: PersistentVolumeClaim has <25% Free
+            description: >-
+              The `{{$labels.namespace}}`/`{{$labels.persistentvolumeclaim}}`
+              `PersistentVolumeClaim` on the `{{$externalLabels.cluster}}`
+              Cluster is reporting as having **{{$value|humanizePercentage}}**
+              of its total capacity remaining, which is below the **warning**
+              limit.
+            dashboard: https://grafana.${cluster_domain}/
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-non-work-hours
+            # severity can be info, errors, warning, critical
+            severity: warning
+            # slack is the name of the channel to send messages to
+            slack: kub3-${cluster}-alerts-infra
+            # pagerduty can either be send or ignore for Alerts
+            pagerduty: send
+            # incidentio can either create incidents, send Alerts, or ignore
+            incidentio: send
+            # team sets the Team and Escalation Path to use for the incident
+            team: platform
+
+        - alert: PersistentVolumeClaimUsageCritical
+          expr: |-
+            kubelet_volume_stats_available_bytes{
+              job="kubelet",
+              metrics_path="/metrics"
+            } /
+            kubelet_volume_stats_capacity_bytes{
+              job="kubelet",
+              metrics_path="/metrics"
+            } < 0.05
+          for: 1m
+          annotations:
+            summary: PersistentVolumeClaim has <5% Free
+            description: >-
+              The `{{$labels.namespace}}`/`{{$labels.persistentvolumeclaim}}`
+              `PersistentVolumeClaim` on the `{{$externalLabels.cluster}}`
+              Cluster is reporting as having **{{$value|humanizePercentage}}**
+              of its total capacity remaining, which is below the **critical**
+              limit.
+            dashboard: https://grafana.${cluster_domain}/
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PersistentVolumeClaimCapacityWarning
+          expr: |-
+            (
+              (
+                kubelet_volume_stats_available_bytes{
+                  job="kubelet",
+                  metrics_path="/metrics"
+                } /
+                kubelet_volume_stats_capacity_bytes{
+                  job="kubelet",
+                  metrics_path="/metrics"
+                }
+              ) <= 0.3
+              and
+              predict_linear(
+                kubelet_volume_stats_available_bytes{
+                  job="kubelet",
+                  metrics_path="/metrics"
+                }[6h],
+                (7 * 24 * 60 * 60)
+              ) <= 0
+            )
+          for: 30m
+          annotations:
+            summary: PersistentVolumeClaim Nearing Capacity in 7d
+            description: >-
+              The `{{$labels.namespace}}`/`{{$labels.persistentvolumeclaim}}`
+              `PersistentVolumeClaim` on the `{{$externalLabels.cluster}}`
+              Cluster is reporting as having **{{$value|humanizePercentage}}**
+              of its total capacity remaining, **and is expected to fill within
+              the next seven days**, which is below the **warning** limit.
+            dashboard: https://grafana.${cluster_domain}/
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-non-work-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: PersistentVolumeClaimCapacityCritical
+          expr: |-
+            (
+              (
+                kubelet_volume_stats_available_bytes{
+                  job="kubelet",
+                  metrics_path="/metrics"
+                } /
+                kubelet_volume_stats_capacity_bytes{
+                  job="kubelet",
+                  metrics_path="/metrics"
+                }
+              ) <= 0.3
+              and
+              predict_linear(
+                kubelet_volume_stats_available_bytes{
+                  job="kubelet",
+                  metrics_path="/metrics"
+                }[3h],
+                (2 * 24 * 60 * 60)
+              ) <= 0
+            )
+          for: 30m
+          annotations:
+            summary: PersistentVolumeClaim at Capacity in 2d
+            description: >-
+              The `{{$labels.namespace}}`/`{{$labels.persistentvolumeclaim}}`
+              `PersistentVolumeClaim` on the `{{$externalLabels.cluster}}`
+              Cluster is reporting as having **{{$value|humanizePercentage}}**
+              of its total capacity remaining, **and is expected to fill within
+              the next two days**, which is below the **critical** limit.
+            dashboard: https://grafana.${cluster_domain}/
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PersistentVolumeErrors
+          expr: |-
+            kube_persistentvolumeclaim_status_phase{
+              phase=~"Pending|Failed"
+            } > 0
+          for: 2m
+          annotations:
+            summary: PersistentVolume is Pending or Failed
+            description: >-
+              The `{{$labels.persistentvolume}}` `PersistentVolume` on the
+              `{{$externalLabels.cluster}}` Cluster is reporting as in the
+              `{{$labels.phase}}` phase.
+            dashboard: https://grafana.${cluster_domain}/
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: never
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PersistentVolumeClaimErrors
+          expr: |-
+            kube_persistentvolumeclaim_status_phase{
+              phase=~"Pending|Lost"
+            } > 0
+          for: 2m
+          annotations:
+            summary: PersistentVolumeClaim Pending or Lost
+            description: >-
+              The `{{$labels.namespace}}`/`{{$labels.persistentvolumeclaim}}`
+              `PersistentVolumeClaim` on the `{{$externalLabels.cluster}}`
+              Cluster is reporting as having {{$value}} `PersistenVolume{{if ne
+              $value 1}}s{{end}}` in the `{{$labels.phase}}` phase.
+            dashboard: https://grafana.${cluster_domain}/
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: never
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform

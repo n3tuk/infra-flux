@@ -7,6 +7,7 @@ ignore:
   - flux/elastic-crds/resources.yaml
   - flux/elastic-crds/operator.yaml
   - flux/grafana-crds/resources.yaml
+  - flux/keda-crds/resources.yaml
 
 rules:
   document-start:
@@ -33,7 +34,7 @@ rules:
     check-multi-line-strings: false
 
   line-length:
-    max: 80
+    max: 100
     allow-non-breakable-words: true
     allow-non-breakable-inline-mappings: true
 

@@ -1,0 +1,520 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: nodes
+  namespace: prometheus-metrics
+  labels:
+    alertmanager: metrics
+spec:
+  groups:
+    - name: kubernetes-kubelet
+      rules:
+        - alert: KubeletDown
+          expr: |-
+            absent(
+              up{
+                namespace="kube-system",
+                job="kubelet",
+                metrics_path="/metrics"
+              } == 1
+            )
+          annotations:
+            title: >-
+              `kubelet` has Disappeared from Prometheus
+            summary: >-
+              One or more `Nodes` in the `{{$externalLabels.cluster}}` Cluster has dissapeared from
+              target discovery in Prometheus and may no longer accessable.
+            description: >-
+              `{{$labels.node}}` `Node`
+          for: 5m
+          labels:
+            ignore: outside-extended-hours
+            # severity can be info, errors, warning, critical
+            severity: critical
+            # slack is the name of the channel to send messages to
+            slack: kub3-${cluster}-alerts-infra
+            # pagerduty can either be send or ignore for Alerts
+            pagerduty: send
+            # incidentio can either create incidents, send Alerts, or ignore
+            incidentio: create
+            # team sets the Team and Escalation Path to use for the incident
+            team: platform
+
+        - alert: KubeletMaxPodsWarning
+          expr: |-
+            max by (node) (
+              max by (node) (
+                kubelet_running_pods{
+                  namespace="kube-system",
+                  job="kubelet"
+                }
+              ) /
+              max by (node) (
+                kube_node_status_capacity{
+                  job="kube-state-metrics",
+                  resource="pods"
+                }
+              )
+            ) > 0.80
+          for: 15m
+          annotations:
+            title: >-
+              `Node` has >80% of Maximum Pods Scheduled
+            summary: >-
+              One or more of the `Nodes` in the `{{$externalLabels.cluster}}` Cluster has schedules
+              80% or more of maximum allowed `Pods`, which is above the *warning* limit.
+            description: >-
+              `{{$labels.node}}` `Node` (*{{$value|humanizePercentage}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: KubeletMaxPodsCritical
+          expr: |-
+            max by (node) (
+              max by (node) (
+                kubelet_running_pods{
+                  namespace="kube-system",
+                  job="kubelet"
+                }
+              ) /
+              max by (node) (
+                kube_node_status_capacity{
+                  job="kube-state-metrics",
+                  resource="pods"
+                }
+              )
+            ) > 0.95
+          for: 15m
+          annotations:
+            title: >-
+              `Node` has >95% of Maximum Pods Scheduled
+            summary: >-
+              One or more of the `Nodes` in the `{{$externalLabels.cluster}}` Cluster has schedules
+              95% or more of maximum allowed `Pods`, which is above the *critical* limit.
+            description: >-
+              `{{$labels.node}}` `Node` (*{{$value|humanizePercentage}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+    - name: kubernetes-nodes
+      rules:
+        - alert: NodeClockSkewWarning
+          expr: |-
+            abs(
+              node_timex_offset_seconds{
+                namespace="kube-system",
+                job="prometheus-node-exporter"
+              } * on (namespace, pod) group_left (node)
+              kube_pod_info
+            ) > 0.05
+          for: 10m
+          annotations:
+            title: >-
+              Clock Skew Detected on `Node`
+            summary: >-
+              One or more of the `Nodes` in the `{{$externalLabels.cluster}}` Cluster is *adrift of
+              the upstream time servers by at least 50ms*, and this may begin to affect the
+              operation of this `Node` on the Cluster. This is above the *warning* threshold.
+            description: >-
+              `{{$labels.node}}` `Node` ({{$value|humanizeDuration}})
+            dashboard: https://grafana.${cluster_domain}/
+          labels:
+            ignore: outside-non-work-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: NodeClockSkewCritical
+          expr: |-
+            abs(
+              node_timex_offset_seconds{
+                namespace="kube-system",
+                job="prometheus-node-exporter"
+              } * on (namespace, pod) group_left (node)
+              kube_pod_info
+            ) >= 0.25
+          for: 1m
+          annotations:
+            title: Large Clock Skew Detected on `Node`
+            summary: >-
+              One or more of the `Nodes` in the `{{$externalLabels.cluster}}` Cluster is *adrift of
+              the upstream time servers by at least 250ms*, and is very likely to affect the
+              operation of this `Node` on the Cluster. This is above the *critical* threshold.
+            description: >-
+              `{{$labels.node}}` `Node` ({{$value|humanizeDuration}})
+            dashboard: https://grafana.${cluster_domain}/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: NodeUnreachable
+          expr: |-
+            kube_node_spec_taint{
+              job="kube-state-metrics",
+              key="node.kubernetes.io/unreachable",
+              effect="NoSchedule"
+            } == 1
+          for: 5m
+          annotations:
+            title: >-
+              `Node` is `Unreachable`
+            summary: >-
+              One or more of the `Nodes` in the `{{$externalLabels.cluster}}` Cluster *is marked as*
+              `Unreachable` for at least the last five minutes.
+            description: >-
+              `{{$labels.node}}` `Node`
+            dashboard: https://grafana.${cluster_domain}/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: NodeDegraded
+          expr: |-
+            sum by (node, condition, status) (
+              kube_node_status_condition{
+                condition!="Ready",
+                status="true"
+              } >= 1
+            )
+          for: 10m
+          annotations:
+            title: >-
+              `Node` is Degraded
+            summary: >-
+              One or more of the `Nodes` in the `{{$externalLabels.cluster}}` Cluster *is marked as
+              in a degraded* (i.e. not `Ready`) *state* for at least the last five minutes.
+            description: >-
+              `{{$labels.node}}` `Node` (`{{$labels.condition}}`: `{{$labels.status}}`)
+            dashboard: https://grafana.${cluster_domain}/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: NodeNotReadyWarning
+          expr: |-
+            sum by (node, condition, status) (
+              kube_node_status_condition{
+                condition="Ready",
+                status!="true"
+              } >= 1
+            )
+          for: 5m
+          annotations:
+            title: >-
+              `Node` is `NotReady`
+            summary: >-
+              One or more of the `Nodes` in the `{{$externalLabels.cluster}}` Cluster *is marked as
+              in a* `NotReady` *state* for at least the last five minutes, which is above the
+              *warning* limit.
+            description: >-
+              `{{$labels.node}}` `Node` (`{{$labels.condition}}`: `{{$labels.status}}`)
+            dashboard: https://grafana.${cluster_domain}/
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: NodeNotReadyCritical
+          expr: |-
+            sum by (node, condition, status)(
+              kube_node_status_condition{
+                condition="Ready",
+                status!="true"
+              } >= 1
+            )
+          for: 15m
+          annotations:
+            title: >-
+              `Node` is `NotReady`
+            summary: >-
+              One or more of the `Nodes` in the `{{$externalLabels.cluster}}` Cluster *is marked as
+              in a* `NotReady` *state* for at least the last fifteen minutes, which is above the
+              *critical* limit.
+            description: >-
+              `{{$labels.node}}` `Node` (`{{$labels.condition}}`: `{{$labels.status}}`)
+            dashboard: https://grafana.${cluster_domain}/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: NodeFilesystemCapacityWarning
+          expr: |-
+            (
+              ( node_filesystem_avail_bytes{
+                  job="prometheus-node-exporter",
+                  fstype!=""
+                } /
+                node_filesystem_size_bytes{
+                  job="prometheus-node-exporter",
+                  fstype!=""
+                } < 0.5
+              ) and (
+                predict_linear(
+                  node_filesystem_avail_bytes{
+                    job="prometheus-node-exporter",
+                    fstype!=""
+                  }[6h], 7*24*60*60
+                ) < 0
+              ) and (
+                node_filesystem_readonly{
+                  job="prometheus-node-exporter",
+                  fstype!=""
+                } == 0
+              )
+            ) * on(instance)
+                group_left(nodename, domainname) (
+                  node_uname_info{
+                    job="prometheus-node-exporter"
+                  }
+                )
+          for: 30m
+          annotations:
+            title: >-
+              `Node` Filesystem Capacity
+            summary: >-
+              One or more `Nodes` in the `{{$externalLabels.cluster}}` Cluster have mountpoints
+              which are consuming space on the underlying volumes, and *based on current usage are
+              expected to fill up within the next seven days*, which is above the *warning*
+              threshold.
+            description: >-
+              `{{$labels.nodename}}` `Node` (*{{$value|humanizePercentage}}%* on
+              `{{$labels.mountpoint}}`)
+          labels:
+            ignore: outside-non-work-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: NodeFilesystemCapacityCritical
+          expr: |-
+            (
+              ( node_filesystem_avail_bytes{
+                  job="prometheus-node-exporter",
+                  fstype!=""
+                } /
+                node_filesystem_size_bytes{
+                  job="prometheus-node-exporter",
+                  fstype!=""
+                } < 0.4
+              ) and (
+                predict_linear(
+                  node_filesystem_avail_bytes{
+                    job="prometheus-node-exporter",
+                    fstype!=""
+                  }[6h], 3*24*60*60
+                ) < 0
+              ) and (
+                node_filesystem_readonly{
+                  job="prometheus-node-exporter",
+                  fstype!=""
+                } == 0
+              )
+            ) * on(instance)
+                group_left(nodename, domainname) (
+                  node_uname_info{
+                    job="prometheus-node-exporter"
+                  }
+                )
+          for: 30m
+          annotations:
+            title: >-
+              `Node` Filesystem Capacity
+            summary: >-
+              One or more `Nodes` in the `{{$externalLabels.cluster}}` Cluster have mountpoints
+              which are consuming space on the underlying volumes, and *based on current usage are
+              expected to fill up within the next three days*, which is above the *critical*
+              threshold.
+            description: >-
+              `{{$labels.nodename}}` `Node` (*{{$value|humanizePercentage}}%* on
+              `{{$labels.mountpoint}}`)
+          labels:
+            ignore: outside-non-work-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: NodeFilesystemUsageWarning
+          expr: |-
+            (
+              (
+                (
+                  node_filesystem_avail_bytes{
+                    job="prometheus-node-exporter",
+                    fstype!=""
+                  } /
+                  node_filesystem_size_bytes{
+                    job="prometheus-node-exporter",
+                    fstype!=""
+                  }
+                ) * 100
+              ) < 15
+            and
+              node_filesystem_readonly{
+                job="prometheus-node-exporter",
+                fstype!=""
+              } == 0
+            ) * on(instance) group_left(nodename, domainname) (
+              node_uname_info{
+                job="prometheus-node-exporter"
+              }
+            )
+          for: 1h
+          annotations:
+            title: >-
+              `Node` Filesystem Usage
+            summary: >-
+              One or more `Nodes` in the `{{$externalLabels.cluster}}` Cluster have mountpoints
+              which are using at or above 85% of their available capacity during at least the last
+              hour, which is above the *warning* threshold.
+            description: >-
+              `{{$labels.nodename}}` `Node` (*{{$value|humanizePercentage}}%* on
+              `{{$labels.mountpoint}}`)
+          labels:
+            ignore: outside-non-work-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: NodeFilesystemUsageWarning
+          expr: |-
+            (
+              (
+                (
+                  node_filesystem_avail_bytes{
+                    job="prometheus-node-exporter",
+                    fstype!=""
+                  } /
+                  node_filesystem_size_bytes{
+                    job="prometheus-node-exporter",
+                    fstype!=""
+                  }
+                ) * 100
+              ) < 5
+            and
+              node_filesystem_readonly{
+                job="prometheus-node-exporter",
+                fstype!=""
+              } == 0
+            ) * on(instance) group_left(nodename, domainname) (
+              node_uname_info{
+                job="prometheus-node-exporter"
+              }
+            )
+          for: 1h
+          annotations:
+            title: >-
+              `Node` Filesystem Usage
+            summary: >-
+              One or more `Nodes` in the `{{$externalLabels.cluster}}` Cluster have mountpoints
+              which are using at or above 95% of their available space during at least the last
+              hour, which is above the *critical* threshold.
+            description: >-
+              `{{$labels.nodename}}` `Node` (*{{$value|humanizePercentage}}%* on
+              `{{$labels.mountpoint}}`)
+          labels:
+            ignore: outside-non-work-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: NodeNetworkReceiveErrors
+          expr: |-
+            increase(
+              node_network_receive_errs_total{
+                job="prometheus-node-exporter"
+              }[2m]
+            ) * on(instance)
+                group_left(nodename, domainname) (
+                  node_uname_info{
+                    job="prometheus-node-exporter"
+                  }
+                )
+              > 5
+          for: 10m
+          annotations:
+            title: >-
+              `Node` Network Receive Errors
+            summary: >-
+              One or more `Nodes` in the `{{$externalLabels.cluster}}` Cluster have recorded
+              *received errors on network interfaces* over at least the last ten minutes, which is
+              above the *warning* threshold.
+            description: >-
+              `{{$labels.nodename}}` `Node` (*{{$value|humanize}} errors* on `{{$labels.device}}`)
+          labels:
+            ignore: outside-non-work-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: NodeNetworkTransmitErrors
+          expr: |-
+            increase(
+              node_network_transmit_errs_total{
+                job="prometheus-node-exporter"
+              }[2m]
+            ) * on(instance)
+                group_left(nodename, domainname) (
+                  node_uname_info{
+                    job="prometheus-node-exporter"
+                  }
+                )
+              > 5
+          for: 1h
+          annotations:
+            title: >-
+              `Node` Network Transmit Errors
+            summary: >-
+              One or more `Nodes` in the `{{$externalLabels.cluster}}` Cluster have recorded
+              *transmit errors on network interfaces* over at least the last ten minutes, which is
+              above the *warning* threshold.
+            description: >-
+              `{{$labels.nodename}}` `Node` (*{{$value|humanize}} errors* on `{{$labels.device}}`)
+          labels:
+            ignore: outside-non-work-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform

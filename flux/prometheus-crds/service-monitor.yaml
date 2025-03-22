@@ -1,0 +1,21 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: prometheus-operator
+  namespace: prometheus-operator
+spec:
+  endpoints:
+    - port: http
+      path: /metrics
+      scheme: http
+      interval: 30s
+      scrapeTimeout: 10s
+      honorLabels: false
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-operator
+      app.kubernetes.io/component: controller
+  namespaceSelector:
+    matchNames:
+      - prometheus-operator

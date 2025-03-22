@@ -1,0 +1,54 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: elastic-role-exporters
+  namespace: elastic-logs
+stringData:
+  roles.yml: |-
+    exporters:
+      cluster:
+        - monitor
+      indices:
+        - names:
+            - '*'
+          privileges:
+            - monitor
+            - view_index_metadata
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: elastic-role-log-writers
+  namespace: elastic-logs
+stringData:
+  roles.yml: |-
+    log_writers:
+      cluster:
+        - monitor
+        - manage_index_templates
+      indices:
+        - names:
+            - logs-*
+          privileges:
+            - create
+            - create_index
+            - write
+            - manage
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: elastic-role-dashboards
+  namespace: elastic-logs
+stringData:
+  roles.yml: |-
+    dashboards:
+      cluster:
+        - monitor
+      indices:
+        - names:
+            - logs-*
+          privileges:
+            - view_index_metadata
+            - read

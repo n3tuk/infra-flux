@@ -24,6 +24,7 @@ resources:
   - provider-slack.yaml
   - provider-pagerduty.yaml
   - notifications.yaml
+  - prometheus-rules.yaml
 
 configMapGenerator:
   - name: helm-flux-values

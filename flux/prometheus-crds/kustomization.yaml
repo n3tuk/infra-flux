@@ -19,3 +19,6 @@ labels:
 resources:
   - namespace.yaml
   - resources.yaml
+  # NOTE: This may break bootstrapping by attempting to deploy a ServiceMonitor
+  #       resource at the same time as the ServiceMonitor CRDs manifest
+  - service-monitor.yaml

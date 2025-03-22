@@ -1,0 +1,44 @@
+---
+fullnameOverride: elasticsearch-exporter
+replicaCount: 1
+
+log:
+  format: json
+  level: info
+
+resources:
+  limits: # Don't limit the CPU
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 32Mi
+
+extraEnvSecrets:
+  ES_USERNAME:
+    secret: elastic-user-exporter
+    key: username
+  ES_PASSWORD:
+    secret: elastic-user-exporter
+    key: password
+
+es:
+  uri: http://logs-es-http.elastic-logs.svc:9200
+
+  all: true
+  indices: true
+  indices_settings: true
+  indices_mappings: true
+  aliases: false
+  shards: true
+  snapshots: false
+  cluster_settings: false
+  slm: false
+  data_stream: false
+  ilm: false
+  timeout: 10s
+
+serviceMonitor:
+  enabled: true
+
+podMonitor:
+  enabled: false

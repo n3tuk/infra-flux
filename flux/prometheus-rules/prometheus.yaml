@@ -1,0 +1,726 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: prometheus
+  namespace: prometheus-metrics
+  labels:
+    alertmanager: metrics
+spec:
+  groups:
+    - name: prometheus-utilisation
+      rules:
+        - alert: PrometheusRuleEvaluationWarning
+          expr: |-
+            (
+              prometheus_rule_group_last_duration_seconds
+                >
+              ( prometheus_rule_group_interval_seconds / 2 )
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+          for: 5m
+          annotations:
+            title: Slow Prometheus Rule Group Evaluation
+            summary: >-
+              One or more of the Prometheus `Pods` in the `{{$externalLabels.cluster}}` Cluster have
+              recorded an evaluation time for a Rule Group *which is more than half of the scrape
+              interval*, which means the data cannot be processed quickly enough, or there are
+              queries which are too complex.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}` (*{{$value|humanizeDuration}}*)
+          labels:
+            ignore: outside-extended-hours
+            # severity can be info, erorrs, warning, critical
+            severity: warning
+            # slack is the name of the channel to send messages to
+            slack: kub3-${cluster}-alerts-infra
+            # pagerduty can either be send or ignore for Alerts
+            pagerduty: send
+            # incidentio can either creaet incidents, send Alerts, or ignore
+            incidentio: send
+            # team sets the Team and Escalation Path to use for the incident
+            team: platform
+
+        - alert: PrometheusRuleEvaluationCritical
+          expr: |-
+            (
+              prometheus_rule_group_last_duration_seconds
+                >
+              prometheus_rule_group_interval_seconds
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+          for: 5m
+          annotations:
+            title: Slow Prometheus Rule Group Evaluation
+            summary: >-
+              One or more of the Prometheus `Pods` in the `{{$externalLabels.cluster}}` Cluster have
+              recorded an evaluation time for a Rule Group *which is more than the scrape interval*,
+              which means the data cannot be processed quickly enough, or there are queries which
+              are too complex.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}` (*{{$value|humanizeDuration}}*)
+          labels:
+            ignore: never
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusNotificationsQueueBacklog
+          expr: |-
+            min_over_time(
+              prometheus_notifications_queue_length[15m]
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+            > 0
+          for: 1m
+          annotations:
+            title: Prometheus Alert Notification Queue Backlog
+            summary: >-
+              One or more of the Prometheus `Pods` in the `{{$externalLabels.cluster}}` Cluster have
+              not emptied their notification queue within the last fifteen minutes, which may mean a
+              broken or down integration.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}`
+              (*{{$value}} notification{{if ne $value 1.0}}s{{end}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusNotificationQueueWarning
+          expr: |
+            # Without min_over_time, failed scrapes could create false negatives, see
+            # https://www.robustperception.io/alerting-on-gauges-in-prometheus-2-0 for details.
+            ( predict_linear(
+                prometheus_notifications_queue_length{
+                  job="prometheus"
+                }[15m],
+                (8 * 60 * 60)
+              ) >
+              min_over_time(
+                prometheus_notifications_queue_capacity{
+                  job="prometheus"
+                }[5m]
+              )
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+          for: 15m
+          annotations:
+            title: Prometheus Alert Notification Queue Warning
+            summary: >-
+              One or more of the Prometheus `Pods` in the `{{$externalLabels.cluster}}` Cluster have
+              a notification queue which is currently growing, and, based on the increase over the
+              last fifteen minutes, it is *expected to fill within the next eight hours*.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}` (*{{$value|humanizeDuration}}*)
+          labels:
+            ignore: never
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+    - name: prometheus-configuration
+      rules:
+        - alert: PrometheusConfigReloadFailure
+          expr: |-
+            # Without max_over_time, failed scrapes could create false negatives, see
+            # https://www.robustperception.io/alerting-on-gauges-in-prometheus-2-0 for details.
+            ( max_over_time(
+                prometheus_config_last_reload_successful{
+                  job="prometheus"
+                }[5m]
+              ) == 0
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+          for: 10m
+          annotations:
+            title: Prometheus Config Reload Failure
+            summary: >-
+              One or more of the Prometheus `Pods` in the `{{$externalLabels.cluster}}` Cluster have
+              failed to reload their configuration files(s) and therefore the configuration has not
+              fully updated to the latest version.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}`
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusServiceDiscoveryRefreshFailure
+          expr: |-
+            ( increase(
+                prometheus_sd_refresh_failures_total{
+                  job="prometheus"
+                }[10m]
+              ) * on (namespace, pod) group_left (node)
+              kube_pod_info
+            ) > 0
+          for: 20m
+          annotations:
+            title: Prometheus Service Discovery Refresh Failure
+            summary: >-
+              One or more of the Prometheus `Pods` in the `{{$externalLabels.cluster}}` Cluster have
+              failed to refresh their Service Discovery configuration with their noted mechanism,
+              preventing targets from being discovered or updated.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}` with `{{$labels.mechanism}}`
+          labels:
+            ignore: outside-non-work-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusRuleEvaluationFailuresWarning
+          expr: |-
+            sum by (namespace, pod, rule_group) (
+              round(
+                increase(
+                  prometheus_rule_evaluation_failures_total[5m]
+                )
+              )
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+            > 0
+          for: 2m
+          annotations:
+            title: Prometheus Rule Evaluation Failures
+            summary: >-
+              One or more of the Prometheus `Pods` in the `{{$externalLabels.cluster}}` Cluster have
+              reported there have been failures when processing rules for one or more Rule Groups
+              within the last five minutes.
+            description: >-
+              `{{$labels.rule_group|reReplaceAll "^[^;]+;" ""}}` Rule Group in `{{$labels.pod}}` on
+              `Node` `{{$labels.node}}` (*{{$value}}* failure{{if ne $value 0.0}}s{{end}})
+            dashboard: https://grafana.${cluster_domain}/
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+    - name: prometheus-operator
+      rules:
+        - alert: PrometheusOperatorListErrors
+          expr: |-
+            (
+              sum by (namespace, pod, controller) (
+                rate(
+                  prometheus_operator_list_operations_failed_total{
+                    job="prometheus-operator",
+                    namespace="prometheus-operator"
+                  }[10m]
+                )
+              ) /
+              sum by (namespace, pod, controller) (
+                rate(
+                  prometheus_operator_list_operations_total{
+                    job="prometheus-operator",
+                    namespace="prometheus-operator"
+                  }[10m]
+                )
+              ) * on (namespace, pod) group_left (node)
+              kube_pod_info
+            ) > 0.1
+          for: 15m
+          annotations:
+            title: >-
+              `prometheus-operator` Errors During `list`
+            summary: >-
+              One or more of the `prometheus-operator` Controllers in the
+              `{{$externalLabels.cluster}}` Cluster *are receiving errors from the Kubernetes API at
+              an elevated rate* in `list` operations. This is likely causing it to not be able to
+              expose metrics about Kubernetes objects correctly, or at all.
+            description: >-
+              `{{$labels.controller}}` Controller in `{{$labels.pod}}` on `Node`
+              `{{$labels.node}}` (*{{$value|humanizePercentage}} error rate*)
+            runbook: https://runbooks.prometheus-operator.dev/runbooks/prometheus-operator/prometheusoperatorlisterrors
+          labels:
+            ignore: outside-non-work-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusOperatorWatchErrors
+          expr: |-
+            (
+              sum by (namepsace, pod, controller) (
+                rate(
+                  prometheus_operator_watch_operations_failed_total{
+                    namespace="prometheus-operator",
+                    job="prometheus-operator"
+                  }[5m]
+                )
+              ) /
+              sum by (namepsace, pod, controller) (
+                rate(
+                  prometheus_operator_watch_operations_total{
+                    namespace="prometheus-operator",
+                    job="prometheus-operator"
+                  }[5m]
+                )
+              ) * on (namespace, pod) group_left (node)
+              kube_pod_info
+            ) > 0.1
+          for: 15m
+          annotations:
+            title: >-
+              `prometheus-operator` Errors During `watch`
+            summary: >-
+              One or more of the `prometheus-operator` Controlelrs in the
+              `{{$externalLabels.cluster}}` Cluster *is receiving errors from the Kubernetes API at
+              an elevated rate* in `watch` operations. This is likely causing it to not be able to
+              expose metrics about Kubernetes objects correctly, or at all.
+            description: >-
+              `{{$labels.controller}}` Controller in `{{$labels.pod}}` on `Node`
+              `{{$labels.node}}` (*{{$value|humanizePercentage}} error rate*)
+            runbook: https://runbooks.prometheus-operator.dev/runbooks/prometheus-operator/prometheusoperatorwatcherrors
+          labels:
+            ignore: outside-non-work-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusOperatorSyncFailed
+          expr: |-
+            round(
+              increase(
+                prometheus_operator_syncs{
+                  namespace="prometheus-operator",
+                  job="prometheus-operator",
+                  status="failed"
+                }[5m]
+              ) * on (namespace, pod) group_left (node)
+              kube_pod_info
+            ) >= 1
+          for: 5m
+          annotations:
+            title: >-
+              `prometheus-operator` Controller Synchronisation Failures
+            summary: >-
+              One or more of the `prometheus-operator` Controllers in the
+              `{{$externalLabels.cluster}}` Cluster has *failed to synchronise* with other
+              Kubernetes resources during at least the last five minutes.
+            description: >-
+              `{{$labels.controller}}` Controller in `{{$labels.pod}}` on `Node` `{{$labels.node}}`
+              (*{{$value|humanize}} failure{{- if ne $value 1.0}}s{{end}}*)
+            runbook: https://runbooks.prometheus-operator.dev/runbooks/prometheus-operator/prometheusoperatorsyncfailed
+          labels:
+            ignore: outside-non-work-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusOperatorControllerReconcileErrors
+          expr: |-
+            (
+              sum by (namespace, pod, controller) (
+                rate(
+                  prometheus_operator_reconcile_errors_total{
+                    namespace="prometheus-operator",
+                    job="prometheus-operator"
+                  }[5m]
+                )
+              ) /
+              sum by (namespace, pod, controller) (
+                rate(
+                  prometheus_operator_reconcile_operations_total{
+                    namespace="prometheus-operator",
+                    job="prometheus-operator"
+                  }[5m]
+                )
+              ) * on (namespace, pod) group_left (node)
+              kube_pod_info
+            ) > 0.1
+          for: 10m
+          annotations:
+            title: >-
+              `prometheus-operator` Controller Reconciliation Errors
+            summary: >-
+              One or more of the `prometheus-operator` Controllers in the
+              `{{$externalLabels.cluster}}` Cluster has *failed to reconcile Kubernetes resource
+              objects* durinag at least the last ten minutes.
+            description: >-
+              `{{$labels.controller}}` Controller in `{{$labels.pod}}` on `Node` `{{$labels.node}}`
+              (*{{$value|humanize}} failure{{- if ne $value 1.0}}s{{end}}*)
+            runbook: https://runbooks.prometheus-operator.dev/runbooks/prometheus-operator/prometheusoperatorreconcileerrors
+          labels:
+            ignore: outside-non-work-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusOperatorStatusUpdateErrors
+          expr: |-
+            (
+              sum by (namespace, pod, controller) (
+                rate(
+                  prometheus_operator_status_update_errors_total{
+                    namespace="prometheus-operator",
+                    job="prometheus-operator"
+                  }[5m]
+                )
+              ) /
+              sum by (namespace, pod, controller) (
+                rate(
+                  prometheus_operator_status_update_operations_total{
+                    namespace="prometheus-operator",
+                    job="prometheus-operator"
+                  }[5m]
+                )
+              ) * on (namespace, pod) group_left (node)
+              kube_pod_info
+            ) > 0.1
+          for: 10m
+          annotations:
+            title: >-
+              `prometheus-operator` Status Update Errors
+            summary: >-
+              One or more of the `prometheus-operator` Controllers in the
+              `{{$externalLabels.cluster}}` Cluster has *failed to update the status of Kubernetes
+              resources objects* during at least the last ten minutes.
+            description: >-
+              `{{$labels.controller}}` Controller in `{{$labels.pod}}` on `Node` `{{$labels.node}}`
+              (*{{$value|humanize}} failure{{- if ne $value 1.0}}s{{end}}*)
+            runbook: https://runbooks.prometheus-operator.dev/runbooks/prometheus-operator/prometheusoperatorstatusupdateerrors
+          labels:
+            ignore: outside-non-work-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusOperatorNodeLookupErrors
+          expr: |-
+            ( increase(
+                prometheus_operator_node_address_lookup_errors_total{
+                  namespace="prometheus-operator",
+                  job="prometheus-operator"
+                }[5m]
+              ) * on (namespace, pod) group_left (node)
+              kube_pod_info
+            ) > 0
+          for: 10m
+          annotations:
+            title: >-
+              `prometheus-operator` Node Lookup Errors
+            summary: >-
+              One or more of the `prometheus-operator` Controllers in the
+              `{{$externalLabels.cluster}}` Cluster has *failed to lookup* `Node` *addresses* during
+              at least the last ten minutes.
+            description: >-
+              `{{$labels.controller}}` Controller in `{{$labels.pod}}` on `Node` `{{$labels.node}}`
+              (*{{$value|humanize}} failure{{- if ne $value 1.0}}s{{end}}*)
+            runbook: https://runbooks.prometheus-operator.dev/runbooks/prometheus-operator/prometheusoperatornodelookuperrors
+          labels:
+            ignore: outside-non-work-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusOperatorNotReady
+          expr: |-
+            ( prometheus_operator_ready{
+                namespace="prometheus-operator",
+                job="prometheus-operator"
+              } == 0
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+          for: 5m
+          annotations:
+            title: >-
+              `prometheus-operator` Controller is `NotReady`
+            summary: >-
+              One or more of the `prometheus-operator` Controllers in the
+              `{{$externalLabels.cluster}}` Cluster has been *in a* `NotReady` *state* for at least
+              the last five minutes.
+            description: >-
+              `{{$labels.controller}}` Controller in `{{$labels.pod}}` on `Node` `{{$labels.node}}`
+            runbook: https://runbooks.prometheus-operator.dev/runbooks/prometheus-operator/prometheusoperatornotready
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusOperatorRejectedResources
+          expr: |-
+            (
+              prometheus_operator_managed_resources{
+                namespace="prometheus-operator",
+                job="prometheus-operator",
+                state="rejected"
+              } > 0
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+          for: 5m
+          annotations:
+            title: >-
+              `prometheus-operator` Rejecting Resources
+            summary: >-
+              One or more of the `prometheus-operator` Controllers in the
+              `{{$externalLabels.cluster}}` Cluster has rejected Kubernetes resources over at least
+              the last five minutes.
+            description: >-
+              `{{$labels.controller}}` Controller in `{{$labels.pod}}` on `Node` `{{$labels.node}}`
+              (*{{$value}}* `{{$labels.resource}}` resource{{if ne $value 1.0}}s{{end}}
+              `{{$labels.state}}`)
+            runbook: https://runbooks.prometheus-operator.dev/runbooks/prometheus-operator/prometheusoperatorrejectedresources
+          labels:
+            ignore: outside-non-work-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+    - name: prometheus-tsdb
+      rules:
+        - alert: PrometheusTSDBCheckpointCreationFailures
+          expr: |-
+            increase(
+              prometheus_tsdb_checkpoint_creations_failed_total[1m]
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+            > 0
+          for: 0m
+          annotations:
+            title: Prometheus TSDB Checkpoint Creation Failures
+            summary: >-
+              One or more of the Prometheus `Pods` in the `{{$externalLabels.cluster}}` Cluster have
+              reported *failures when creating checkpoints* for the TSDB within the last minute.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}` (*{{$value|humanize}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusTSDBCheckpointDeletionFailures
+          expr: |-
+            increase(
+              prometheus_tsdb_checkpoint_deletions_failed_total[1m]
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+            > 0
+          for: 0m
+          annotations:
+            title: Prometheus TSDB Checkpoint Creation Failures
+            summary: >-
+              One or more of the Prometheus `Pods` in the `{{$externalLabels.cluster}}` Cluster have
+              reported *failures when deleting checkpoints* for the TSDB within the last minute.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}` (*{{$value|humanize}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusTSDBCompactionsFailures
+          expr: |-
+            increase(
+              prometheus_tsdb_compactions_failed_total[1m]
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+            > 0
+          for: 0m
+          annotations:
+            title: Prometheus TSDB Compaction Failures
+            summary: >-
+              One or more of the Prometheus `Pods` in the `{{$externalLabels.cluster}}` Cluster have
+              reported *failures when running compactions* for the TSDB within the last minute.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}` (*{{$value|humanize}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusTSDBHeadTruncationsFailures
+          expr: |-
+            increase(
+              prometheus_tsdb_head_truncations_failed_total[1m]
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+            > 0
+          for: 0m
+          annotations:
+            title: Prometheus TSDB Head Truncation Failures
+            summary: >-
+              One or more of the Prometheus `Pods` in the `{{$externalLabels.cluster}}` Cluster have
+              reported *failures when running head truncations* for the TSDB within the last minute.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}` (*{{$value|humanize}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusTSDBReloadFailures
+          expr: |-
+            increase(
+              prometheus_tsdb_reloads_failures_total[1m]
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+            > 0
+          for: 0m
+          annotations:
+            title: Prometheus TSDB Reload Failures
+            summary: >-
+              One or more of the Prometheus `Pods` in the `{{$externalLabels.cluster}}` Cluster have
+              reported *failures when reloading* the TSDB within the last minute.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}` (*{{$value|humanize}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusTSDBWALCorruptions
+          expr: |-
+            increase(
+              prometheus_tsdb_wal_corruptions_total[1m]
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+            > 0
+          for: 0m
+          annotations:
+            title: Prometheus TSDB WAL Corruptions
+            summary: >-
+              One or more of the Prometheus `Pods` in the `{{$externalLabels.cluster}}` Cluster have
+              reported *corruptions with the WAL files* for the TSDB within the last minute.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}` (*{{$value|humanize}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusTSDBWALTruncationsFailures
+          expr: |-
+            increase(
+              prometheus_tsdb_wal_truncations_failed_total[1m]
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+            > 0
+          for: 0m
+          annotations:
+            title: Prometheus TSDB WAL Truncations Failures
+            summary: >-
+              One or more of the Prometheus `Pods` in the `{{$externalLabels.cluster}}` Cluster have
+              reported *failures when truncating the WAL files* for the TSDB within the last minute.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}` (*{{$value|humanize}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusTSDBSeriesIncreaseWarning
+          expr: |-
+            (
+              increase(
+                prometheus_tsdb_head_series_created_total[1d]
+              ) /
+              (
+                prometheus_tsdb_head_series -
+                increase(
+                  prometheus_tsdb_head_series_created_total[1d]
+                )
+              )
+            ) * on (namespace, pod) group_left (node)
+            kube_pod_info
+            > 0.25
+          for: 1m
+          annotations:
+            title: Prometheus TSDB Series Increase
+            summary: >-
+              One or more of the Prometheus `Pods` in the `{{$externalLabels.cluster}}` Cluster have
+              seen *a large increase in the number of series recorded* within the TSDB, expanding by
+              greater than 10%* within the last 24 hours.
+            description: >-
+              `{{$labels.pod}}` on `Node` `{{$labels.node}}`
+              (*{{$value|humanizePercentage}}* increase)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: PrometheusTSDBSeriesCardinalityWarning
+          expr: |-
+            label_replace(
+              topk(
+                100,
+                count by (__name__) (
+                  {__name__=~".+"}
+                )
+              ) > 5000,
+              "name", "$1", "__name__", "(.+)"
+            )
+          for: 1m
+          annotations:
+            title: Prometheus TSDB Series Cardinality
+            summary: >-
+              One or more of the Prometheus `Pods` in the `{{$externalLabels.cluster}}` Cluster have
+              recorded *at least one series with a large cardinality within the TSDB*, potentially
+              leading to a drop in performance of the service.
+            description: >-
+              `{{$labels.name}}` (*{{$value|humanize}}* labels)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform

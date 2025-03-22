@@ -1,0 +1,41 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: flux
+  namespace: flux-system
+  labels:
+    alertmanager: metrics
+spec:
+  groups:
+    - name: flux
+      rules:
+        - alert: FluxReconciliationFailures
+          expr: |-
+            gotk_reconcile_condition{
+              type="Ready",
+              status!="True"
+            } > 0
+          for: 3m
+          annotations:
+            title: Flux Resource Reconciliation Failures
+            summary: >-
+              One of more of the `flux` Controllers in the `{{$externalLabels.cluster}}` Cluster
+              have reported a failure to reconcile against deployed Kubernetes resources during at
+              least the three minutes.
+            description: >-
+              `{{$labels.pod}}` cannot reconcile
+              `{{$labels.exported_namespace}}`/`{{$labels.name}}` `{{$labels.kind}}`
+              (*{{$labels.status}}*)
+          labels:
+            ignore: outside-extended-hours
+            # severity can be info, errors, warning, critical
+            severity: warning
+            # slack is the name of the channel to send messages to
+            slack: kub3-${cluster}-alerts-infra
+            # pagerduty can either be send or ignore for Alerts
+            pagerduty: send
+            # incidentio can either create incidents, send Alerts, or ignore
+            incidentio: send
+            # team sets the Team and Escalation Path to use for the incident
+            team: platform

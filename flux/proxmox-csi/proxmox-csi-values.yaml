@@ -27,6 +27,7 @@ storageClass:
 
 metrics:
   enabled: true
+  type: podMonitor
 
 # These services can run on the Control Plane so that any general issues with
 # worker nodes will not affect the processing of PVCs within the cluster
@@ -35,3 +36,15 @@ nodeSelector:
 tolerations:
   - key: node-role.kubernetes.io/control-plane
     effect: NoSchedule
+
+controller:
+  plugin:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 24Mi
+  provisioner:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 24Mi

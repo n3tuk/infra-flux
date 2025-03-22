@@ -36,7 +36,7 @@ spec:
 
   serviceAccountName: prometheus
 
-  retention: 360h
+  retention: 2160h
   retentionSize: 112GiB
   disableCompaction: true
   storage:
@@ -53,8 +53,8 @@ spec:
     limits: # Don't limit the CPU
       memory: 1024Mi
     requests:
-      cpu: 500m
-      memory: 256Mi
+      cpu: 50m
+      memory: 1024Mi
 
   logFormat: json
 
@@ -65,10 +65,18 @@ spec:
     seccompProfile:
       type: RuntimeDefault
 
+  scrapeInterval: 15s
+
   podMonitorSelector: {}
   podMonitorNamespaceSelector: {}
   serviceMonitorSelector: {}
   serviceMonitorNamespaceSelector: {}
+
+  probeSelector: {}
+  probeNamespaceSelector: {}
+
+  scrapeConfigSelector: {}
+  scrapeConfigNamespaceSelector: {}
 
   ruleSelector:
     matchLabels:

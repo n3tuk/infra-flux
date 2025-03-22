@@ -1,0 +1,284 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: metallb
+  namespace: metallb-system
+  labels:
+    alertmanager: metrics
+spec:
+  groups:
+    - name: metallb
+      rules:
+        - alert: MetallLBSpeakerAbsent
+          expr: |-
+            absent(
+              up{
+                job="metallb"
+              } == 1
+            )
+          for: 3m
+          annotations:
+            title: >-
+              `metallb` has Disappeared from Prometheus
+            summary: >-
+              The `metallb` Speaker job (i.e. MetalLB) in the `{{$externalLabels.cluster}}` Cluster
+              has *dissappeared* from Prometheus' service discovery and may not be running, or the
+              `Service` may not be being scraped, and hence cannot be checked and monitored.
+            description: >-
+              `metallb-system`/`metallb` has *disappeared*
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: never
+            # severity can be info, errors, warning, critical
+            severity: critical
+            # slack is the name of the channel to send messages to
+            slack: kub3-${cluster}-alerts-infra
+            # pagerduty can either be send or ignore for Alerts
+            pagerduty: send
+            # incidentio can either create incidents, send Alerts, or ignore
+            incidentio: create
+            # team sets the Team and Escalation Path to use for the incident
+            team: platform
+
+        - alert: MetallLBControllerAbsent
+          expr: |-
+            absent(
+              up{
+                job="metallb-controller-monitor-service"
+              } == 1
+            )
+          for: 3m
+          annotations:
+            title: >-
+              `metallb` Controller has Disappeared from Prometheus
+            summary: >-
+              The `metallb` Controller job (i.e. MetalLB) in the `{{$externalLabels.cluster}}`
+              Cluster has *dissappeared* from Prometheus' service discovery and may not be running,
+              or the `Service` may not be being scraped, and hence cannot be checked and monitored.
+            description: >-
+              `metallb-system`/`metallb` has *disappeared*
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: never
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+    - name: metallb-config
+      rules:
+        - alert: MetalLBConfigurationStale
+          expr: |-
+            (
+              metallb_k8s_client_config_stale_bool{
+                job=~"metallb"
+              } == 1
+            ) * on (namespace, pod) group_left(node)
+            kube_pod_info
+          for: 1m
+          annotations:
+            title: >-
+              `metallb` Configuration Stale
+            summary: >-
+              One or more of the `metallb` `Pods` on the `{{$externalLabels.cluster}}` Cluster have
+              *stale configurations loaded* for at least the last minute and may be running
+              incorrect or invalid settings.
+            description: >-
+              `$labels.container` Container in the `{{$labels.pod}}` `Pod` on the `{{$labels.node}}`
+              `Node`
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: MetalLBConfigurationNotLoaded
+          expr: |-
+            (
+              metallb_k8s_client_config_loaded_bool{
+                job=~"metallb"
+              } == 0
+            ) * on (namespace, pod) group_left(node)
+            kube_pod_info
+          for: 1m
+          annotations:
+            title: >-
+              `metallb` Configuration Not Loaded
+            summary: >-
+              One or more of the `metallb` `Pods` on the `{{$externalLabels.cluster}}` Cluster have
+              *not loaded their configuration* for at least the last minute and may not be operating
+              correctly.
+            description: >-
+              `$labels.container` Container in the `{{$labels.pod}}` `Pod` on the `{{$labels.node}}`
+              `Node`
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+    - name: metallb-pools
+      rules:
+        - alert: MetalLBAddressPoolExhausted
+          expr: |-
+            (
+              metallb_allocator_addresses_total
+            - on (namespace, pod, pool)
+              metallb_allocator_addresses_in_use_total
+            ) <= 3
+          for: 15m
+          annotations:
+            title: >-
+              `metallb` Address Pool Exhausted
+            summary: >-
+              One or more of the `AddressPools` for `metallb` on the `{{$externalLabels.cluster}}`
+              Cluster have *three or less IP addresses left for allocation* to new `LoadBalancer` or
+              `Service` resources for at least the last fifteen minutes.
+            description: >-
+              `{{$labels.pool}}` (*{{$value|humanize}}* addresses remaining)
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: MetalLBAddressPoolExhaustionWarning
+          expr: |-
+            (
+              metallb_allocator_addresses_in_use_total
+              / on(namespace, pod, pool)
+              metallb_allocator_addresses_total
+            ) >= 0.7
+          for: 15m
+          annotations:
+            title: >-
+              `metallb` Address Pool Exhaustion
+            summary: >-
+              One or more of the `AddressPools` for `metallb` on the `{{$externalLabels.cluster}}`
+              Cluster have *used 70% or more of the allocatable IP addresses* for `LoadBalancer` or
+              `Service` resources for at least the last fifteen minutes.
+            description: >-
+              `{{$labels.pool}}` (*{{$value|humanize}}* addresses used)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: MetalLBAddressPoolExhaustionCritical
+          expr: |-
+            (
+              metallb_allocator_addresses_in_use_total
+              / on(namespace, pod, pool)
+              metallb_allocator_addresses_total
+            ) >= 0.9
+          for: 15m
+          annotations:
+            title: >-
+              `metallb` Address Pool Exhaustion
+            summary: >-
+              One or more of the `AddressPools` for `metallb` on the `{{$externalLabels.cluster}}`
+              Cluster have *used 90% or more of the allocatable IP addresses* for `LoadBalancer` or
+              `Service` resources for at least the last fifteen minutes.
+            description: >-
+              `{{$labels.pool}}` (*{{$value|humanize}}* addresses used)
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+    - name: metallb-sessions
+      rules:
+        - alert: MetalLBBGPSessionDown
+          expr: |-
+            (
+              metallb_speaker_announced{
+                job=~"metallb"
+              } == 0
+            ) * on (namespace, pod) group_left(node)
+            kube_pod_info
+          for: 2m
+          annotations:
+            title: >-
+              `metallb` Speaker Not Announcing
+            summary: >-
+              One or more of `speakers` in the `metallb` `Pods` on the `{{$externalLabels.cluster}}`
+              Cluster are *not announcing on the network* which may be affecting the ability to send
+              traffic to internal `Ingress` resources for at least the last two minutes.
+            description: >-
+              `{{$labels.container}}` Container in the `{{$labels.pod}}` `Pod` on `{{$labels.node}}`
+              `Node` (*{{$labels.protocol}}* Protocol)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: MetalLBBGPSessionDown
+          expr: |-
+            (
+              metalb_bgp_session_up{
+                job=~"metallb"
+              } == 0
+            ) * on (namespace, pod) group_left(node)
+            kube_pod_info
+          for: 2m
+          annotations:
+            title: >-
+              `metallb` Speaker Not Announcing
+            summary: >-
+              One or more of the `metallb` `Pods` on the `{{$externalLabels.cluster}}` Cluster are
+              reporting that *their BGP sessions are down and are unable to share the appropriate
+              routes* with their `peer` for at least the last three minutes.
+            description: >-
+              `{{$labels.pod}}` `Pod` on `{{$labels.node}}` `Node` (`{{$labels.peer}}`)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: MetalLBBFDSessionDown
+          expr: |-
+            (
+              metallb_bfd_session_up{
+                job=~"metallb"
+              } == 0
+            ) * on (namespace, pod) group_left(node)
+            kube_pod_info
+          for: 3m
+          annotations:
+            title: >-
+              `metallb` BFD Session Down
+            summary: >-
+              One or more of the `metallb` `Pods` on the `{{$externalLabels.cluster}}` Cluster are
+              reporting that *their BFD sessions are down and this may affect the BGP session* with
+              their `peer` for at least the last three minutes.
+            description: >-
+              `{{$labels.pod}}` `Pod` on `{{$labels.node}}` `Node` (`{{$labels.peer}}`)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform

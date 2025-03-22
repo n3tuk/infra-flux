@@ -10,10 +10,14 @@ data "google_secret_manager_secret_version" "flux_pagerduty_key" {
   secret = "github-infra-flux-${terraform.workspace}-flux-pagerduty-key"
 }
 
-data "google_secret_manager_secret_version" "alertmanager_slack_token" {
-  secret = "github-infra-flux-${terraform.workspace}-alertmanager-slack-token"
+data "google_secret_manager_secret_version" "alertmanager_slack_webhooks" {
+  secret = "github-infra-flux-${terraform.workspace}-alertmanager-slack-webhooks"
 }
 
 data "google_secret_manager_secret_version" "alertmanager_pagerduty_key" {
   secret = "github-infra-flux-${terraform.workspace}-alertmanager-pagerduty-key"
+}
+
+data "google_secret_manager_secret_version" "alertmanager_incidentio_credentials" {
+  secret = "github-infra-flux-${terraform.workspace}-alertmanager-incidentio-credentials"
 }
