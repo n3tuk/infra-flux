@@ -84,9 +84,8 @@ spec:
           expr: |-
             sum by (namespace, pod, container, reason) (
               kube_pod_container_status_waiting_reason
-            ) * on(namespace, pod)
-                group_left(node)
-                kube_node_info
+            ) * on(namespace, pod) group_left(node)
+                kube_pod_info
             > 0
           for: 15m
           annotations:
