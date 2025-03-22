@@ -1,0 +1,26 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: proxmox-csi-controller
+  namespace: proxmox-system
+spec:
+  podMetricsEndpoints:
+    - port: metrics
+  namespaceSelector:
+    matchNames:
+      - proxmox-system
+  selector:
+    matchExpressions:
+      - key: app.kubernetes.io/component
+        operator: In
+        values:
+          - controller
+      - key: app.kubernetes.io/instance
+        operator: In
+        values:
+          - proxmox-csi
+      - key: app.kubernetes.io/name
+        operator: In
+        values:
+          - proxmox-csi-plugin

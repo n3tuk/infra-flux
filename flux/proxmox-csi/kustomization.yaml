@@ -21,6 +21,7 @@ resources:
   - namespace.yaml
   - proxmox-csi-helm.yaml
   - proxmox-csi-secrets.yaml
+  - pod-monitor.yaml
 
 configMapGenerator:
   - name: helm-proxmox-csi-values

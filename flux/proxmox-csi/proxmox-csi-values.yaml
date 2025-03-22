@@ -27,6 +27,7 @@ storageClass:
 
 metrics:
   enabled: true
+  type: podMonitor
 
 # These services can run on the Control Plane so that any general issues with
 # worker nodes will not affect the processing of PVCs within the cluster
@@ -37,9 +38,6 @@ tolerations:
     effect: NoSchedule
 
 controller:
-  podAnnotations:
-    prometheus.io/scrape: 'true'
-    prometheus.io/port: '8080'
   plugin:
     resources:
       requests:
