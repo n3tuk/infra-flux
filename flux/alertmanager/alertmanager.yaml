@@ -54,10 +54,10 @@ spec:
 
   resources:
     limits: # Don't limit the CPU
-      memory: 512Mi
+      memory: 256Mi
     requests:
       cpu: 10m
-      memory: 32Mi
+      memory: 64Mi
 
   logFormat: json
   logLevel: debug
