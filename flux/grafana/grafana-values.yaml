@@ -35,27 +35,6 @@ persistence:
   enabled: true
   storageClassName: proxmox-rbd-ext4
 
-datasources:
-  datasources.yaml:
-    apiVersion: 1
-    datasources:
-      - name: Prometheus
-        type: prometheus
-        uuid: 707eab40-3d36-46ad-bd75-9484fc3be3ff
-        url: http://prometheus.prometheus-metrics.svc:9090
-        access: proxy
-        isDefault: true
-        editable: true
-      - name: Elasticsearch
-        type: elasticsearch
-        uuid: 1d2896a9-b3f3-453b-af98-e1f457c0c7b5
-        url: http://logs-es-http.elastic-logs.svc:9200
-        access: proxy
-        isDefault: false
-        editable: true
-        jsonData:
-          timeField: '@timestamp'
-
 imageRenderer:
   deploymentStrategy:
     type: RollingUpdate
