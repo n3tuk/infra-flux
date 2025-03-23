@@ -28,6 +28,11 @@ spec:
             matchType: =
             value: kub3-${cluster}-alerts-applications
         continue: true
+      - receiver: notifications
+        matchers:
+          - name: slack
+            value: kub3-${cluster}-notifications
+        continue: true
     repeatInterval: 3h
     continue: true
 
