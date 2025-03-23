@@ -54,17 +54,17 @@ spec:
             sum by (namespace, pod, phase) (
               max by (namespace, pod, phase) (
                 kube_pod_status_phase{
-                  phase!~"Running"
+                  phase!~"Running|Succeeded"
                 }
               ) * on(namespace, pod) group_left(owner_kind)
               max by(namespace, pod, phase, owner_kind) (
                 kube_pod_owner{
                   owner_kind!="Job"
                 }
-              ) * on (namespace, pod) group_left (node) (
-                group by (node, namespace, pod) (
-                  kube_pod_info
-                )
+              )
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
               )
             ) > 0
           for: 5m
