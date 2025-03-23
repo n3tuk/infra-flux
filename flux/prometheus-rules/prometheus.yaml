@@ -664,37 +664,43 @@ spec:
             incidentio: create
             team: platform
 
-        - alert: PrometheusTSDBSeriesIncreaseWarning
+        - alert: PrometheusTSDBSeriesIncreaseNotice
           expr: |-
-            (
-              increase(
-                prometheus_tsdb_head_series_created_total[1d]
-              ) /
+            sum(
+              sum_over_time(
+                scrape_series_added[3h]
+              )
+            ) > (
+              0.01 *
               (
-                prometheus_tsdb_head_series -
-                increase(
-                  prometheus_tsdb_head_series_created_total[1d]
+                max(
+                  prometheus_tsdb_head_series
+                )
+              -
+                sum(
+                  sum_over_time(
+                    scrape_series_added[1h]
+                  )
                 )
               )
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
-            > 0.25
-          for: 1m
+            )
+          for: 3h
+          keep_firing_for: 15m
           annotations:
-            title: Prometheus TSDB Series Increase
+            title: Prometheus TSDB Sustained Increase in Series
             summary: >-
-              One or more of the Prometheus `Pods` in the `{{$externalLabels.cluster}}` Cluster have
-              seen *a large increase in the number of series recorded* within the TSDB, expanding by
-              greater than 10%* within the last 24 hours.
+              The Prometheus service in the `{{$externalLabels.cluster}}` Cluster has seen *a large
+              increase in the number of series added* within the TSDB, *expanding by more than 1%
+              per hour* during at least each of the last three hours. Long-term rapid growth in
+              metrics may slow down processing metrics and increase usage of the underlying PVCs.
             description: >-
-              `{{$labels.pod}}` on `Node` `{{$labels.node}}`
-              (*{{$value|humanizePercentage}}* increase)
+              *{{$value|humanize}}* metrics added
           labels:
             ignore: outside-extended-hours
-            severity: warning
+            severity: info
             slack: kub3-${cluster}-alerts-infra
-            pagerduty: send
-            incidentio: create
+            pagerduty: ignore
+            incidentio: ignore
             team: platform
 
         - alert: PrometheusTSDBSeriesCardinalityWarning
