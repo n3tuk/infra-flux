@@ -48,6 +48,11 @@ controller:
       requests:
         cpu: 10m
         memory: 64Mi
+  resizer:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
   attacher:
     resources:
       requests:
