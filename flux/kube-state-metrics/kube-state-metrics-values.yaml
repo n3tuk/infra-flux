@@ -28,7 +28,7 @@ metricLabelsAllowlist:
 
 resources:
   limits: # Don't limit the CPU
-    memory: 64Mi
+    memory: 128Mi
   requests:
     cpu: 10m
-    memory: 32Mi
+    memory: 64Mi
