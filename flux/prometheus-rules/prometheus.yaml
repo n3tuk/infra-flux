@@ -16,8 +16,11 @@ spec:
               prometheus_rule_group_last_duration_seconds
                 >
               ( prometheus_rule_group_interval_seconds / 2 )
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            )
           for: 5m
           annotations:
             title: Slow Prometheus Rule Group Evaluation
@@ -47,8 +50,11 @@ spec:
               prometheus_rule_group_last_duration_seconds
                 >
               prometheus_rule_group_interval_seconds
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            )
           for: 5m
           annotations:
             title: Slow Prometheus Rule Group Evaluation
@@ -71,9 +77,11 @@ spec:
           expr: |-
             min_over_time(
               prometheus_notifications_queue_length[15m]
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
-            > 0
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 0
           for: 1m
           annotations:
             title: Prometheus Alert Notification Queue Backlog
@@ -107,8 +115,11 @@ spec:
                   job="prometheus"
                 }[5m]
               )
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            )
           for: 15m
           annotations:
             title: Prometheus Alert Notification Queue Warning
@@ -137,8 +148,11 @@ spec:
                   job="prometheus"
                 }[5m]
               ) == 0
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            )
           for: 10m
           annotations:
             title: Prometheus Config Reload Failure
@@ -162,8 +176,11 @@ spec:
                 prometheus_sd_refresh_failures_total{
                   job="prometheus"
                 }[10m]
-              ) * on (namespace, pod) group_left (node)
-              kube_pod_info
+              ) * on (namespace, pod) group_left (node) (
+                group by (node, namespace, pod) (
+                  kube_pod_info
+                )
+              )
             ) > 0
           for: 20m
           annotations:
@@ -190,9 +207,11 @@ spec:
                   prometheus_rule_evaluation_failures_total[5m]
                 )
               )
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
-            > 0
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 0
           for: 2m
           annotations:
             title: Prometheus Rule Evaluation Failures
@@ -233,8 +252,11 @@ spec:
                     namespace="prometheus-operator"
                   }[10m]
                 )
-              ) * on (namespace, pod) group_left (node)
-              kube_pod_info
+              ) * on (namespace, pod) group_left (node) (
+                group by (node, namespace, pod) (
+                  kube_pod_info
+                )
+              )
             ) > 0.1
           for: 15m
           annotations:
@@ -275,8 +297,11 @@ spec:
                     job="prometheus-operator"
                   }[5m]
                 )
-              ) * on (namespace, pod) group_left (node)
-              kube_pod_info
+              ) * on (namespace, pod) group_left (node) (
+                group by (node, namespace, pod) (
+                  kube_pod_info
+                )
+              )
             ) > 0.1
           for: 15m
           annotations:
@@ -308,8 +333,11 @@ spec:
                   job="prometheus-operator",
                   status="failed"
                 }[5m]
-              ) * on (namespace, pod) group_left (node)
-              kube_pod_info
+              ) * on (namespace, pod) group_left (node) (
+                group by (node, namespace, pod) (
+                  kube_pod_info
+                )
+              )
             ) >= 1
           for: 5m
           annotations:
@@ -349,8 +377,11 @@ spec:
                     job="prometheus-operator"
                   }[5m]
                 )
-              ) * on (namespace, pod) group_left (node)
-              kube_pod_info
+              ) * on (namespace, pod) group_left (node) (
+                group by (node, namespace, pod) (
+                  kube_pod_info
+                )
+              )
             ) > 0.1
           for: 10m
           annotations:
@@ -390,8 +421,11 @@ spec:
                     job="prometheus-operator"
                   }[5m]
                 )
-              ) * on (namespace, pod) group_left (node)
-              kube_pod_info
+              ) * on (namespace, pod) group_left (node) (
+                group by (node, namespace, pod) (
+                  kube_pod_info
+                )
+              )
             ) > 0.1
           for: 10m
           annotations:
@@ -420,8 +454,11 @@ spec:
                   namespace="prometheus-operator",
                   job="prometheus-operator"
                 }[5m]
-              ) * on (namespace, pod) group_left (node)
-              kube_pod_info
+              ) * on (namespace, pod) group_left (node) (
+                group by (node, namespace, pod) (
+                  kube_pod_info
+                )
+              )
             ) > 0
           for: 10m
           annotations:
@@ -449,8 +486,11 @@ spec:
                 namespace="prometheus-operator",
                 job="prometheus-operator"
               } == 0
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            )
           for: 5m
           annotations:
             title: >-
@@ -478,8 +518,11 @@ spec:
                 job="prometheus-operator",
                 state="rejected"
               } > 0
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            )
           for: 5m
           annotations:
             title: >-
@@ -507,9 +550,11 @@ spec:
           expr: |-
             increase(
               prometheus_tsdb_checkpoint_creations_failed_total[1m]
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
-            > 0
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 0
           for: 0m
           annotations:
             title: Prometheus TSDB Checkpoint Creation Failures
@@ -530,9 +575,11 @@ spec:
           expr: |-
             increase(
               prometheus_tsdb_checkpoint_deletions_failed_total[1m]
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
-            > 0
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 0
           for: 0m
           annotations:
             title: Prometheus TSDB Checkpoint Creation Failures
@@ -553,9 +600,11 @@ spec:
           expr: |-
             increase(
               prometheus_tsdb_compactions_failed_total[1m]
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
-            > 0
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 0
           for: 0m
           annotations:
             title: Prometheus TSDB Compaction Failures
@@ -576,9 +625,11 @@ spec:
           expr: |-
             increase(
               prometheus_tsdb_head_truncations_failed_total[1m]
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
-            > 0
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 0
           for: 0m
           annotations:
             title: Prometheus TSDB Head Truncation Failures
@@ -599,9 +650,11 @@ spec:
           expr: |-
             increase(
               prometheus_tsdb_reloads_failures_total[1m]
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
-            > 0
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 0
           for: 0m
           annotations:
             title: Prometheus TSDB Reload Failures
@@ -622,9 +675,11 @@ spec:
           expr: |-
             increase(
               prometheus_tsdb_wal_corruptions_total[1m]
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
-            > 0
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 0
           for: 0m
           annotations:
             title: Prometheus TSDB WAL Corruptions
@@ -645,9 +700,11 @@ spec:
           expr: |-
             increase(
               prometheus_tsdb_wal_truncations_failed_total[1m]
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
-            > 0
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 0
           for: 0m
           annotations:
             title: Prometheus TSDB WAL Truncations Failures

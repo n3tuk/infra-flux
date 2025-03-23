@@ -45,14 +45,17 @@ spec:
         - alert: CoreDNSRequestLatencyWarning
           expr: |-
             histogram_quantile(0.99,
-              sum by(pod, server, zone, le) (
+              sum by(namespace, pod, server, zone, le) (
                 rate(
                   coredns_dns_request_duration_seconds_bucket{
                     job="kube-dns"
                   }[5m]
                 )
-              ) * on(pod) group_left(node, namespace)
-              kube_pod_info
+              ) * on (namespace, pod) group_left (node) (
+                group by (node, namespace, pod) (
+                  kube_pod_info
+                )
+              )
             ) > 0.2
           for: 5m
           annotations:
@@ -76,14 +79,17 @@ spec:
         - alert: CoreDNSRequestLatencyCritical
           expr: |-
             histogram_quantile(0.99,
-              sum by(pod, server, zone, le) (
+              sum by(namespace, pod, server, zone, le) (
                 rate(
                   coredns_dns_request_duration_seconds_bucket{
                     job="kube-dns"
                   }[5m]
                 )
-              ) * on(pod) group_left(node, namespace)
-              kube_pod_info
+              ) * on (namespace, pod) group_left (node) (
+                group by (node, namespace, pod) (
+                  kube_pod_info
+                )
+              )
             ) > 0.5
           for: 3m
           annotations:
@@ -106,7 +112,7 @@ spec:
 
         - alert: CoreDNSErrorsWarning
           expr: |-
-            sum by (pod, server, zone) (
+            sum by (namespace, pod, server, zone) (
               rate(
                 coredns_dns_responses_total{
                   job="kube-dns",
@@ -114,15 +120,57 @@ spec:
                 }[5m]
               )
             ) /
-            sum by (pod, server, zone) (
+            sum by (namespace, pod, server, zone) (
               rate(
                 coredns_dns_responses_total{
                   job="kube-dns"
                 }[5m]
               )
-            ) * on(pod) group_left(node)
-            kube_pod_info
-            > 0.025
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 0.5
+          for: 3m
+          annotations:
+            title: CoreDNS Request Latency
+            summary: >-
+              One of more of the CoreDNS `Pods` in the `{{$externalLabels.cluster}}` Cluster are
+              reporting a *99th percentile latency of 500ms or more* for one or more endpoints and
+              zones for at least the last three minutes, which is above the *critical* threshold.
+            description: >-
+              `{{$labels.pod}}` on `{{$labels.node}}` `Node` (*{{$value|humanizeDuration}}* to
+              `{{$labels.server}}` for `{{$labels.zone}}` Zone)
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: never
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: CoreDNSErrorsWarning
+          expr: |-
+            sum by (namespace, pod, server, zone) (
+              rate(
+                coredns_dns_responses_total{
+                  job="kube-dns",
+                  rcode="SERVFAIL"
+                }[5m]
+              )
+            ) /
+            sum by (namespace, pod, server, zone) (
+              rate(
+                coredns_dns_responses_total{
+                  job="kube-dns"
+                }[5m]
+              )
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 0.025
           for: 5m
           annotations:
             title: CoreDNS Internal Error Rate
@@ -144,7 +192,7 @@ spec:
 
         - alert: CoreDNSErrorsCritical
           expr: |-
-            sum by (pod, server, zone) (
+            sum by (namespace, pod, server, zone) (
               rate(
                 coredns_dns_responses_total{
                   job="kube-dns",
@@ -158,9 +206,11 @@ spec:
                   job="kube-dns"
                 }[5m]
               )
-            ) * on(pod) group_left(node)
-            kube_pod_info
-            > 0.1
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 0.1
           for: 5m
           annotations:
             title: CoreDNS Internal Error Rate
@@ -185,16 +235,18 @@ spec:
         - alert: CoreDNSProxyLatencyWarning
           expr: |-
             histogram_quantile(0.99,
-              sum by(pod, proxy_name, to, le) (
+              sum by(namespace, pod, proxy_name, to, le) (
                 rate(
                   coredns_proxy_request_duration_seconds_bucket{
                     job="kube-dns"
                   }[5m]
                 )
               )
-            ) * on(pod) group_left(node)
-            kube_pod_info
-            > 0.35
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 0.35
           for: 10m
           annotations:
             title: CoreDNS Proxy Latency
@@ -217,16 +269,18 @@ spec:
         - alert: CoreDNSProxyLatencyCritical
           expr: |-
             histogram_quantile(0.99,
-              sum by(pod, proxy_name, to, le) (
+              sum by(namespace, pod, proxy_name, to, le) (
                 rate(
                   coredns_proxy_request_duration_seconds_bucket{
                     job="kube-dns"
                   }[5m]
                 )
               )
-            ) * on(pod) group_left(node)
-            kube_pod_info
-            > 0.75
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 0.75
           for: 3m
           annotations:
             title: CoreDNS Proxy Latency
@@ -248,16 +302,17 @@ spec:
 
         - alert: CoreDNSProxyHealthcheckFailure
           expr: |-
-            sum by (pod, proxy_name, to) (
+            sum by (namespace, pod, proxy_name, to) (
               rate(
                 coredns_proxy_healthcheck_failures_total{
                   job="kube-dns"
                 }[2m]
               )
-            ) * on(pod)
-                group_left(node)
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
                 kube_pod_info
-            > 1
+              )
+            ) > 1
           for: 3m
           annotations:
             title: CoreDNS Proxy Health Checks Failures
@@ -283,10 +338,11 @@ spec:
               coredns_forward_healthcheck_broken_total{
                 job="kube-dns"
               }[5m]
-            ) * on(pod)
-                group_left(node, created_by_kind, created_by_name)
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
                 kube_pod_info
-            > 0
+              )
+            ) > 0
           for: 2m
           annotations:
             title: CoreDNS Proxy Health Checks Failures

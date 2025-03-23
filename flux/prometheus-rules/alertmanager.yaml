@@ -18,9 +18,11 @@ spec:
               alertmanager_config_last_reload_successful{
                 job="alertmanager"
               }[5m]
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
-            == 0
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) == 0
           for: 10m
           annotations:
             title: Alertmanager Configuration Reload Failed
@@ -80,8 +82,11 @@ spec:
                 alertmanager_cluster_members{
                   job="alertmanager"
                 }[5m]
-              ) * on (namespace, pod) group_left (node)
-              kube_pod_info
+              ) * on (namespace, pod) group_left (node) (
+                group by (node, namespace, pod) (
+                  kube_pod_info
+                )
+              )
             ) < on (job) group_left
             count by (job) (
               max_over_time(
@@ -118,8 +123,11 @@ spec:
                     job="alertmanager",
                     integration!~"pagerduty|slack|webhook"
                   }[5m]
-                ) * on (namespace, pod) group_left (node)
-                kube_pod_info
+                ) * on (namespace, pod) group_left (node) (
+                  group by (node, namespace, pod) (
+                    kube_pod_info
+                  )
+                )
               ) / ignoring (pod, reason) group_left
               rate(
                 alertmanager_notifications_total{
@@ -157,8 +165,11 @@ spec:
                     job="alertmanager",
                     integration="slack"
                   }[5m]
-                ) * on (namespace, pod) group_left (node)
-                kube_pod_info
+                ) * on (namespace, pod) group_left (node) (
+                  group by (node, namespace, pod) (
+                    kube_pod_info
+                  )
+                )
               ) / ignoring (reason)
                   group_left
                   rate(
@@ -196,8 +207,11 @@ spec:
                     job="alertmanager",
                     integration=~"pagerduty"
                   }[5m]
-                ) * on (namespace, pod) group_left (node)
-                kube_pod_info
+                ) * on (namespace, pod) group_left (node) (
+                  group by (node, namespace, pod) (
+                    kube_pod_info
+                  )
+                )
               ) / ignoring (reason)
                   group_left
                   rate(
@@ -235,8 +249,11 @@ spec:
                     job="alertmanager",
                     integration=~"webhook"
                   }[5m]
-                ) * on (namespace, pod) group_left (node)
-                kube_pod_info
+                ) * on (namespace, pod) group_left (node) (
+                  group by (node, namespace, pod) (
+                    kube_pod_info
+                  )
+                )
               ) / ignoring (reason)
                   group_left
                   rate(
@@ -340,9 +357,11 @@ spec:
                   job="alertmanager"
                 }
               )
-            ) * on (namespace, pod) group_left (node)
-            kube_pod_info
-            >= 0.5
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) >= 0.5
           for: 5m
           annotations:
             title: Alertmanager Instances Crashing

@@ -19,11 +19,13 @@ spec:
       - receiver: infrastructure
         matchers:
           - name: slack
+            matchType: =
             value: kub3-${cluster}-alerts-infra
         continue: true
       - receiver: applications
         matchers:
           - name: slack
+            matchType: =
             value: kub3-${cluster}-alerts-applications
         continue: true
     repeatInterval: 3h

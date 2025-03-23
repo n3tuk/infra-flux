@@ -25,9 +25,11 @@ spec:
                   kube_state_metrics_list_total[5m]
                 )
               )
-            ) * on(namespace, pod) group_left(node)
-            kube_pod_info
-            > 0.01
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 0.01
           for: 15m
           annotations:
             title: >-
@@ -67,10 +69,11 @@ spec:
                   kube_state_metrics_watch_total[5m]
                 )
               )
-            ) * on(namespace, pod)
-                group_left(node)
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
                 kube_pod_info
-            > 0.01
+              )
+            ) > 0.01
           for: 15m
           annotations:
             title: >-
@@ -95,9 +98,11 @@ spec:
           expr: |
             stdvar by (namespace, pod) (
               kube_state_metrics_total_shards
-            ) * on(namespace, pod) group_left(node)
-            kube_pod_info
-            != 0
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) != 0
           annotations:
             title: >-
               `kube-state-metrics` Sharding is Misconfigured
@@ -132,10 +137,11 @@ spec:
                       kube_state_metrics_shard_ordinal
                     )
               )
-            ) * on(namespace, pod)
-                group_left(node)
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
                 kube_pod_info
-            != 0
+              )
+            ) != 0
           for: 15m
           annotations:
             title: >-

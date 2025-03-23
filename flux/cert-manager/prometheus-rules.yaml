@@ -126,8 +126,11 @@ spec:
                 certmanager_controller_sync_error_count{
                   namespace="certificates-system"
                 }[5m]
-              ) * on(pod) group_left(node)
-              kube_pod_info
+              ) * on (namespace, pod) group_left (node) (
+                group by (node, namespace, pod) (
+                  kube_pod_info
+                )
+              )
             ) > 1
           for: 5m
           annotations:
@@ -158,9 +161,11 @@ spec:
                   }[1h]
                 )
               )
-            ) * on(pod) group_left(node)
-            kube_pod_info
-            > 2
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 2
           for: 30m
           annotations:
             title: >-

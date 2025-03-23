@@ -15,9 +15,11 @@ spec:
             ( time()
                 -
               external_dns_controller_last_reconcile_timestamp_seconds
-            ) * on(namespace, pod) group_left(node)
-            kube_pod_info
-            > 3600
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 3600
           for: 10m
           annotations:
             title: >-
@@ -47,9 +49,11 @@ spec:
           expr: |-
             increase(
               external_dns_source_errors_total[1h]
-            ) * on(namespace, pod) group_left(node)
-            kube_pod_info
-            > 0
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 0
           for: 1m
           annotations:
             title: >-
@@ -74,9 +78,11 @@ spec:
           expr: |-
             increase(
               external_dns_registry_errors_total[1h]
-            ) * on(namespace, pod) group_left(node)
-            kube_pod_info
-            > 0
+            ) * on (namespace, pod) group_left (node) (
+              group by (node, namespace, pod) (
+                kube_pod_info
+              )
+            ) > 0
           for: 1m
           annotations:
             title: >-

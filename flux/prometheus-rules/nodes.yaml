@@ -115,8 +115,11 @@ spec:
               node_timex_offset_seconds{
                 namespace="kube-system",
                 job="prometheus-node-exporter"
-              } * on (namespace, pod) group_left (node)
-              kube_pod_info
+              } * on (namespace, pod) group_left (node) (
+                group by (node, namespace, pod) (
+                  kube_pod_info
+                )
+              )
             ) > 0.05
           for: 10m
           annotations:
@@ -143,8 +146,11 @@ spec:
               node_timex_offset_seconds{
                 namespace="kube-system",
                 job="prometheus-node-exporter"
-              } * on (namespace, pod) group_left (node)
-              kube_pod_info
+              } * on (namespace, pod) group_left (node) (
+                group by (node, namespace, pod) (
+                  kube_pod_info
+                )
+              )
             ) >= 0.25
           for: 1m
           annotations:
