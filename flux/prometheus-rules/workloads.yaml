@@ -361,9 +361,9 @@ spec:
               `{{$labels.cronjob}}` `CronJob`
             runbook: https://d.n3t.uk/runbooks/
           labels:
-            ignore: outside-extended-hours
-            severity: warning
-            slack: kub3-${cluster}-alerts-infra
+            ignore: never
+            severity: info
+            slack: kub3-${cluster}-notifications
             pagerduty: ignore
             incidentio: ignore
             team: platform
@@ -382,9 +382,9 @@ spec:
               `{{$labels.job_name}}` `Job`
             runbook: https://d.n3t.uk/runbooks/
           labels:
-            ignore: outside-extended-hours
-            severity: warning
-            slack: kub3-${cluster}-alerts-infra
+            ignore: never
+            severity: info
+            slack: kub3-${cluster}-notifications
             pagerduty: ignore
             incidentio: ignore
             team: platform
@@ -424,9 +424,9 @@ spec:
             dashboard: https://grafana.p.kub3.uk/
             runbook: https://d.n3t.uk/runbooks/
           labels:
-            ignore: outside-extended-hours
-            severity: warning
-            slack: kub3-${cluster}-alerts-infra
+            ignore: never
+            severity: info
+            slack: kub3-${cluster}-notifications
             pagerduty: ignore
             incidentio: ignore
             team: platform
@@ -505,9 +505,9 @@ spec:
             dashboard: https://grafana.p.kub3.uk/
             runbook: https://d.n3t.uk/runbooks/
           labels:
-            ignore: outside-extended-hours
-            severity: warning
-            slack: kub3-${cluster}-alerts-infra
+            ignore: never
+            severity: info
+            slack: kub3-${cluster}-notifications
             pagerduty: ignore
             incidentio: ignore
             team: platform
