@@ -60,8 +60,11 @@ spec:
                 rate(
                   rest_client_requests_total[5m]
                 )
-              ) * on(namespace, pod) group_left(node)
-              kube_pod_info
+              ) * on (namespace, pod) group_left (node) (
+                group by (node, namespace, pod) (
+                  kube_pod_info
+                )
+              )
             ) > 0.01
           for: 15m
           annotations:
