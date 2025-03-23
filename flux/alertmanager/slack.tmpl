@@ -1,5 +1,5 @@
-{{/* Define the Slack Channel to send the Alert to based on the provided labels
-     to either all of the alerts (if common), or the first Alert, if set */}}
+# Define the Slack Channel to send the Alert to based on the provided labels to
+# either all of the alerts (if common), or the first Alert, if set
 {{  define "slack.n3tuk.channel" }}
 {{-   if ne .CommonLabels.slack "" -}}
 {{-      print "#" .CommonLabels.slack -}}
@@ -10,9 +10,9 @@
 {{-   end -}}
 {{- end }}
 
-{{/* Configure the colour of the sidebar of the message provided to Slack, which
-     mainly depends if the Alert is firing or not */}}
-{{  define "slack.n3tuk.color" }}
+# Configure the colour of the sidebar of the message provided to Slack, which
+# mainly depends if the Alert is firing or not
+{{  define "slack.n3tuk.color" -}}
 {{-   if eq .Status "firing" -}}
 {{-     if eq .CommonLabels.severity "critical" -}}
           danger
@@ -26,43 +26,25 @@
 {{-   end -}}
 {{- end }}
 
-{{/* Configure the username for the message provided to Slack, which should
-     provide the information on where it is being triggered from */}}
-{{  define "slack.n3tuk.username" -}}
-alertmanager ({{ .CommonLabels.cluster }})
-{{- end }}
-
-{{/* Set up the title (or summary) for the message to be provided to Slack,
-     which should usually be the title annotation of the Alert, falling back to
-     the name of the Alert if that is not available (Slack does not yet support
-     Markdown in the title of the block, so it is filtered out here) */}}
-{{  define "slack.n3tuk.title" -}}
-{{-   if .CommonAnnotations.title -}}
-{{-     .CommonAnnotations.title | reReplaceAll "[`*]+" "" -}}
-{{-   else -}}
-{{-     .GroupLabels.alertname -}}
-{{-   end -}}
-{{- end }}
-
-{{/* Provide a primary link which can be used either with the title of a
-     message, or with the basic Slack message when the client cannot show
-     formatted text (usually when the message as shown as a notification rather
-     than within the application itself), and so prioritise the link to use
-     based a number of on possible options */}}
+# Provide a primary link which can be used either with the title of a message,
+# or with the basic Slack message when the client cannot show formatted text
+# (usually when the message as shown as a notification rather than within the
+# application itself), and so prioritise the link to use based a number of on
+# possible options
 {{  define "slack.n3tuk.link" -}}
 {{-   if .CommonAnnotations.link -}}
-        {{ .CommonAnnotations.link }}
+{{-     .CommonAnnotations.link -}}
 {{-   else if .CommonAnnotations.dashboard -}}
-        {{ .CommonAnnotations.dashboard }}
+{{-     .CommonAnnotations.dashboard -}}
 {{-   else if .CommonAnnotations.runbook -}}
-        {{ .CommonAnnotations.runbook }}
+{{-     .CommonAnnotations.runbook -}}
 {{-   else -}}
-        {{ (index .Alerts 0).GeneratorURL }}
+{{-     template "common.n3tuk.alertmanager_link" . -}}
 {{-   end -}}
 {{- end }}
 
-{{/* Provide the pre-text to send with the Slack message which provides
-     information about the number of Alerts contained within this message */}}
+# Provide the pre-text to send with the Slack message which provides information
+# about the number of Alerts contained within this message
 {{  define "slack.n3tuk.pretext" -}}
 {{-   if and (gt (len .Firing) 0) (gt (len .Resolved) 0) -}}
 Alertmanager is reporting *{{ len .Firing }}* alert{{ if ne (len .Firing) 1 }}s{{ end }} as firing, plus *{{ len .Resolved }}* alert{{ if ne (len .Resolved) 1 }}s{{ end }} as resolved.
@@ -73,9 +55,9 @@ Alertmanager is reporting *{{ len .Resolved }}* alert{{ if ne (len .Resolved) 1 
 {{-   end -}}
 {{- end }}
 
-{{/* Provide the description (or message) to send with the Slack message on the
-     Alert, and more specifically handle Alerts firing and resolving, as well
-     as different descriptions for the Alerts, where configured. */}}
+# Provide the description (or message) to send with the Slack message on the
+# Alert, and more specifically handle Alerts firing and resolving, as well as
+# different descriptions for the Alerts, where configured.
 {{  define "slack.n3tuk.text" -}}
 {{-   $commonSummary := false -}}
 {{-   if .CommonAnnotations.summary -}}
@@ -111,13 +93,13 @@ This `Alert` has no description
 {{        if not $commonSummary -}}){{ end -}}
 {{- print " " }}(_{{ .EndsAt | since | humanizeDuration }} ago_)
 {{-     end -}}
-{{-   end -}}
-{{- end }}
+{{-   end }}
+{{  end }}
 
-{{/* Provide the fallback message for Slack, which is often used for the
-     notification of the message across devices */}}
+# Provide the fallback message for Slack, which is often used for the
+# notification of the message across devices
 {{  define "slack.n3tuk.fallback" -}}
-{{    template "slack.n3tuk.title" . }} ({{ .Status | title }})
+{{-   template "common.n3tuk.title" . }} ({{ .Status | title }})
 {{    if .CommonAnnotations.summary -}}
 {{-     .CommonAnnotations.summary -}}
 {{-   else -}}
@@ -131,48 +113,8 @@ Alertmanager is reporting *{{ len .Resolved }}* alert{{ if ne (len .Resolved) 1 
 {{-   end -}}
 {{- end }}
 
-{{/* Provide the name of the Cluster for this Alert, working through the
-     Group, Common, and Alert labels, as necessary */}}
-{{  define "slack.n3tuk.cluster" }}
-{{-   if .GroupLabels.cluster -}}
-{{-     .GroupLabels.cluster -}}
-{{-   else if .CommonLabels.cluster -}}
-{{-     .CommonLabels.cluster -}}
-{{-   else if (index 0 .Alerts).Labels.cluster -}}
-{{-     (index 0 .Alerts).Labels.cluster -}}
-{{-   else -}}
--
-{{-   end -}}
-{{- end }}
-
-{{/* Provide the name of the Namespace for this Alert, working through the
-     Group, Common, and Alert labels, as necessary */}}
-{{  define "slack.n3tuk.namespace" }}
-{{-   if .GroupLabels.namespace -}}
-{{-     .GroupLabels.namespace }}
-{{-   else if .CommonLabels.namespace -}}
-{{-     .CommonLabels.namespace }}
-{{-   else if (index 0 .Alerts).Labels.namespace -}}
-{{-     (index 0 .Alerts).Labels.namespace -}}
-{{-   else -}}
--
-{{-   end -}}
-{{- end }}
-
-{{/* Provide the value for the severity for this Alert, working through the
-     Common, and Alert labels, as necessary */}}
-{{  define "slack.n3tuk.severity" }}
-{{  if .CommonLabels.severity -}}
-{{    .CommonLabels.severity | title }}
-{{- else if (index .Alerts 0).Labels.severity }}
-{{    (index .Alerts 0).Labels.severity | title }}
-{{- else -}}
-Unknown
-{{- end }}
-{{- end }}
-
-{{/* Provide the footer of the message for Slack, which is normally used to
-     provide useful contextual information */}}
+# Provide the footer of the message for Slack, which is normally used to provide
+# useful contextual information
 {{  define "slack.n3tuk.footer" -}}
 This Alert was generated by Alertmanager {{ if .CommonLabels.prometheus -}}
 and the {{ .CommonLabels.prometheus }} Prometheus instance {{ end -}}

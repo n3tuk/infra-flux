@@ -1,98 +1,164 @@
-{{  define "__text_alert_list" }}
-{{-   range . }}
-Labels:
-{{      range .Labels.SortedPairs }}
-  - {{ .Name }} = {{ .Value }}
-{{      end }}
-Annotations:
-{{      range .Annotations.SortedPairs }}
-  - {{ .Name }} = {{ .Value }}
-{{      end }}
-Source: {{ .GeneratorURL }}
-{{    end }}
-{{  end }}
-
-{{ define "custom_single_alert_message" }}
-  {{- "\n" }}
-  {{- range .Firing }}
-    {{- .Annotations.description }}
-  {{- end }}
-  {{- range .Resolved }}
-    {{- .Annotations.description }}
-  {{- end }}
+# Configure the name of this instance of Alertmanager to break down where this
+# alert is being triggered through
+{{  define "common.n3tuk.instance" -}}
+{{-   if .GroupLabels.cluster -}}
+alertmanager ({{ .GroupLabels.cluster }})
+{{-   else -}}
+alertmanager
+{{-   end -}}
 {{- end }}
 
-{{ define "custom_multiple_alerts_message" }}
-  {{- if gt (len .Firing) 0 }}
-  {{- "\n*Alerts Firing:*" }}
-    {{- range .Firing }}
-      {{- "\n  -" }} {{ .Annotations.description }}
-    {{- end }}
-  {{- end }}
-  {{- if gt (len .Resolved) 0 }}
-  {{- "\n*Alerts Resolved:*" }}
-    {{- range .Resolved }}
-      {{- "\n  - " }}{{ .Annotations.description }}
-    {{- end }}
-  {{- end }}
+# Set up the title (or the name, if not provided as an annotation) of the Alert
+# to ensure we focus on the reason why this Alert is being generated
+{{  define "common.n3tuk.title" -}}
+{{-   if .CommonAnnotations.title -}}
+{{-     .CommonAnnotations.title | reReplaceAll "[`*]+" "" -}}
+{{-   else -}}
+{{-     .GroupLabels.alertname -}}
+{{-   end -}}
 {{- end }}
 
-{{ define "custom_slack_message" }}
-  {{- if .CommonAnnotations.summary }}
-    {{- .CommonAnnotations.summary }}
-  {{- end }}
-  {{ template "__alert_severity" . }}
-  {{- if or (and (eq (len .Alerts.Firing) 1) (eq (len .Alerts.Resolved) 0)) (and (eq (len .Alerts.Firing) 0) (eq (len .Alerts.Resolved) 1)) }}
-    {{- template "custom_single_alert_message" .Alerts }}
-  {{- else }}
-    {{- template "custom_multiple_alerts_message" .Alerts }}
-  {{- end }}
+# Extract and provide the name of the Kubernetes Cluster associated with this
+# Alert, working through the Group, Common, and Alert labels, as necessary
+{{  define "common.n3tuk.cluster" }}
+{{-   if .GroupLabels.cluster -}}
+{{-     .GroupLabels.cluster -}}
+{{-   else if .CommonLabels.cluster -}}
+{{-     .CommonLabels.cluster -}}
+{{-   else if (index 0 .Alerts).Labels.cluster -}}
+{{-     (index 0 .Alerts).Labels.cluster -}}
+{{-   else -}}
+unknown
+{{-   end -}}
 {{- end }}
 
-# This builds the silence URL.  We exclude the alertname in the range
-# to avoid the issue of having trailing comma separator (%2C) at the end
-# of the generated URL
-{{ define "__alert_silence_link" -}}
-  {{ .ExternalURL }}/#/silences/new?filter=%7B
-  {{- range .CommonLabels.SortedPairs -}}
-    {{- if ne .Name "alertname" -}}
-      {{- .Name }}%3D"{{- .Value -}}"%2C%20
-    {{- end -}}
-  {{- end -}}
-  alertname%3D"{{ .CommonLabels.alertname }}"%7D
+# Extract and provide the name for the Namespace within the Kubernetes Cluster
+# associated with this Alert, working through the Group, Common, and Alert
+# labels, as necessary
+{{  define "common.n3tuk.namespace" -}}
+{{-   if .GroupLabels.namespace -}}
+{{-     .GroupLabels.namespace -}}
+{{-   else if .CommonLabels.namespace -}}
+{{-     .CommonLabels.namespace -}}
+{{-   else if (index .Alerts 0).Labels.namespace -}}
+{{-     (index .Alerts 0).Labels.namespace -}}
+{{-   else }}unknown{{ end -}}
 {{- end }}
 
-# This builds the run book URL.
-{{ define "__runbook_link" -}}
-  {{- if .CommonAnnotations.runbook }}
-    {{ .CommonAnnotations.runbook }}
-  {{- end }}
+# Extract and provide the Alert Name for this Alert, working through the Group
+# and Alert labels, as necessary
+{{  define "common.n3tuk.alertname" -}}
+{{-   if .GroupLabels.alertname -}}
+{{-     .GroupLabels.alertname -}}
+{{-   else -}}
+{{-     (index .Alerts 0).Labels.alertname -}}
+{{-   end -}}
 {{- end }}
 
-# Allow indication of severity
-{{ define "__alert_severity" -}}
-  {{ if ne .Status "firing" -}}
-  {{- else if eq .CommonLabels.severity "critical" -}}
-  *Severity*: Critical
-  {{- else if eq .CommonLabels.severity "warning" -}}
-  *Severity*: Warning
-  {{- else if eq .CommonLabels.severity "info" -}}
-  *Severity*: Info
-  {{- else -}}
-  *Severity*: :question: ({{ .CommonLabels.severity }})
-  {{- end }}
+# Extract and provide the severity for this Alert, working through the Common,
+# and Alert labels, as necessary
+{{  define "common.n3tuk.severity" -}}
+{{-   if .CommonLabels.severity -}}
+{{-     .CommonLabels.severity | title }}
+{{-   else if (index .Alerts 0).Labels.severity -}}
+{{-     (index .Alerts 0).Labels.severity | title -}}
+{{-   else -}}
+Unknown
+{{-   end -}}
 {{- end }}
 
-{{ define "custom_color" -}}
-  {{ if eq .Status "firing" -}}
-    {{ if eq .CommonLabels.severity "warning" -}}
-      warning
-    {{- else if eq .CommonLabels.severity "critical" -}}
-      danger
-    {{- else -}}
-      #439FE0
-    {{- end -}}
-  {{ else -}}
-    good
-  {{- end }}
+# Extract and provide the time since the initial firing of the first Alert
+{{  define "common.n3tuk.since" -}}
+{{-   (index .Alerts 0).StartsAt | since | humanizeDuration -}}
+{{- end }}
+
+# Generate the Runbook URL to link to the provided runbook which can be attached
+# to the Alerts for additional context, with the default being a fallback to the
+# central Runbooks section of the Lab Environment documentation website
+{{  define "common.n3tuk.runbook" -}}
+{{-   if .CommonAnnotations.runbook -}}
+{{-     .CommonAnnotations.runbook -}}
+{{-   else if (index .Alerts 0).Annotations.runbook -}}
+{{-     (index .Alerts 0).Annotations.runbook -}}
+{{-   else -}}
+https://d.n3t.uk/runbooks/
+{{-   end -}}
+{{- end }}
+
+# Generate the Dashboard URL to the provided Grafana dashboard which can be
+# attached to the Alerts for additional context, with the default being a
+# fallback to the Grafana instance of the local Kubernetes Cluster
+{{  define "common.n3tuk.dashboard" -}}
+{{-   if .CommonAnnotations.dashboard -}}
+{{-     .CommonAnnotations.dashboard -}}
+{{-   else if (index .Alerts 0).Annotations.dashboard -}}
+{{-     (index .Alerts 0).Annotations.dashboard -}}
+{{-   else -}}
+{{-     if .GroupLabels.cluster -}}
+https://grafana.{{ .GroupLabels.cluster | reReplaceAll "^([a-z]).*$" "$1" }}.kub3.uk/
+{{-     else -}}
+https://grafana.p.kub3.uk/
+{{-     end -}}
+{{-   end -}}
+{{- end }}
+
+# Generate the Prometheus URL to link to the Prometheus Query which monitors the
+# metrics and therefore created the Alert so the data can be reviewed
+{{  define "common.n3tuk.prometheus_query_link" -}}
+{{-   (index .Alerts 0).GeneratorURL -}}
+{{- end }}
+
+# Generate the Prometheus URL to link to the Prometheus Alerts page with the
+# focus on the Prometheus Rule for this Alert, showing all related Alerts
+{{  define "common.n3tuk.prometheus_alerts_link" -}}
+{{-   (index .Alerts 0).GeneratorURL | reReplaceAll "^([^\\?]+)/query\\?.*$" "$1/alerts?" -}}
+search%3D{{ .GroupLabels.alertname -}}
+{{- end }}
+
+# Generate the Alertmanager URL to link to the firing Alerts in Alertmanager
+# using the labels used to group the Alerts as the filter, ensuring only this
+# Alert, and any related Alerts, are shown (including those silenced)
+{{  define "common.n3tuk.alertmanager_link" -}}
+{{-   .ExternalURL }}/#/alerts?silenced=true&active=true&filter=%7B
+{{-   range .GroupLabels.SortedPairs -}}
+{{-     if ne .Name "alertname" -}}
+{{-       .Name }}%3D%22{{ .Value }}%22%2C
+{{-     end -}}
+{{-   end -}}
+alertname%3D%22{{ .GroupLabels.alertname }}%22%7D
+{{- end }}
+
+# Generate the Alertmanager URL to create the silence override, combining the
+# labels used to group these Alerts as the filter to allow the silencing of this
+# and all other related Alerts in Alertmanager
+{{  define "common.n3tuk.silence_all_link" -}}
+{{-   .ExternalURL }}/#/silences/new?filter=%7B
+{{-   range .GroupLabels.SortedPairs -}}
+{{-     if ne .Name "alertname" -}}
+{{-       .Name }}%3D%22{{ .Value }}%22%2C
+{{-     end -}}
+{{-   end -}}
+alertname%3D%22{{ .GroupLabels.alertname }}%22%7D
+{{- end }}
+
+# Generate the Alertmanager URL to create the silence override, combining the
+# labels used to group the Alerts, as well as a selected of the common labels
+# from all the alerts (as many of the labels are related to the metrics
+# collection and not the context or environment of the alert), into a filter to
+# allow the silencing of this single Alert
+{{  define "common.n3tuk.silence_single_link" -}}
+{{-   .ExternalURL }}/#/silences/new?filter=%7B
+{{-   range .GroupLabels.SortedPairs -}}
+{{-     if ne .Name "alertname" -}}
+{{-       .Name }}%3D%22{{ .Value }}%22%2C
+{{-     end -}}
+{{-   end -}}
+alertname%3D%22{{ .GroupLabels.alertname }}%22
+{{-   if .CommonLabels.node }}2Cnode%3D%22{{ .CommonLabels.node }}%22{{ end -}}
+{{-   if .CommonLabels.job }}2Cjob%3D%22{{ .CommonLabels.job }}%22{{ end -}}
+{{-   if .CommonLabels.pod }}2Cpod%3D%22{{ .CommonLabels.pod }}%22{{ end -}}
+{{-   if .CommonLabels.container }}2Ccontainer%3D%22{{ .CommonLabels.container }}%22{{ end -}}
+{{-   if .CommonLabels.name }}2Cname%3D%22{{ .CommonLabels.name }}%22{{ end -}}
+{{-   if .CommonLabels.severity }}2Cseverity%3D%22{{ .CommonLabels.severity }}%22{{ end -}}
+%7D
 {{- end }}

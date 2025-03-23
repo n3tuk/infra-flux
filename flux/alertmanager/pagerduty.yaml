@@ -26,34 +26,31 @@ spec:
             key: service-key
           sendResolved: true
           client: >-
-            {{ template "pagerduty.n3tuk.client" . }}
+            {{ template "common.n3tuk.instance" . }}
           clientURL: >-
-            {{ template "pagerduty.n3tuk.client_url" . }}
+            {{ template "common.n3tuk.alertmanager_link" . }}
           description: >-
-            {{ template "pagerduty.n3tuk.title" . }}
+            {{ template "common.n3tuk.title" . }}
           severity: >-
-            {{ template "pagerduty.n3tuk.priority" . }}
+            {{ template "common.n3tuk.severity" . }}
           source: >-
-            {{ template "pagerduty.n3tuk.username" . }}
+            {{ template "common.n3tuk.instance" . }}
           details:
             - key: alert name
               value: >-
-                {{ template "pagerduty.n3tuk.alert_name" . }}
+                {{ template "common.n3tuk.alertname" . }}
             - key: summary
               value: >-
                 {{ template "pagerduty.n3tuk.summary" . }}
-            - key: priority
-              value: >-
-                {{ template "pagerduty.n3tuk.priority" . }}
             - key: cluster
               value: >-
-                {{ template "pagerduty.n3tuk.cluster" . }}
+                {{ template "common.n3tuk.cluster" . }}
             - key: namespace
               value: >-
-                {{ template "pagerduty.n3tuk.namespace" . }}
+                {{ template "common.n3tuk.namespace" . }}
             - key: severity
               value: >-
-                {{ template "pagerduty.n3tuk.severity" . }}
+                {{ template "common.n3tuk.severity" . }}
             - key: firing
               value: >-
                 {{ template "pagerduty.n3tuk.firing" . }}
@@ -61,20 +58,26 @@ spec:
               value: >-
                 {{ template "pagerduty.n3tuk.resolved" . }}
           pagerDutyLinkConfigs:
-            - alt: Runbooks
+            - alt: Prometheus Query
               href: >-
-                {{ template "pagerduty.n3tuk.runbook" . }}
-            - alt: Dashboard
+                {{ template "common.n3tuk.prometheus_query_link" . }}
+            - alt: Prometheus Alerts
               href: >-
-                {{ template "pagerduty.n3tuk.dashboard" . }}
-            - alt: Prometheus
+                {{ template "common.n3tuk.prometheus_alert_link" . }}
+            - alt: Alertmanager Alerts
               href: >-
-                {{ (index .Alerts 0).GeneratorURL }}
-            - alt: Alertmanager
+                {{ template "common.n3tuk.alertmanager_link" . }}
+            - alt: Grafana Dashboard
               href: >-
-                https://alerts.${cluster_domain}/
-            - alt: Silence
+                {{ template "common.n3tuk.dashboard" . }}
+            - alt: Review the Runbook
               href: >-
-                {{ template "__alert_silence_link" . }}
+                {{ template "common.n3tuk.runbook" . }}
+            - alt: Silence this Alert
+              href: >-
+                {{ template "common.n3tuk.silence_single_link" . }}
+            - alt: Silence all Alerts
+              href: >-
+                {{ template "common.n3tuk.silence_all_link" . }}
           component: kub3-${cluster}
           group: ${cluster}
