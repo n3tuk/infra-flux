@@ -725,7 +725,7 @@ spec:
           expr: |-
             sum(
               sum_over_time(
-                scrape_series_added[3h]
+                scrape_series_added[1h]
               )
             ) > (
               0.01 *
