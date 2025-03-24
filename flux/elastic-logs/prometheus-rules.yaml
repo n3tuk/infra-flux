@@ -273,11 +273,13 @@ spec:
               `{{$labels.name}}` node in `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster
             runbook: https://d.n3t.uk/runbooks/
           labels:
-            ignore: outside-extended-hours
+            # At the moment there are not enough concurrent shards being processed which will always
+            # ensure that data nodes will alway sbe written to, so disable alerting for this rule
+            ignore: always
             severity: warning
             slack: kub3-${cluster}-alerts-infra
-            pagerduty: send
-            incidentio: send
+            pagerduty: ignore
+            incidentio: ignore
             team: platform
 
         - alert: ElasticSearchNoNewDocumentsCritical
