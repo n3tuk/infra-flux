@@ -11,7 +11,7 @@ resources:
     memory: 128Mi
   requests:
     cpu: 50m
-    memory: 32Mi
+    memory: 64Mi
 
 extraEnvSecrets:
   ES_USERNAME:
