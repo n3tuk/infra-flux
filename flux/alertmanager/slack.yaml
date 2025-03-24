@@ -33,6 +33,7 @@ spec:
           - name: slack
             value: kub3-${cluster}-notifications
         continue: true
+        repeatInterval: 24h
     repeatInterval: 3h
     continue: true
 
