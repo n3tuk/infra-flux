@@ -725,7 +725,7 @@ spec:
           expr: |-
             sum(
               sum_over_time(
-                scrape_series_added[3h]
+                scrape_series_added[1h]
               )
             ) > (
               0.01 *
@@ -753,14 +753,14 @@ spec:
             description: >-
               *{{$value|humanize}}* metrics added
           labels:
-            ignore: outside-extended-hours
+            ignore: never
             severity: info
-            slack: kub3-${cluster}-alerts-infra
+            slack: kub3-${cluster}-notifications
             pagerduty: ignore
             incidentio: ignore
             team: platform
 
-        - alert: PrometheusTSDBSeriesCardinalityWarning
+        - alert: PrometheusTSDBSeriesCardinalityNotice
           expr: |-
             label_replace(
               topk(
@@ -781,9 +781,9 @@ spec:
             description: >-
               `{{$labels.name}}` (*{{$value|humanize}}* labels)
           labels:
-            ignore: outside-extended-hours
-            severity: warning
-            slack: kub3-${cluster}-alerts-infra
-            pagerduty: send
-            incidentio: create
+            ignore: never
+            severity: info
+            slack: kub3-${cluster}-notifications
+            pagerduty: ignore
+            incidentio: ignore
             team: platform

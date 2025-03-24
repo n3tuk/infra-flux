@@ -1,28 +1,6 @@
-{{/* Configure the client name for the message provided to PagerDuty, which
-     should provide the information on where it is being triggered from */}}
-{{  define "pagerduty.n3tuk.client" -}}
-alertmanager ({{ .GroupLabels.cluster }})
-{{- end }}
-
-{{/* Configure the client URL for the message provided to PagerDuty, which
-     should provide the link to the Alert it is being triggered from */}}
-{{  define "pagerduty.n3tuk.client_url" -}}
-{{ .ExternalURL }}/#/alerts?receiver={{ .Receiver | urlquery }}
-{{- end }}
-
-{{/* Set up the title (or Alert name) for the message to be provided to
-     PagerDuty, as this is used for the title of the event in PagerDuty */}}
-{{  define "pagerduty.n3tuk.title" -}}
-{{-   if .CommonAnnotations.title -}}
-{{-     .CommonAnnotations.title | reReplaceAll "[`*]+" "" -}}
-{{-   else -}}
-{{-     .GroupLabels.alertname -}}
-{{-   end -}}
-{{- end }}
-
-{{/* Set up the (or summary) for the message to be provided to PagerDuty,
-     which should use the summary of the Alert, where possible, not the full
-     description, as this is used for the title of the event in PagerDuty */}}
+# Set up the (or summary) for the message to be provided to PagerDuty, which
+# should use the summary of the Alert, where possible, not the full description,
+# as this is used for the title of the event in PagerDuty
 {{  define "pagerduty.n3tuk.summary" -}}
 {{-   if .CommonAnnotations.summary -}}
 {{-     .CommonAnnotations.summary | reReplaceAll "[`*]+" "" -}}
@@ -31,63 +9,9 @@ No common summary is available for this event. See the individual descriptions f
 {{-   end -}}
 {{- end }}
 
-{{/* Set up the value for the priority for the PagerDuty event, which
-     should be based on the label provided for each Alert */}}
-{{  define "pagerduty.n3tuk.priority" -}}
-{{-   if .CommonLabels.pagerduty -}}
-{{-     .CommonLabels.pagerduty -}}
-{{-   else if (index .Alerts 0).Labels.pagerduty -}}
-{{-     (index .Alerts 0).Labels.pagerduty -}}
-{{-   else }}P5{{ end -}}
-{{- end }}
-
-{{/* Set up the value for the severity field for the PagerDuty event, which
-     should be based on the label provided for each Alert */}}
-{{  define "pagerduty.n3tuk.severity" -}}
-{{-   if .CommonLabels.severity -}}
-{{-     .CommonLabels.severity -}}
-{{-   else if (index .Alerts 0).Labels.severity -}}
-{{-     (index .Alerts 0).Labels.severity -}}
-{{-   else }}P5{{ end -}}
-{{- end }}
-
-{{/* Set up the value for the Alert Name field for the PagerDuty event, which
-     should be based on the label provided for each Alert */}}
-{{  define "pagerduty.n3tuk.alert_name" -}}
-{{-   if .GroupLabels.alertname -}}
-{{-     .GroupLabels.alertname -}}
-{{-   else -}}
-{{-     (index .Alerts 0).Labels.alertname -}}
-{{-   end -}}
-{{- end }}
-
-{{/* Set up the value for the Cluster field for the PagerDuty event, which
-     should be based on the label provided for each Alert */}}
-{{  define "pagerduty.n3tuk.cluster" -}}
-{{-   if .GroupLabels.cluster -}}
-{{-     .GroupLabels.cluster -}}
-{{-   else if .CommonLabels.cluster -}}
-{{-     .CommonLabels.cluster -}}
-{{-   else if (index .Alerts 0).Labels.cluster -}}
-{{-     (index .Alerts 0).Labels.cluster -}}
-{{-   else }}unknown{{ end -}}
-{{- end }}
-
-{{/* Set up the value for the Namespace field for the PagerDuty event, which
-     should be based on the label provided for each Alert */}}
-{{  define "pagerduty.n3tuk.namespace" -}}
-{{-   if .GroupLabels.namespace -}}
-{{-     .GroupLabels.namespace -}}
-{{-   else if .CommonLabels.namespace -}}
-{{-     .CommonLabels.namespace -}}
-{{-   else if (index .Alerts 0).Labels.namespace -}}
-{{-     (index .Alerts 0).Labels.namespace -}}
-{{-   else }}unknown{{ end -}}
-{{- end }}
-
-{{/* Provide a list of full descriptions for all the Alerts currently firing or
-     resolved within this event, to provide additional detail for each one over
-     and above the summary and title (or Alert name) already provided */}}
+# Provide a list of full descriptions for all the Alerts currently firing or
+# resolved within this event, to provide additional detail for each one over and
+# above the summary and title (or Alert name) already provided
 {{  define "pagerduty.n3tuk.firing" -}}
 {{-   $commonSummary := false }}
 {{-   if .CommonAnnotations.summary -}}
@@ -115,7 +39,7 @@ This Alert has no description
 {{-   if .CommonAnnotations.summary -}}
 {{-     $commonSummary = true -}}
 {{-   end -}}
-{{-   if eq (len .Alerts.resolved) 0 -}}
+{{-   if eq (len .Alerts.Resolved) 0 -}}
 (none)
 {{-   else -}}
 {{-     range .Alerts.Resolved -}}
@@ -130,28 +54,4 @@ This Alert has no description
 {{-       print " " }}({{ .StartsAt | since | humanizeDuration }} ago)
 {{      end -}}
 {{-   end -}}
-{{- end }}
-
-{{/* Provide a Runbook link for this Alert/Event */}}
-{{  define "pagerduty.n3tuk.runbook" -}}
-{{-   if .CommonAnnotations.runbook }}
-{{      .CommonAnnotations.runbook }}
-{{-   else if (index .Alerts 0).Annotations.runbook }}
-{{      (index .Alerts 0).Annotations.runbook }}
-{{-   else -}}
-        https://d.n3t.uk/runbooks/
-{{-   end }}
-{{- end }}
-
-{{/* Provide a Dashboard link for this Alert/Event, but the default of which is
-     templated to the Production Grafana instance as this file cannot be
-     templated through Flux's Kustomization */}}
-{{  define "pagerduty.n3tuk.dashboard" -}}
-{{-   if .CommonAnnotations.dashboard }}
-{{      .CommonAnnotations.dashboard }}
-{{-   else if (index .Alerts 0).Annotations.dashboard }}
-{{      (index .Alerts 0).Annotations.dashboard }}
-{{-   else -}}
-        https://grafana.p.kub3.uk/
-{{-   end }}
 {{- end }}

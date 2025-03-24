@@ -28,6 +28,11 @@ spec:
             matchType: =
             value: kub3-${cluster}-alerts-applications
         continue: true
+      - receiver: notifications
+        matchers:
+          - name: slack
+            value: kub3-${cluster}-notifications
+        continue: true
     repeatInterval: 3h
     continue: true
 
@@ -46,9 +51,9 @@ spec:
           color: >-
             {{ template "slack.n3tuk.color" . }}
           username: >-
-            {{ template "slack.n3tuk.username" . }}
+            {{ template "common.n3tuk.instance" . }}
           title: >-
-            {{ template "slack.n3tuk.title" . }}
+            {{ template "common.n3tuk.title" . }}
           titleLink: >-
             {{ template "slack.n3tuk.link" . }}
           pretext: |
@@ -62,41 +67,46 @@ spec:
           fields:
             - title: Alert Name
               value: >-
-                {{ .GroupLabels.alertname }}
+                {{ template "common.n3tuk.alertname" . }}
               short: false
             - title: Cluster
               value: >-
-                {{ template "slack.n3tuk.cluster" . }}
+                {{ template "common.n3tuk.cluster" . }}
               short: true
             - title: Namespace
               value: >-
-                {{ template "slack.n3tuk.namespace" . }}
+                {{ template "common.n3tuk.namespace" . }}
               short: true
             - title: Severity
               value: >-
-                {{ template "slack.n3tuk.severity" . }}
+                {{ template "common.n3tuk.severity" . }}
               short: true
             - title: Since
               value: >-
-                {{ (index .Alerts 0).StartsAt | since | humanizeDuration }}
+                {{ template "common.n3tuk.since" . }}
               short: true
           actions:
+            # Maximum of five actions allowed?
+            - text: Prometheus Query
+              type: button
+              url: >-
+                {{ template "common.n3tuk.prometheus_query_link" . }}
+            - text: Alertmanager Alerts
+              type: button
+              url: >-
+                {{ template "common.n3tuk.alertmanager_link" . }}
+            - text: Grafana Dashboard
+              type: button
+              url: >-
+                {{ template "common.n3tuk.dashboard" . }}
             - text: Runbook
               type: button
               url: >-
-                {{ (index .Alerts 0).Annotations.runbook }}
-            - text: Query
+                {{ template "common.n3tuk.runbook" . }}
+            - text: Silence Alert
               type: button
               url: >-
-                {{ (index .Alerts 0).GeneratorURL }}
-            - text: Dashboard
-              type: button
-              url: >-
-                {{ (index .Alerts 0).Annotations.dashboard }}
-            - text: Silence
-              type: button
-              url: >-
-                {{ template "__alert_silence_link" . }}
+                {{ template "common.n3tuk.silence_all_link" . }}
           linkNames: false
           mrkdwnIn:
             - title
@@ -117,9 +127,9 @@ spec:
           color: >-
             {{ template "slack.n3tuk.color" . }}
           username: >-
-            {{ template "slack.n3tuk.username" . }}
+            {{ template "common.n3tuk.instance" . }}
           title: >-
-            {{ template "slack.n3tuk.title" . }}
+            {{ template "common.n3tuk.title" . }}
           titleLink: >-
             {{ template "slack.n3tuk.link" . }}
           pretext: |
@@ -133,41 +143,45 @@ spec:
           fields:
             - title: Alert Name
               value: >-
-                {{ .GroupLabels.alertname }}
+                {{ template "common.n3tuk.alertname" . }}
               short: false
             - title: Cluster
               value: >-
-                {{ template "slack.n3tuk.cluster" . }}
+                {{ template "common.n3tuk.cluster" . }}
               short: true
             - title: Namespace
               value: >-
-                {{ template "slack.n3tuk.namespace" . }}
+                {{ template "common.n3tuk.namespace" . }}
               short: true
             - title: Severity
               value: >-
-                {{ template "slack.n3tuk.severity" . }}
+                {{ template "common.n3tuk.severity" . }}
               short: true
             - title: Since
               value: >-
-                {{ (index .Alerts 0).StartsAt | since | humanizeDuration }}
+                {{ template "common.n3tuk.since" . }}
               short: true
           actions:
+            - text: Prometheus Query
+              type: button
+              url: >-
+                {{ template "common.n3tuk.prometheus_query_link" . }}
+            - text: Alertmanager Alerts
+              type: button
+              url: >-
+                {{ template "common.n3tuk.alertmanager_link" . }}
+            - text: Grafana Dashboard
+              type: button
+              url: >-
+                {{ template "common.n3tuk.dashboard" . }}
             - text: Runbook
               type: button
               url: >-
-                {{ (index .Alerts 0).Annotations.runbook }}
-            - text: Query
+                {{ template "common.n3tuk.runbook" . }}
+            - text: Silence Alert
               type: button
               url: >-
-                {{ (index .Alerts 0).GeneratorURL }}
-            - text: Dashboard
-              type: button
-              url: >-
-                {{ (index .Alerts 0).Annotations.dashboard }}
-            - text: Silence
-              type: button
-              url: >-
-                {{ template "__alert_silence_link" . }}
+                {{ template "common.n3tuk.silence_all_link" . }}
           linkNames: false
           mrkdwnIn:
             - title
@@ -188,9 +202,9 @@ spec:
           color: >-
             {{ template "slack.n3tuk.color" . }}
           username: >-
-            {{ template "slack.n3tuk.username" . }}
+            {{ template "common.n3tuk.instance" . }}
           title: >-
-            {{ template "slack.n3tuk.title" . }}
+            {{ template "common.n3tuk.title" . }}
           titleLink: >-
             {{ template "slack.n3tuk.link" . }}
           pretext: |
@@ -204,41 +218,120 @@ spec:
           fields:
             - title: Alert Name
               value: >-
-                {{ .GroupLabels.alertname }}
+                {{ template "common.n3tuk.alertname" . }}
               short: false
             - title: Cluster
               value: >-
-                {{ template "slack.n3tuk.cluster" . }}
+                {{ template "common.n3tuk.cluster" . }}
               short: true
             - title: Namespace
               value: >-
-                {{ template "slack.n3tuk.namespace" . }}
+                {{ template "common.n3tuk.namespace" . }}
               short: true
             - title: Severity
               value: >-
-                {{ template "slack.n3tuk.severity" . }}
+                {{ template "common.n3tuk.severity" . }}
+              short: true
+            - title: Since
+              value: >-
+                {{ template "common.n3tuk.since" . }}
+              short: true
+          actions:
+            - text: Prometheus Query
+              type: button
+              url: >-
+                {{ template "common.n3tuk.prometheus_query_link" . }}
+            - text: Alertmanager Alerts
+              type: button
+              url: >-
+                {{ template "common.n3tuk.alertmanager_link" . }}
+            - text: Grafana Dashboard
+              type: button
+              url: >-
+                {{ template "common.n3tuk.dashboard" . }}
+            - text: Runbook
+              type: button
+              url: >-
+                {{ template "common.n3tuk.runbook" . }}
+            - text: Silence Alert
+              type: button
+              url: >-
+                {{ template "common.n3tuk.silence_all_link" . }}
+          linkNames: false
+          mrkdwnIn:
+            - title
+            - pretext
+            - text
+
+    - name: notifications
+      slackConfigs:
+        - apiURL:
+            name: slack-webhooks
+            key: notifications
+          httpConfig: {}
+          channel: '#kub3-${cluster}-notifications'
+          sendResolved: true
+          shortFields: false
+          iconEmoji: ':alertmanager:'
+          iconURL: https://alerts.${cluster_domain}/
+          color: >-
+            {{ template "slack.n3tuk.color" . }}
+          username: >-
+            {{ template "common.n3tuk.instance" . }}
+          title: >-
+            {{ template "common.n3tuk.title" . }}
+          titleLink: >-
+            {{ template "slack.n3tuk.link" . }}
+          pretext: |
+            {{ template "slack.n3tuk.pretext" .Alerts }}
+          text: |
+            {{ template "slack.n3tuk.text" . }}
+          footer: |
+            {{ template "slack.n3tuk.footer" . }}
+          fallback: >-
+            {{ template "slack.n3tuk.fallback" . }}
+          fields:
+            - title: Alert Name
+              value: >-
+                {{ template "common.n3tuk.alertname" . }}
+              short: false
+            - title: Cluster
+              value: >-
+                {{ template "common.n3tuk.cluster" . }}
+              short: true
+            - title: Namespace
+              value: >-
+                {{ template "common.n3tuk.namespace" . }}
+              short: true
+            - title: Severity
+              value: >-
+                {{ template "common.n3tuk.severity" . }}
               short: true
             - title: Since
               value: >-
                 {{ (index .Alerts 0).StartsAt | since | humanizeDuration }}
               short: true
           actions:
+            - text: Prometheus Query
+              type: button
+              url: >-
+                {{ template "common.n3tuk.prometheus_query_link" . }}
+            - text: Alertmanager Alerts
+              type: button
+              url: >-
+                {{ template "common.n3tuk.alertmanager_link" . }}
+            - text: Grafana Dashboard
+              type: button
+              url: >-
+                {{ template "common.n3tuk.dashboard" . }}
             - text: Runbook
               type: button
               url: >-
-                {{ (index .Alerts 0).Annotations.runbook }}
-            - text: Query
+                {{ template "common.n3tuk.runbook" . }}
+            - text: Silence Alert
               type: button
               url: >-
-                {{ (index .Alerts 0).GeneratorURL }}
-            - text: Dashboard
-              type: button
-              url: >-
-                {{ (index .Alerts 0).Annotations.dashboard }}
-            - text: Silence
-              type: button
-              url: >-
-                {{ template "__alert_silence_link" . }}
+                {{ template "common.n3tuk.silence_all_link" . }}
           linkNames: false
           mrkdwnIn:
             - title

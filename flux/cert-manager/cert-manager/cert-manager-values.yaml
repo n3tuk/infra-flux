@@ -147,9 +147,11 @@ cainjector:
     minAvailable: 1
 
   resources:
+    limits: # Don't limit the CPU
+      memory: 128Mi
     requests:
-      cpu: 5m
-      memory: 64Mi
+      cpu: 10m
+      memory: 96Mi
 
   topologySpreadConstraints:
     - maxSkew: 1
@@ -176,11 +178,3 @@ startupapicheck:
     requests:
       cpu: 10m
       memory: 32Mi
-
-cainjector:
-  resources:
-    limits: # Don't limit the CPU
-      memory: 128Mi
-    requests:
-      cpu: 10m
-      memory: 96Mi

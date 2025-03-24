@@ -15,7 +15,7 @@ spec:
       - name: incidentio
         matchType: '!='
         value: ignore
-    repeatInterval: 1m
+    repeatInterval: 5m
     continue: true
 
   receivers:

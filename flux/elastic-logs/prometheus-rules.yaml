@@ -148,7 +148,7 @@ spec:
 
     - name: elasticsearch-shards
       rules:
-        - alert: ElasticSearchRelocatingShardsInfo
+        - alert: ElasticSearchRelocatingShardsNotice
           expr: |-
             elasticsearch_cluster_health_relocating_shards{
               namespace="elastic-logs",
@@ -161,15 +161,15 @@ spec:
             title: ElasticSearch Cluster is Relocating Shards
             summary: >-
               One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
-              reported *they are relocating shards across the* `data` *nodes*, which can degrate the
-              cluster's performance.
+              reported *they are relocating shards across the* `data` *nodes*, which can temporarily
+              degrate the cluster's performance.
             description: >-
               `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster (*{{$value|humanize}}* nodes)
             runbook: https://d.n3t.uk/runbooks/
           labels:
-            ignore: outside-extended-hours
+            ignore: never
             severity: info
-            slack: kub3-${cluster}-alerts-infra
+            slack: kub3-${cluster}-notifications
             pagerduty: ignore
             incidentio: ignore
             team: platform
@@ -199,7 +199,7 @@ spec:
             incidentio: send
             team: platform
 
-        - alert: ElasticSearchInitializingShardsInfo
+        - alert: ElasticSearchInitializingShardsNotice
           expr: |-
             elasticsearch_cluster_health_initializing_shards{
               namespace="elastic-logs",
@@ -217,13 +217,12 @@ spec:
               `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster (*{{$value|humanize}}* shards)
             runbook: https://d.n3t.uk/runbooks/
           labels:
-            ignore: outside-extended-hours
+            ignore: never
             severity: info
-            slack: kub3-${cluster}-alerts-infra
+            slack: kub3-${cluster}-notifications
             pagerduty: ignore
             incidentio: ignore
             team: platform
-            runbook: https://d.n3t.uk/runbooks/
 
         - alert: ElasticSearchInitializingShardsWarning
           expr: |-
