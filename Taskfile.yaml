@@ -31,7 +31,7 @@ vars:
     sh: git rev-parse --show-toplevel
   # Set the version of the Kubernetes API we should be validating the Flux
   # Kustomizations against, as this may not be available at runtime
-  kubernetes_version: 1.30.3
+  kubernetes_version: 1.32.3
   # Find all the kustomization directories for Flux so that we can process and
   # test them individually as part of their integrations
   kustomizations:

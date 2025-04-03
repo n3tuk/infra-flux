@@ -55,26 +55,28 @@ tasks:
       # yamllint disable rule:line-length
       - cmd: |-
           [[ -n '{{ .files }}' ]] || exit 0
-           mkdir -p .kubeconform
-           kubeconform \
-             -kubernetes-version {{ .kubernetes_version }} \
-             -ignore-missing-schemas \
-             -schema-location 'https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{ printf "{{ .NormalizedKubernetesVersion }}-standalone{{ .StrictSuffix }}/{{ .ResourceKind }}{{ .KindSuffix }}" }}.json' \
-             -schema-location 'https://raw.githubusercontent.com/datreeio/crds-catalog/main/{{ printf "{{ .Group }}/{{ .ResourceKind }}_{{ .ResourceAPIVersion }}" }}.json' \
-             -cache .kubeconform \
-             -output pretty \
-             -verbose \
-             -summary \
-             -strict \
-             {{ .files }}
-           echo -e '{{ .cg }}Passed{{ .cc }}'
+          mkdir -p .kubeconform
+          kubeconform \
+            -kubernetes-version {{ .kubernetes_version }} \
+            -ignore-missing-schemas \
+            -schema-location 'https://json.schemastore.org/{{.ResourceKind}}.json' \
+            -schema-location 'https://github.com/yannh/kubernetes-json-schema/raw/master/{{printf "{{.NormalizedKubernetesVersion}}{{.StrictSuffix}}/{{.ResourceKind}}{{.KindSuffix}}"}}.json' \
+            -schema-location 'https://github.com/datreeio/crds-catalog/raw/main/{{printf "{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}"}}.json' \
+            -cache .kubeconform \
+            -output pretty \
+            -verbose \
+            -summary \
+            -strict \
+            {{ .files }}
+          echo -e '{{ .cg }}Passed{{ .cc }}'
       - cmd: |-
           [[ -n '{{ .files }}' ]] || exit 0
           kubeconform \
             -kubernetes-version {{ .kubernetes_version }} \
             -ignore-missing-schemas \
-            -schema-location 'https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{ printf "{{ .NormalizedKubernetesVersion }}-standalone{{ .StrictSuffix }}/{{ .ResourceKind }}{{ .KindSuffix }}" }}.json' \
-            -schema-location 'https://raw.githubusercontent.com/datreeio/crds-catalog/main/{{ printf "{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}" }}.json' \
+            -schema-location 'https://json.schemastore.org/{{ .ResourceKind }}.json' \
+            -schema-location 'https://github.com/yannh/kubernetes-json-schema/raw/master/{{printf "{{.NormalizedKubernetesVersion}}{{.StrictSuffix}}/{{.ResourceKind}}{{.KindSuffix}}"}}.json' \
+            -schema-location 'https://github.com/datreeio/crds-catalog/raw/main/{{printf "{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}"}}.json'\
             -cache .kubeconform \
             -output junit \
             -strict \
