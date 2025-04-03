@@ -1,6 +1,6 @@
 ---
 # yamllint disable-line rule:line-length
-# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/refs/heads/main/source.toolkit.fluxcd.io/ocirepository_v1beta2.json
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/source.toolkit.fluxcd.io/ocirepository_v1beta2.json
 apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: OCIRepository
 metadata:
