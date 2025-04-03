@@ -1,4 +1,6 @@
 ---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/yannh/kubernetes-json-schema/raw/master/master/service-v1.json
 apiVersion: v1
 kind: Service
 metadata:
