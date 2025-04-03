@@ -1,4 +1,6 @@
 ---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema= https://github.com/yannh/kubernetes-json-schema/raw/master/master/secret-v1.json
 apiVersion: v1
 kind: Secret
 metadata:
@@ -11,6 +13,8 @@ stringData:
     ${elasticsearch_exporter_password}
   roles: exporters
 ---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema= https://github.com/yannh/kubernetes-json-schema/raw/master/master/secret-v1.json
 apiVersion: v1
 kind: Secret
 metadata:
@@ -23,6 +27,8 @@ stringData:
     ${elasticsearch_fluent_bit_password}
   roles: log_writers
 ---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema= https://github.com/yannh/kubernetes-json-schema/raw/master/master/secret-v1.json
 apiVersion: v1
 kind: Secret
 metadata:

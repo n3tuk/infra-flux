@@ -1,4 +1,6 @@
 ---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/elasticsearch.k8s.elastic.co/elasticsearch_v1.json
 apiVersion: elasticsearch.k8s.elastic.co/v1
 kind: Elasticsearch
 metadata:
