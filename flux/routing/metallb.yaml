@@ -1,4 +1,6 @@
 ---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/metallb.io/ipaddresspool_v1beta1.json
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
@@ -7,6 +9,8 @@ spec:
   addresses:
     - ${ipv4_pool}
 ---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/metallb.io/bgppeer_v1beta2.json
 apiVersion: metallb.io/v1beta2
 kind: BGPPeer
 metadata:
@@ -21,6 +25,8 @@ spec:
     - matchLabels:
         topology.kubernetes.io/zone: proxmox-01
 ---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/metallb.io/bgppeer_v1beta2.json
 apiVersion: metallb.io/v1beta2
 kind: BGPPeer
 metadata:
@@ -35,6 +41,8 @@ spec:
     - matchLabels:
         topology.kubernetes.io/zone: proxmox-02
 ---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/metallb.io/bgppeer_v1beta2.json
 apiVersion: metallb.io/v1beta2
 kind: BGPPeer
 metadata:
@@ -49,6 +57,8 @@ spec:
     - matchLabels:
         topology.kubernetes.io/zone: proxmox-03
 ---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/metallb.io/bfdprofile_v1beta1.json
 apiVersion: metallb.io/v1beta1
 kind: BFDProfile
 metadata:
@@ -58,6 +68,8 @@ spec:
   transmitInterval: 270
   detectMultiplier: 3
 ---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/metallb.io/bgpadvertisement_v1beta1.json
 apiVersion: metallb.io/v1beta1
 kind: BGPAdvertisement
 metadata:
