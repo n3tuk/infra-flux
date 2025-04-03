@@ -1,30 +1,69 @@
 ---
 misconfigurations:
-  - id: KSV020 # LOW
-    # Force the container to run with user ID > 10000 to avoid conflicts with
-    # the host’s user table.
+  - id: KSV032 # MEDIUM
+    #  All container images must start with the *.azurecr.io domain
     statement: >
-      This is a positive detection of an issue in the pre-compiled Custom
-      Resource Defitions for one or more Kubernetes Operators, and must be
-      ignored until they can be reviewed and resolved.
+      There are currently no plans to locally cache any container images used in dedicated,
+      personally controlled registries as these clusters are mainly for learning and development
+      currently.
+
+  - id: KSV033 # MEDIUM
+    # All container images must start with a GCR domain
+    statement: >
+      There are currently no plans to locally cache any container images used in dedicated,
+      personally controlled registries as these clusters are mainly for learning and development
+      currently.
+
+  - id: KSV034 # MEDIUM
+    # Container images from public registries used
+    statement: >
+      There are currently no plans to locally cache any container images used in dedicated,
+      personally controlled registries as these clusters are mainly for learning and development
+      currently.
+
+  - id: KSV035 # MEDIUM
+    # All container images must start with a ECR domain
+    statement: >
+      There are currently no plans to locally cache any container images used in dedicated,
+      personally controlled registries as these clusters are mainly for learning and development
+      currently.
+
+  - id: KSV039 # LOW
+    #  limit range usage
+    statement: >
+      This seems to be a poorly written rule which is catching many false-positive detections within
+      the configuration, for example, when accessing OCIRepository resources for Flux which cannot
+      support resource quotas (see https://github.com/aquasecurity/trivy/issues/8635).
+
+  - id: KSV040 # LOW
+    # resource quota usage
+    statement: >
+      This seems to be a poorly written rule which is catching many false-positive detections within
+      the configuration, for example, when accessing OCIRepository resources for Flux which cannot
+      support resource quotas (see https://github.com/aquasecurity/trivy/issues/8635).
+
+  - id: KSV020 # LOW
+    # Force the container to run with user ID > 10000 to avoid conflicts with the host’s user table.
+    statement: >
+      This is a positive detection of an issue in the pre-compiled Custom Resource Defitions for one
+      or more Kubernetes Operators, and must be ignored until they can be reviewed and resolved.
     paths:
       # Container 'manager' of StatefulSet 'elastic-operator' should set
       # 'securityContext.runAsUser' > 10000
       - elastic-crds/operator.yaml
-      # Container 'prometheus-operator' of Deployment 'prometheus-operator'
-      # should set 'securityContext.runAsUser' > 10000
+      # Container 'prometheus-operator' of Deployment 'prometheus-operator' should set
+      # 'securityContext.runAsUser' > 10000
       - prometheus-crds/resources.yaml
-      # Container 'manager' of Deployment 'grafana-operator-controller-manager'
-      # should set 'securityContext.runAsUser' > 10000
+      # Container 'manager' of Deployment 'grafana-operator-controller-manager' should set
+      # 'securityContext.runAsUser' > 10000
       - grafana-crds/resources.yaml
 
   - id: KSV021 # LOW
-    # Force the container to run with group ID > 10000 to avoid conflicts with
-    # the host’s user table.
+    # Force the container to run with group ID > 10000 to avoid conflicts with the host’s user
+    # table.
     statement: >
-      This is a positive detection of an issue in the pre-compiled Custom
-      Resource Defitions for one or more Kubernetes Operators, and must be
-      ignored until they can be reviewed and resolved.
+      This is a positive detection of an issue in the pre-compiled Custom Resource Defitions for one
+      or more Kubernetes Operators, and must be ignored until they can be reviewed and resolved.
     paths:
       # Container 'manager' of StatefulSet 'elastic-operator' should set
       # 'securityContext.runAsGroup' > 10000
@@ -32,31 +71,29 @@ misconfigurations:
       # Container 'manager' of StatefulSet 'elastic-operator' should set
       # 'securityContext.runAsGroup' > 10000
       - prometheus-crds/resources.yaml
-      # Container 'manager' of Deployment 'grafana-operator-controller-manager'
-      # should set 'securityContext.runAsGroup' > 10000
+      # Container 'manager' of Deployment 'grafana-operator-controller-manager' should set
+      # 'securityContext.runAsGroup' > 10000
       - grafana-crds/resources.yaml
 
   - id: KSV030 # LOW
-    # According to pod security standard 'Seccomp', the RuntimeDefault seccomp
-    # profile must be required, or allow specific additional profiles.
+    # According to pod security standard 'Seccomp', the RuntimeDefault seccomp profile must be
+    # required, or allow specific additional profiles.
     statement: >
-      This is a positive detection of an issue in the pre-compiled Custom
-      Resource Defitions for one or more Kubernetes Operators, and must be
-      ignored until they can be reviewed and resolved.
+      This is a positive detection of an issue in the pre-compiled Custom Resource Defitions for one
+      or more Kubernetes Operators, and must be ignored until they can be reviewed and resolved.
     paths:
-      # Either Pod or Container should set 'securityContext.seccompProfile.type'
-      # to 'RuntimeDefault'
+      # Either Pod or Container should set 'securityContext.seccompProfile.type' to 'RuntimeDefault'
       - elastic-crds/operator.yaml
-      # According to pod security standard 'Seccomp', the RuntimeDefault seccomp
-      # profile must be required, or allow specific additional profiles.
+      # According to pod security standard 'Seccomp', the RuntimeDefault seccomp profile must be
+      # required, or allow specific additional profiles.
       - grafana-crds/resources.yaml
 
   - id: KSV037 # MEDIUM
     # Ensure that User pods are not placed in kube-system namespace
     statement: >
-      The ServiceMonitor resource is an addition to enable active monitoring of
-      the CoreDNS service through Prometheus, and the CoreDNS service operates
-      within kube-system. As such, this namespace cannot be changed.
+      The ServiceMonitor resource is an addition to enable active monitoring of the CoreDNS service
+      through Prometheus, and the CoreDNS service operates within kube-system. As such, this
+      namespace cannot be changed.
     paths:
       # ServiceMonitor 'core-dns' should not be set with 'kube-system' namespace
       - core-dns/service-monitor.yaml
@@ -66,142 +103,120 @@ misconfigurations:
       - kube-state-metrics/prometheus-rules.yaml
 
   - id: KSV041 # CRITICAL
-    # Viewing secrets at the cluster-scope is akin to cluster-admin in most
-    # clusters as there are typically at least one service accounts (their token
-    # stored in a secret) bound to cluster-admin directly or a role/clusterrole
-    # that gives similar permissions.
+    # Viewing secrets at the cluster-scope is akin to cluster-admin in most clusters as there are
+    # typically at least one service accounts (their token stored in a secret) bound to
+    # cluster-admin directly or a role/clusterrole that gives similar permissions.
     statement: >
-      This is a positive detection of an issue in the pre-compiled Custom
-      Resource Defitions for one or more Kubernetes Operators, and must be
-      ignored until they can be reviewed and resolved.
+      This is a positive detection of an issue in the pre-compiled Custom Resource Defitions for one
+      or more Kubernetes Operators, and must be ignored until they can be reviewed and resolved.
     paths:
-      # ClusterRole 'elastic-operator' shouldn't have access to manage resource
-      # 'secrets'
+      # ClusterRole 'elastic-operator' shouldn't have access to manage resource 'secrets'
       - elastic-crds/operator.yaml
-      # ClusterRole 'prometheus-operator' shouldn't have access to manage
-      # resource 'secrets'
+      # ClusterRole 'prometheus-operator' shouldn't have access to manage resource 'secrets'
       - prometheus-crds/resources.yaml
-      # ClusterRole 'grafana-operator-permissions' shouldn't have access to
-      # manage resource 'secrets'
+      # ClusterRole 'grafana-operator-permissions' shouldn't have access to manage resource
+      # 'secrets'
       - grafana-crds/resources.yaml
 
   - id: KSV045 # CRITICAL
     # Check whether role permits wildcard verb on specific resources
     statement: >
-      This is a positive detection of an issue in the pre-compiled Custom
-      Resource Defitions for one or more Kubernetes Operators, and must be
-      ignored until they can be reviewed and resolved.
+      This is a positive detection of an issue in the pre-compiled Custom Resource Defitions for one
+      or more Kubernetes Operators, and must be ignored until they can be reviewed and resolved.
     paths:
       # Role permits wildcard verb on specific resources
       - prometheus-crds/resources.yaml
 
   - id: KSV048 # MEDIUM
-    # Depending on the policies enforced by the admission controller, this
-    # permission ranges from the ability to steal compute (crypto) by running
-    # workloads or allowing for creating workloads that escape to the node as
-    # root and escalation to cluster-admin.
+    # Depending on the policies enforced by the admission controller, this permission ranges from
+    # the ability to steal compute (crypto) by running workloads or allowing for creating workloads
+    # that escape to the node as root and escalation to cluster-admin.
     statement: >
-      This is a positive detection of an issue in the pre-compiled Custom
-      Resource Defitions for one or more Kubernetes Operators, and must be
-      ignored until they can be reviewed and resolved.
+      This is a positive detection of an issue in the pre-compiled Custom Resource Defitions for one
+      or more Kubernetes Operators, and must be ignored until they can be reviewed and resolved.
     paths:
-      # ClusterRole 'elastic-operator' should not have access to resources
-      # ["pods", "deployments", "jobs", "cronjobs", "statefulsets",
-      # "daemonsets", "replicasets", "replicationcontrollers"] for verbs
-      # ["create", "update", "patch", "delete", "deletecollection",
-      # "impersonate", "*"]
+      # ClusterRole 'elastic-operator' should not have access to resources ["pods", "deployments",
+      # "jobs", "cronjobs", "statefulsets", "daemonsets", "replicasets", "replicationcontrollers"]
+      # for verbs ["create", "update", "patch", "delete", "deletecollection", "impersonate", "*"]
       - elastic-crds/operator.yaml
-      # ClusterRole 'prometheus-operator' should not have access to resources
-      # ["pods", "deployments", "jobs", "cronjobs", "statefulsets",
-      # "daemonsets", "replicasets", "replicationcontrollers"] for verbs
-      # ["create", "update", "patch", "delete", "deletecollection",
-      # "impersonate", "*"]
+      # ClusterRole 'prometheus-operator' should not have access to resources ["pods",
+      # "deployments", "jobs", "cronjobs", "statefulsets", "daemonsets", "replicasets",
+      # "replicationcontrollers"] for verbs ["create", "update", "patch", "delete",
+      # "deletecollection", "impersonate", "*"]
       - prometheus-crds/resources.yaml
-      # ClusterRole 'grafana-operator-permissions' should not have access to
-      # resources ["pods", "deployments", "jobs", "cronjobs", "statefulsets",
-      # "daemonsets", "replicasets", "replicationcontrollers"] for verbs
-      # ["create", "update", "patch", "delete", "deletecollection",
-      # "impersonate", "*"]
+      # ClusterRole 'grafana-operator-permissions' should not have access to resources ["pods",
+      # "deployments", "jobs", "cronjobs", "statefulsets", "daemonsets", "replicasets",
+      # "replicationcontrollers"] for verbs ["create", "update", "patch", "delete",
+      # "deletecollection", "impersonate", "*"]
       - grafana-crds/resources.yaml
 
   - id: KSV049 # MEDIUM
-    # Some workloads leverage configmaps to store sensitive data or
-    # configuration parameters that affect runtime behavior that can be modified
-    # by an attacker or combined with another issue to potentially lead to
-    # compromise.
+    # Some workloads leverage configmaps to store sensitive data or configuration parameters that
+    # affect runtime behavior that can be modified by an attacker or combined with another issue to
+    # potentially lead to compromise.
     statement: >
-      This is a positive detection of an issue in the pre-compiled Custom
-      Resource Defitions for one or more Kubernetes Operators, and must be
-      ignored until they can be reviewed and resolved.
+      This is a positive detection of an issue in the pre-compiled Custom Resource Defitions for one
+      or more Kubernetes Operators, and must be ignored until they can be reviewed and resolved.
     paths:
-      # ClusterRole 'elastic-operator' should not have access to resource
-      # 'configmaps' for verbs ["create", "update", "patch", "delete",
-      # "deletecollection", "impersonate", "*"]
+      # ClusterRole 'elastic-operator' should not have access to resource 'configmaps' for verbs
+      # ["create", "update", "patch", "delete", "deletecollection", "impersonate", "*"]
       - elastic-crds/operator.yaml
-      # ClusterRole 'prometheus-operator' should not have access to resource
-      # 'configmaps' for verbs ["create", "update", "patch", "delete",
-      # "deletecollection", "impersonate", "*"]
+      # ClusterRole 'prometheus-operator' should not have access to resource 'configmaps' for verbs
+      # ["create", "update", "patch", "delete", "deletecollection", "impersonate", "*"]
       - prometheus-crds/resources.yaml
-      # ClusterRole 'grafana-operator-permissions' should not have access to
-      # resource 'configmaps' for verbs ["create", "update", "patch", "delete",
-      # "deletecollection", "impersonate", "*"]
+      # ClusterRole 'grafana-operator-permissions' should not have access to resource 'configmaps'
+      # for verbs ["create", "update", "patch", "delete", "deletecollection", "impersonate", "*"]
       - grafana-crds/resources.yaml
 
   - id: KSV056 # HIGH
-    # The ability to control which pods get service traffic directed to them
-    # allows for interception attacks. Controlling network policy allows for
-    # bypassing lateral movement restrictions.
+    # The ability to control which pods get service traffic directed to them allows for interception
+    # attacks. Controlling network policy allows for bypassing lateral movement restrictions.
     statement: >
-      This is a positive detection of an issue in the pre-compiled Custom
-      Resource Defitions for one or more Kubernetes Operators, and must be
-      ignored until they can be reviewed and resolved.
+      This is a positive detection of an issue in the pre-compiled Custom Resource Defitions for one
+      or more Kubernetes Operators, and must be ignored until they can be reviewed and resolved.
     paths:
-      # ClusterRole 'elastic-operator' should not have access to resources
-      # ["services", "endpoints", "endpointslices", "networkpolicies",
-      # "ingresses"] for verbs ["create", "update", "patch", "delete",
-      # "deletecollection", "impersonate", "*"]
+      # ClusterRole 'elastic-operator' should not have access to resources ["services", "endpoints",
+      # "endpointslices", "networkpolicies", "ingresses"] for verbs ["create", "update", "patch",
+      # "delete", "deletecollection", "impersonate", "*"]
       - elastic-crds/operator.yaml
-      # ClusterRole 'prometheus-operator' should not have access to resources
-      # ["services", "endpoints", "endpointslices", "networkpolicies",
-      # "ingresses"] for verbs ["create", "update", "patch", "delete",
-      # "deletecollection", "impersonate", "*"]
+      # ClusterRole 'prometheus-operator' should not have access to resources ["services",
+      # "endpoints", "endpointslices", "networkpolicies", "ingresses"] for verbs ["create",
+      # "update", "patch", "delete", "deletecollection", "impersonate", "*"]
       - prometheus-crds/resources.yaml
-      # ClusterRole 'grafana-operator-permissions' should not have access to
-      # resources ["services", "endpoints", "endpointslices", "networkpolicies",
-      # "ingresses"] for verbs ["create", "update", "patch", "delete",
-      # "deletecollection", "impersonate", "*"]
+      # ClusterRole 'grafana-operator-permissions' should not have access to resources ["services",
+      # "endpoints", "endpointslices", "networkpolicies", "ingresses"] for verbs ["create",
+      # "update", "patch", "delete", "deletecollection", "impersonate", "*"]
       - grafana-crds/resources.yaml
 
   - id: KSV104 # MEDIUM
     # A program inside the container can bypass Seccomp protection policies.
     statement: >
-      The namespace defined for this container is managed by the Kustomization
-      resource that imports the resources through Flux.
+      The namespace defined for this container is managed by the Kustomization resource that imports
+      the resources through Flux.
     paths:
-      # Container "manager" of statefulset "elastic-operator" in
-      # "elastic-system" namespace should specify a seccomp profile
+      # Container "manager" of statefulset "elastic-operator" in "elastic-system" namespace should
+      # specify a seccomp profile
       - elastic-crds/operator.yaml
-      # Container "manager" of deployment "grafana-operator-controller-manager"
-      # in "grafana" namespace should specify a seccomp profile
+      # Container "manager" of deployment "grafana-operator-controller-manager" in "grafana"
+      # namespace should specify a seccomp profile
       - grafana-crds/resources.yaml
 
   - id: KSV110 # LOW
     # Checks whether a workload is running in the default namespace.
     statement: >
-      The namespace defined for this container is managed by the Kustomization
-      resource that imports the resources through Flux.
+      The namespace defined for this container is managed by the Kustomization resource that imports
+      the resources through Flux.
     paths:
-      # Deployment prometheus-operator in default namespace should set
-      # metadata.namespace to a non-default namespace
+      # Deployment prometheus-operator in default namespace should set metadata.namespace to a
+      # non-default namespace
       - prometheus-crds/resources.yaml
 
   - id: KSV114 # CRITICAL
     # A program inside the container can bypass Seccomp protection policies.
     statement: >
-      This is a positive detection of an issue in the pre-compiled Custom
-      Resource Defitions for one or more Kubernetes Operators, and must be
-      ignored until they can be reviewed and resolved.
+      This is a positive detection of an issue in the pre-compiled Custom Resource Defitions for one
+      or more Kubernetes Operators, and must be ignored until they can be reviewed and resolved.
     paths:
-      # container "manager" of statefulset "elastic-operator" in
-      # "elastic-system" namespace should specify a seccomp profile
+      # container "manager" of statefulset "elastic-operator" in "elastic-system" namespace should
+      # specify a seccomp profile
       - elastic-crds/operator.yaml

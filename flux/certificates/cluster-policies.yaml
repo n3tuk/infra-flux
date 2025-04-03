@@ -1,4 +1,7 @@
 ---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/policy.cert-manager.io/certificaterequestpolicy_v1alpha1.json
+
 # This policy configures all options to allow all possible values.
 apiVersion: policy.cert-manager.io/v1alpha1
 kind: CertificateRequestPolicy

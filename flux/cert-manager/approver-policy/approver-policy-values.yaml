@@ -1,7 +1,5 @@
 ---
-# The use of nameOverride does not work currently:
-#   https://github.com/cert-manager/approver-policy/issues/207
-# nameOverride: approver-policy
+nameOverride: approver-policy
 
 crds:
   enabled: true

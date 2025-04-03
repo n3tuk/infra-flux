@@ -1,4 +1,6 @@
 ---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/yannh/kubernetes-json-schema/raw/master/master/secret-v1.json
 apiVersion: v1
 kind: Secret
 metadata:
@@ -16,6 +18,8 @@ stringData:
             - monitor
             - view_index_metadata
 ---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema= https://github.com/yannh/kubernetes-json-schema/raw/master/master/secret-v1.json
 apiVersion: v1
 kind: Secret
 metadata:
@@ -36,6 +40,8 @@ stringData:
             - write
             - manage
 ---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema= https://github.com/yannh/kubernetes-json-schema/raw/master/master/secret-v1.json
 apiVersion: v1
 kind: Secret
 metadata:
