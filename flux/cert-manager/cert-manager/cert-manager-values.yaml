@@ -22,7 +22,6 @@ crds:
   enabled: false
 
 replicaCount: 1
-
 strategy:
   type: RollingUpdate
   rollingUpdate:
