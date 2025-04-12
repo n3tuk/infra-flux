@@ -6,6 +6,11 @@ crds:
   keep: true
 
 replicaCount: 1
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 0
+    maxUnavailable: 0
 
 app:
   logFormat: json
