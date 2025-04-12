@@ -26,7 +26,7 @@ spec:
               `cert-manager has Disappeared from Prometheus`
             summary: >-
               The `cert-manager` job in the `{{$externalLabels.cluster}}` Cluster has
-              *dissappeared* from Prometheus' service discovery and may not be running, or the
+              *disappeared* from Prometheus' service discovery and may not be running, or the
               `Service` may not be being scraped, and hence cannot be checked and monitored.
             description: >-
               `certificates-system`/`cert-manager` has *disappeared*
@@ -48,19 +48,19 @@ spec:
             absent(
               up{
                 namespace="certificates-system",
-                container="cert-manager-approver-policy"
+                container="approver-policy"
               } == 1
             )
           for: 30m
           annotations:
             title: >-
-              `cert-manager-approver-policy` has Disappeared from Prometheusg
+              `approver-policy` has Disappeared from Prometheus
             summary: >-
-              The `cert-manager-approver-policy` job in the `{{$externalLabels.cluster}}` Cluster
-              has *dissappeared* from Prometheus' service discovery and may not be running, or the
+              The `approver-policy` job in the `{{$externalLabels.cluster}}` Cluster has
+              *disappeared* from Prometheus' service discovery and may not be running, or the
               `Service` may not be being scraped, and hence cannot be checked and monitored.
             description: >-
-              `certificates-system`/`cert-manager` has *disappeared*
+              `certificates-system`/`approver-policy` has *disappeared*
           labels:
             ignore: outside-extended-hours
             severity: critical
