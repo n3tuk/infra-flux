@@ -416,7 +416,7 @@ spec:
             ) < 1
           for: 1m
           annotations:
-            title: ElasticSearch Cluster has No New Documents
+            title: ElasticSearch Node has No New Documents
             summary: >-
               One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
               reported *at least one of the data nodes have not received any new doucmentes* during
@@ -476,7 +476,7 @@ spec:
             ) > 0.0005
           for: 10m
           annotations:
-            title: ElasticSearch Cluster High Indexing Latency
+            title: ElasticSearch Node High Indexing Latency
             summary: >-
               One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
               reported *a high latency during indexing on some or all of its nodes* during at least
@@ -506,7 +506,7 @@ spec:
             ) > 0.75
           for: 2m
           annotations:
-            title: ElasticSearch Cluster High Heap Usage
+            title: ElasticSearch Node High Heap Usage
             summary: >-
               One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
               reported *a usage of over 75% of the JVM heap on some or all of its nodes* during at
@@ -535,7 +535,7 @@ spec:
             ) > 0.9
           for: 2m
           annotations:
-            title: ElasticSearch Cluster High Heap Usage
+            title: ElasticSearch Node High Heap Usage
             summary: >-
               One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
               reported *a usage of over 90% of the JVM heap on some or all of its nodes* during at
@@ -571,11 +571,12 @@ spec:
             )
           for: 2m
           annotations:
-            title: ElasticSearch Cluster Disk I/O Usage
+            title: ElasticSearch Node Disk I/O Usage
             summary: >-
               One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
-              reported *their I/O usage is over 70% of the limit allocated to the storage
-              device* during at least the last five minutes, which is above the *warning* threshold.
+              reported nodes where *their I/O usage is over 70% of the limit allocated to the
+              storage device* during at least the last five minutes, which is above the *warning*
+              threshold.
             description: >-
               `{{$labels.name}}` in `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster
               (*{{$value|humanize}}* IOPS)
@@ -608,11 +609,12 @@ spec:
             )
           for: 2m
           annotations:
-            title: ElasticSearch Cluster Disk I/O Usage
+            title: ElasticSearch Node Disk I/O Usage
             summary: >-
               One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
-              reported *their I/O usage is over 97.5% of the limit allocated to the storage device*
-              during at least the last five minutes, which is above the *critical* threshold.
+              reported nodes where *their I/O usage is over 97.5% of the limit allocated to the
+              storage device* during at least the last five minutes, which is above the *critical*
+              threshold.
             description: >-
               `{{$labels.name}}` in `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster
               (*{{$value|humanize}}* IOPS)
