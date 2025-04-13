@@ -10,6 +10,156 @@ metadata:
     alertmanager: metrics
 spec:
   groups:
+    - name: elasticsearch.rules
+      rules:
+        - record: name:elasticsearch_filesystem_data_size_bytes:capacity_by_top_indicies
+          # Compare the configured disk size for each data node in an ElasticSearch cluster against
+          # the average size of the largest seven days worth of indexes and work out the approximate
+          # number of days' indexes it can store in total (taking into account the number of nodes
+          # available and the number of replications configured for the indexes across those nodes)
+          expr: |2-
+                sum by (namespace, cluster, name, host, mount, path) (
+                  elasticsearch_filesystem_data_size_bytes{
+                    es_data_node="true"
+                  }
+                )
+              / on (namespace, cluster) group_left ()
+                avg by (namespace, cluster) (
+                  topk(7,
+                    stream_date:elasticsearch_indices_store_size_bytes:sum{
+                      date!=""
+                    }
+                  )
+                )
+            / on (namespace, cluster) group_left ()
+              (
+                (
+                  max by (namespace, cluster) (
+                    elasticsearch_cluster_health_active_shards
+                  )
+                / max by (namespace, cluster) (
+                    elasticsearch_cluster_health_active_primary_shards)
+                  )
+              / count by (namespace, cluster) (
+                  elasticsearch_filesystem_data_size_bytes{
+                    es_data_node="true"
+                  }
+                )
+              )
+
+        - record: name:elasticsearch_filesystem_data_free_bytes:capacity_by_top_indicies
+          # Compare the free disk space for each data node in an ElasticSearch cluster against the
+          # average size of the largest seven days worth of indexes and work out the approximate
+          # number of days' indexes it has the remaining capacity for
+          expr: |2-
+              sum by (namespace, cluster, name, host, mount, path) (
+                elasticsearch_filesystem_data_free_bytes{
+                  es_data_node="true"
+                }
+              )
+            / on (namespace, cluster) group_left ()
+              avg by (namespace, cluster) (
+                topk(7,
+                  stream_date:elasticsearch_indices_store_size_bytes:sum{
+                    date!=""
+                  }
+                )
+              )
+
+        - record: stream_date:elasticsearch_indices_store_size_bytes:sum
+          # Process all known data stream indices and extract the stream and the date of the index,
+          # and then sum them all based on that date to provide a total data size for each
+          # individual date/stream rather than each individual index stored within the cluster
+          expr: |-
+            sum by (namespace, cluster, date, stream) (
+              label_replace(
+                label_replace(
+                  elasticsearch_indices_store_size_bytes_total{
+                    index=~"^\\.ds-logs-.*-(?:(20[0-9]{2}\\.[0-9]{2}\\.[0-9]{2})-){2}[0-9]{6}$"
+                  },
+                  "date",
+                  "$1",
+                  "index",
+                  "^.*-(?:(20[0-9]{2}\\.[0-9]{2}\\.[0-9]{2})-){2}[0-9]{6}$"
+                ),
+                "stream",
+                "$1",
+                "index",
+                "^\\.ds-(.*)-(?:20[0-9]{2}\\.[0-9]{2}\\.[0-9]{2}-){2}[0-9]{6}$"
+              )
+            )
+
+        - record: stream_date:elasticsearch_indices_docs_primary:sum
+          # Process all known data stream indices and extract the steam and the date of the index,
+          # and then sum them all based on that date to provide a total count for each
+          # individual date/stream rather than each individual index stored within the cluster
+          expr: |-
+            sum by (namespace, cluster, date, stream) (
+              label_replace(
+                label_replace(
+                  elasticsearch_indices_docs_primary{
+                    index=~"^\\.ds-logs-.*-(?:(20[0-9]{2}\\.[0-9]{2}\\.[0-9]{2})-){2}[0-9]{6}$"
+                  },
+                  "date",
+                  "$1",
+                  "index",
+                  "^.*-(?:(20[0-9]{2}\\.[0-9]{2}\\.[0-9]{2})-){2}[0-9]{6}$"
+                ),
+                "stream",
+                "$1",
+                "index",
+                "^\\.ds-(.*)-(?:20[0-9]{2}\\.[0-9]{2}\\.[0-9]{2}-){2}[0-9]{6}$"
+              )
+            )
+
+        - record: stream_date:elasticsearch_indices_docs_primary:rate3m
+          # Process all known data stream indices and extract the steam and the date of the index,
+          # and then sum them all based on that date to provide a rate for each individual
+          # date/stream rather than each individual index stored within the cluster
+          expr: |-
+            sum by (namespace, cluster, date, stream) (
+              label_replace(
+                label_replace(
+                  rate(
+                    elasticsearch_indices_docs_primary{
+                      index=~"^\\.ds-logs-.*-(?:(20[0-9]{2}\\.[0-9]{2}\\.[0-9]{2})-){2}[0-9]{6}$"
+                    }[3m]
+                  ),
+                  "date",
+                  "$1",
+                  "index",
+                  "^.*-(?:(20[0-9]{2}\\.[0-9]{2}\\.[0-9]{2})-){2}[0-9]{6}$"
+                ),
+                "stream",
+                "$1",
+                "index",
+                "^\\.ds-(.*)-(?:20[0-9]{2}\\.[0-9]{2}\\.[0-9]{2}-){2}[0-9]{6}$"
+              )
+            )
+
+        - record: stream_date:elasticsearch_indices_docs_primary:rate5m
+          # Process all known data stream indices and extract the steam and the date of the index,
+          # and then sum them all based on that date to provide a rate for each individual
+          # date/stream rather than each individual index stored within the cluster
+          expr: |-
+            label_replace(
+              label_replace(
+                rate(
+                  elasticsearch_indices_docs_primary{
+                    index=~"^\\.ds-logs-.*-(?:(20[0-9]{2}\\.[0-9]{2}\\.[0-9]{2})-){2}[0-9]{6}$"
+                  }[5m]
+                ),
+                "date",
+                "$1",
+                "index",
+                "^.*-(?:(20[0-9]{2}\\.[0-9]{2}\\.[0-9]{2})-){2}[0-9]{6}$"
+              ),
+              "stream",
+              "$1",
+              "index",
+              "^\\.ds-(.*)-(?:20[0-9]{2}\\.[0-9]{2}\\.[0-9]{2}-){2}[0-9]{6}$"
+            )
+
     - name: elasticsearch-cluster
       rules:
         - alert: ElasticSearchClusterStatusRed
@@ -567,32 +717,9 @@ spec:
             incidentio: create
             team: platform
 
-        - alert: ElasticSearchIndexCapacityWarning
+        - alert: ElasticSearchIndiciesCapacityWarning
           expr: |-
-            floor(
-              sum by (cluster, namespace, name, path) (
-                elasticsearch_filesystem_data_size_bytes{
-                  namespace="elastic-logs"
-                }
-              ) / on (namespace) group_left ()
-              avg by (namespace) (
-                topk(
-                  7,
-                  sum by (namespace, date) (
-                    label_replace(
-                      elasticsearch_indices_store_size_bytes_total{
-                        namespace="elastic-logs",
-                        index=~"^\\.ds-logs-.*$"
-                      },
-                      "date",
-                      "$1",
-                      "index",
-                      "^.*(20[0-9]{2}\\.[0-9]{2}\\.[0-9]{2})-[0-9]{6}$"
-                    )
-                  )
-                )
-              )
-            ) < 28
+            name:elasticsearch_filesystem_data_size_bytes:capacity_by_top_indicies < 28
           for: 2m
           annotations:
             title: ElasticSearch Cluster Index Capacity
