@@ -36,7 +36,7 @@ spec:
             # severity can be info, errors, warning, critical
             severity: info
             # slack is the name of the channel to send messages to
-            slack: alerts
+            slack: kub3-${cluster}-infra-alerts
             # pagerduty can either be send or ignore for Alerts
             pagerduty: ignore
             # incidentio can either create incidents, send Alerts, or ignore
@@ -66,7 +66,7 @@ spec:
           labels:
             ignore: outside-extended-hours
             severity: warning
-            slack: alerts
+            slack: kub3-${cluster}-infra-alerts
             pagerduty: send
             incidentio: create
             team: platform
@@ -93,7 +93,7 @@ spec:
           labels:
             ignore: never
             severity: critical
-            slack: alerts
+            slack: kub3-${cluster}-infra-alerts
             pagerduty: send
             incidentio: create
             team: platform
@@ -122,7 +122,7 @@ spec:
           labels:
             ignore: outside-extended-hours
             severity: critical
-            slack: alerts
+            slack: kub3-${cluster}-infra-alerts
             pagerduty: send
             incidentio: create
             team: platform
@@ -159,7 +159,7 @@ spec:
           labels:
             ignore: outside-extended-hours
             severity: warning
-            slack: alerts
+            slack: kub3-${cluster}-infra-alerts
             pagerduty: send
             incidentio: create
             team: platform
@@ -190,7 +190,7 @@ spec:
           labels:
             ignore: outside-extended-hours
             severity: critical
-            slack: alerts
+            slack: kub3-${cluster}-infra-alerts
             pagerduty: send
             incidentio: create
             team: platform
@@ -217,7 +217,7 @@ spec:
           labels:
             ignore: never
             severity: critical
-            slack: alerts
+            slack: kub3-${cluster}-infra-alerts
             pagerduty: send
             incidentio: create
             team: platform
@@ -246,7 +246,7 @@ spec:
           labels:
             ignore: outside-extended-hours
             severity: warning
-            slack: alerts
+            slack: kub3-${cluster}-infra-alerts
             pagerduty: send
             incidentio: create
             team: platform
