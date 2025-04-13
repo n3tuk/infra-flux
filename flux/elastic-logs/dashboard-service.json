@@ -889,7 +889,7 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 12,
+        "w": 8,
         "x": 0,
         "y": 8
       },
@@ -944,6 +944,103 @@
         "defaults": {
           "color": {
             "fixedColor": "blue",
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "index": 0,
+                  "text": "(n/a)"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 2000
+              },
+              {
+                "color": "orange",
+                "value": 2500
+              },
+              {
+                "color": "red",
+                "value": 3000
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 8,
+        "x": 8,
+        "y": 8
+      },
+      "id": 346,
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "background_solid",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "elasticsearch_cluster_health_active_shards{cluster=\"$esCluster\"} / on (namespace,cluster) (min by (namespace,cluster) (elasticsearch_jvm_memory_max_bytes{cluster=\"$esCluster\",es_master_node=\"true\",area=\"heap\"}) / (1024^3))",
+          "format": "time_series",
+          "instant": true,
+          "intervalFactor": 1,
+          "legendFormat": "Shards per JVM GiB (Master) ",
+          "refId": "A",
+          "step": 60
+        }
+      ],
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "default": true,
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
             "mode": "fixed"
           },
           "decimals": 0,
@@ -975,8 +1072,8 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 12,
-        "x": 12,
+        "w": 8,
+        "x": 16,
         "y": 8
       },
       "id": 7,
@@ -3256,7 +3353,7 @@
       },
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": [
             "logs-es-data-0",
             "logs-es-data-1",
@@ -3292,7 +3389,7 @@
       },
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": [
             "logs-audit",
             "logs-dashboard",
@@ -3349,6 +3446,6 @@
   "timezone": "browser",
   "title": "ElasticSearch Service",
   "uid": "aegcc31gpqwhsd",
-  "version": 49,
+  "version": 50,
   "weekStart": "monday"
 }
