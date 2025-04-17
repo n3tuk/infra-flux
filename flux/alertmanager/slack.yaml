@@ -33,6 +33,7 @@ spec:
       - receiver: notifications
         matchers:
           - name: slack
+            matchType: =
             value: kub3-${cluster}-notifications
         continue: true
         repeatInterval: 24h
