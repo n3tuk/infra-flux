@@ -53,7 +53,7 @@ spec:
 
   resources:
     limits: # Don't limit the CPU
-      memory: 1024Mi
+      memory: 1228Mi
     requests:
       cpu: 50m
       memory: 1024Mi
