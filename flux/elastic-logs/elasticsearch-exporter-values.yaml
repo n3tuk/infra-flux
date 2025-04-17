@@ -31,10 +31,10 @@ es:
   aliases: false
   shards: true
   snapshots: false
-  cluster_settings: false
-  slm: false
-  data_stream: false
-  ilm: false
+  cluster_settings: true
+  slm: true
+  data_stream: true
+  ilm: true
   timeout: 10s
 
 serviceMonitor:
