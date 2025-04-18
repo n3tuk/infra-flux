@@ -14,7 +14,7 @@ spec:
         name: prometheus-community
       chart: prometheus-elasticsearch-exporter
       interval: 5m
-      version: 6.6.1
+      version: 6.7.2
   interval: 3h
   install:
     crds: CreateReplace

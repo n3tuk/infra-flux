@@ -53,7 +53,7 @@ spec:
             - name: elasticsearch
               env:
                 - name: ES_JAVA_OPTS
-                  value: -Xms4g -Xmx4g
+                  value: -Xms3g -Xmx3g
               resources:
                 limits:
                   memory: 6Gi
