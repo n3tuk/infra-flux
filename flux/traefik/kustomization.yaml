@@ -1,0 +1,31 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization.json
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: traefik
+  namespace: flux-system
+namespace: traefik-system
+
+labels:
+  - includeSelectors: true
+    pairs:
+      flux.kub3.uk/organisation: n3tuk
+      flux.kub3.uk/repository: infra-flux
+      flux.kub3.uk/name: traefik
+      flux.kub3.uk/kustomization: traefik
+      flux.kub3.uk/application: traefik
+      flux.kub3.uk/component: traefik
+      flux.kub3.uk/managed-by: kustomization
+
+resources:
+  - traefik-helm.yaml
+  - prometheus-rules.yaml
+
+configMapGenerator:
+  - name: helm-traefik-values
+    files:
+      - values.yaml=traefik-values.yaml
+
+configurations:
+  - kustomize-config.yaml

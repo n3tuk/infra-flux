@@ -18,6 +18,7 @@ resources:
   - certificates.yaml
   - external-dns.yaml
   - ingress-nginx.yaml
+  - traefik.yaml
   - metallb.yaml
   - routing.yaml
   - elastic-operator.yaml
