@@ -9,3 +9,6 @@ spec:
   type: pagerduty
   address: https://events.eu.pagerduty.com
   channel: ${flux_pagerduty_key}
+  # Testing and development is being paused for PagerDuty, so suspend this provider until its
+  # resumed at a future date, or it is removed entirely
+  suspend: true

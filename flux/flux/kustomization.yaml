@@ -23,7 +23,7 @@ resources:
   - flux-helm.yaml
   - secrets.yaml
   - provider-slack.yaml
-  - provider-pagerduty.yaml
+  # - provider-pagerduty.yaml
   - notifications.yaml
   - prometheus-rules.yaml
 
