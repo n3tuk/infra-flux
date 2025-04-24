@@ -24,7 +24,7 @@ spec:
             summary: >-
               One of more of the `flux` Controllers in the `{{$externalLabels.cluster}}` Cluster
               have reported a failure to reconcile against deployed Kubernetes resources during at
-              least the three minutes.
+              least the last three minutes.
             description: >-
               `{{$labels.pod}}` cannot reconcile
               `{{$labels.exported_namespace}}`/`{{$labels.name}}` `{{$labels.kind}}`
