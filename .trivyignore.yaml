@@ -1,48 +1,14 @@
 ---
 misconfigurations:
-  - id: KSV032 # MEDIUM
-    #  All container images must start with the *.azurecr.io domain
+  - id: AVD-KSV-0011 # LOW
+    # Enforcing CPU limits prevents DoS via resource exhaustion.
     statement: >
-      There are currently no plans to locally cache any container images used in dedicated,
-      personally controlled registries as these clusters are mainly for learning and development
-      currently.
+      There are currently no plans to limit CPU resources as this is not considered a serious issue
+      currently for the clusters. Currently all CPUs should have requests set to ensure that their
+      baseline is met (and is monitored via Prometheus) and are then allowed to burst to any
+      available CPU usage.
 
-  - id: KSV033 # MEDIUM
-    # All container images must start with a GCR domain
-    statement: >
-      There are currently no plans to locally cache any container images used in dedicated,
-      personally controlled registries as these clusters are mainly for learning and development
-      currently.
-
-  - id: KSV034 # MEDIUM
-    # Container images from public registries used
-    statement: >
-      There are currently no plans to locally cache any container images used in dedicated,
-      personally controlled registries as these clusters are mainly for learning and development
-      currently.
-
-  - id: KSV035 # MEDIUM
-    # All container images must start with a ECR domain
-    statement: >
-      There are currently no plans to locally cache any container images used in dedicated,
-      personally controlled registries as these clusters are mainly for learning and development
-      currently.
-
-  - id: KSV039 # LOW
-    #  limit range usage
-    statement: >
-      This seems to be a poorly written rule which is catching many false-positive detections within
-      the configuration, for example, when accessing OCIRepository resources for Flux which cannot
-      support resource quotas (see https://github.com/aquasecurity/trivy/issues/8635).
-
-  - id: KSV040 # LOW
-    # resource quota usage
-    statement: >
-      This seems to be a poorly written rule which is catching many false-positive detections within
-      the configuration, for example, when accessing OCIRepository resources for Flux which cannot
-      support resource quotas (see https://github.com/aquasecurity/trivy/issues/8635).
-
-  - id: KSV020 # LOW
+  - id: AVD-KSV-0020 # LOW
     # Force the container to run with user ID > 10000 to avoid conflicts with the host’s user table.
     statement: >
       This is a positive detection of an issue in the pre-compiled Custom Resource Defitions for one
@@ -58,7 +24,7 @@ misconfigurations:
       # 'securityContext.runAsUser' > 10000
       - grafana-crds/resources.yaml
 
-  - id: KSV021 # LOW
+  - id: AVD-KSV-0021 # LOW
     # Force the container to run with group ID > 10000 to avoid conflicts with the host’s user
     # table.
     statement: >
@@ -75,7 +41,7 @@ misconfigurations:
       # 'securityContext.runAsGroup' > 10000
       - grafana-crds/resources.yaml
 
-  - id: KSV030 # LOW
+  - id: AVD-KSV-0030 # LOW
     # According to pod security standard 'Seccomp', the RuntimeDefault seccomp profile must be
     # required, or allow specific additional profiles.
     statement: >
@@ -88,12 +54,41 @@ misconfigurations:
       # required, or allow specific additional profiles.
       - grafana-crds/resources.yaml
 
-  - id: KSV037 # MEDIUM
-    # Ensure that User pods are not placed in kube-system namespace
+  - id: AVD-KSV-0032 # MEDIUM
+    # All container images must start with the *.azurecr.io domain
     statement: >
-      The ServiceMonitor resource is an addition to enable active monitoring of the CoreDNS service
-      through Prometheus, and the CoreDNS service operates within kube-system. As such, this
-      namespace cannot be changed.
+      There are currently no plans to locally cache any container images used in dedicated,
+      personally controlled registries as these clusters are mainly for learning and development
+      currently.
+
+  - id: AVD-KSV-0033 # MEDIUM
+    # All container images must start with a GCR domain
+    statement: >
+      There are currently no plans to locally cache any container images used in dedicated,
+      personally controlled registries as these clusters are mainly for learning and development
+      currently.
+
+  - id: AVD-KSV-0034 # MEDIUM
+    # Container images from public registries used
+    statement: >
+      There are currently no plans to locally cache any container images used in dedicated,
+      personally controlled registries as these clusters are mainly for learning and development
+      currently.
+
+  - id: AVD-KSV-0035 # MEDIUM
+    # All container images must start with a ECR domain
+    statement: >
+      There are currently no plans to locally cache any container images used in dedicated,
+      personally controlled registries as these clusters are mainly for learning and development
+      currently.
+
+  - id: AVD-KSV-0037 # MEDIUM
+    # Ensure that User resources are not placed in kube-system namespace
+    statement: >
+      The ServiceMonitor and PrometheusRule resources are an additional set of configurations to
+      enable active monitoring of the CoreDNS service through Prometheus, as well as the Kubernetes
+      cluster in general through kube-state-metrics, and the CoreDNS service operates within
+      kube-system. As such, this namespace choice is correct.
     paths:
       # ServiceMonitor 'core-dns' should not be set with 'kube-system' namespace
       - core-dns/service-monitor.yaml
@@ -102,7 +97,21 @@ misconfigurations:
       # PrometheusRule 'kube-state-metrics' should not be set with 'kube-system'
       - kube-state-metrics/prometheus-rules.yaml
 
-  - id: KSV041 # CRITICAL
+  - id: AVD-KSV-0039 # LOW
+    #  limit range usage
+    statement: >
+      This seems to be a poorly written rule which is catching many false-positive detections within
+      the configuration, for example, when accessing OCIRepository resources for Flux which cannot
+      support resource quotas (see https://github.com/aquasecurity/trivy/issues/8635).
+
+  - id: AVD-KSV-0040 # LOW
+    # resource quota usage
+    statement: >
+      This seems to be a poorly written rule which is catching many false-positive detections within
+      the configuration, for example, when accessing OCIRepository resources for Flux which cannot
+      support resource quotas (see https://github.com/aquasecurity/trivy/issues/8635).
+
+  - id: AVD-KSV-0041 # CRITICAL
     # Viewing secrets at the cluster-scope is akin to cluster-admin in most clusters as there are
     # typically at least one service accounts (their token stored in a secret) bound to
     # cluster-admin directly or a role/clusterrole that gives similar permissions.
@@ -117,8 +126,10 @@ misconfigurations:
       # ClusterRole 'grafana-operator-permissions' shouldn't have access to manage resource
       # 'secrets'
       - grafana-crds/resources.yaml
+      # ClusterRole 'traefik-traefik' shouldn't have access to manage resource 'secrets'
+      - traefik-crds/resources.yaml
 
-  - id: KSV045 # CRITICAL
+  - id: AVD-KSV-0045 # CRITICAL
     # Check whether role permits wildcard verb on specific resources
     statement: >
       This is a positive detection of an issue in the pre-compiled Custom Resource Defitions for one
@@ -127,7 +138,7 @@ misconfigurations:
       # Role permits wildcard verb on specific resources
       - prometheus-crds/resources.yaml
 
-  - id: KSV048 # MEDIUM
+  - id: AVD-KSV-0048 # MEDIUM
     # Depending on the policies enforced by the admission controller, this permission ranges from
     # the ability to steal compute (crypto) by running workloads or allowing for creating workloads
     # that escape to the node as root and escalation to cluster-admin.
@@ -150,7 +161,7 @@ misconfigurations:
       # "deletecollection", "impersonate", "*"]
       - grafana-crds/resources.yaml
 
-  - id: KSV049 # MEDIUM
+  - id: AVD-KSV-0049 # MEDIUM
     # Some workloads leverage configmaps to store sensitive data or configuration parameters that
     # affect runtime behavior that can be modified by an attacker or combined with another issue to
     # potentially lead to compromise.
@@ -168,7 +179,7 @@ misconfigurations:
       # for verbs ["create", "update", "patch", "delete", "deletecollection", "impersonate", "*"]
       - grafana-crds/resources.yaml
 
-  - id: KSV056 # HIGH
+  - id: AVD-KSV-0056 # HIGH
     # The ability to control which pods get service traffic directed to them allows for interception
     # attacks. Controlling network policy allows for bypassing lateral movement restrictions.
     statement: >
@@ -188,7 +199,7 @@ misconfigurations:
       # "update", "patch", "delete", "deletecollection", "impersonate", "*"]
       - grafana-crds/resources.yaml
 
-  - id: KSV104 # MEDIUM
+  - id: AVD-KSV-0104 # MEDIUM
     # A program inside the container can bypass Seccomp protection policies.
     statement: >
       The namespace defined for this container is managed by the Kustomization resource that imports
@@ -201,7 +212,7 @@ misconfigurations:
       # namespace should specify a seccomp profile
       - grafana-crds/resources.yaml
 
-  - id: KSV110 # LOW
+  - id: AVD-KSV-0110 # LOW
     # Checks whether a workload is running in the default namespace.
     statement: >
       The namespace defined for this container is managed by the Kustomization resource that imports
@@ -211,7 +222,7 @@ misconfigurations:
       # non-default namespace
       - prometheus-crds/resources.yaml
 
-  - id: KSV114 # CRITICAL
+  - id: AVD-KSV-0114 # CRITICAL
     # A program inside the container can bypass Seccomp protection policies.
     statement: >
       This is a positive detection of an issue in the pre-compiled Custom Resource Defitions for one
