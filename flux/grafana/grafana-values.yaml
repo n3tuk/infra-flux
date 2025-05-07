@@ -44,3 +44,14 @@ imageRenderer:
   serviceMonitor:
     enabled: true
     path: /metrics
+
+grafana.ini:
+  feature_toggles:
+    # Git Sync for Dashboards
+    provisioning: true
+    kubernetesClientDashboardsFolders: true
+    kubernetesDashboards: true
+    # Dynamic Dashboards
+    dashboardNewLayouts: true
+    # Blazing-fast Table Panel
+    tableNextGen: true
