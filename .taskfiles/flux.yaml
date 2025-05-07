@@ -20,6 +20,45 @@ tasks:
           as: kustom
         cmd: echo "flux/{{ .kustom }}"
 
+  flux:promtool:
+    aliases:
+      - promtool
+    desc: Validate the recording rules and alerts in PrometheusRules
+    summary: |-
+      Check that the recording rules and alerts in PrometheusRules resources
+      are valid, including PromQL expressions and expected labels and
+      annotations, using the promtool.
+    silent: true
+    dir: flux
+    sources:
+      - '**/prometheus-rules.yaml'
+    vars:
+      files:
+        sh: |-
+          find . \
+            -ignore_readdir_race \
+            -type f \
+            -iname 'prometheus-rules.yaml' \
+            -printf '%P ' \
+          2> /dev/null || true
+    deps:
+      - task: yamllint
+      - task: flux:conform
+    cmds:
+      # yamllint disable rule:line-length
+      - for:
+          var: files
+          as: file
+        cmd: |-
+          yq '.spec' --yaml-roundtrip '{{.file}}' \
+          | promtool check rules --lint-fatal \
+          | sed -e 's|standard input|{{.file}}|' \
+                -e '/^$/d'
+
+      - cmd: |-
+          echo -e '{{ .cg }}Passed{{ .cc }}'
+      # yamllint enable rule:line-length
+
   flux:conform:
     aliases:
       - conform

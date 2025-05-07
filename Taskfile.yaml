@@ -8,7 +8,7 @@ output: prefixed
 # there are issues with tasks running continuously, or being re-added to the
 # queue multiple times due to regular changes, increase the value for the watch
 # interval to take into account the typical longest running task in the set.
-interval: 5s
+# interval: 5s
 
 # Enforce the pipefail option in the Bash library to ensure that where commands
 # are run through pipes, the failure of any one step in the pipeline fails the
@@ -146,11 +146,15 @@ tasks:
         Terraform code is syntactically correct, properly formatted, and mostly
         valid for runtime (e.g. using correct instance types, names are not too
         long, and resource names are correctly formatted).
+      - Run promtool across all prometheus-rules.yaml, extracting all recording
+        rules and alerts from the PrometheusRule resources files to check them
+        for correctness.
     silent: true
     cmds:
       - task: prettier
       - task: markdownlint
       - task: jsonschema
+      - task: flux:promtool
 
   validate:
     desc: Validate the configurations and resources
