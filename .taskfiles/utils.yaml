@@ -35,6 +35,7 @@ tasks:
       - task: check:kubeconform
       - task: check:check-jsonschema
       - task: check:markdownlint
+      - task: check:promtool
 
   # Run a check for a specific executable to ensure it's available within $PATH
   check:*:

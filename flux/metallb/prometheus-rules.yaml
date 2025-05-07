@@ -212,7 +212,7 @@ spec:
 
     - name: metallb-sessions
       rules:
-        - alert: MetalLBBGPSessionDown
+        - alert: MetalLBBGPSessionDownWarning
           expr: |-
             (
               metallb_speaker_announced{
@@ -242,7 +242,7 @@ spec:
             incidentio: send
             team: platform
 
-        - alert: MetalLBBGPSessionDown
+        - alert: MetalLBBGPSessionDownCritical
           expr: |-
             (
               metalb_bgp_session_up{
@@ -265,7 +265,7 @@ spec:
               `{{$labels.pod}}` `Pod` on `{{$labels.node}}` `Node` (`{{$labels.peer}}`)
           labels:
             ignore: outside-extended-hours
-            severity: warning
+            severity: critical
             slack: kub3-${cluster}-alerts-infra
             pagerduty: send
             incidentio: send
