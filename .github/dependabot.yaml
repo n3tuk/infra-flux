@@ -15,8 +15,6 @@ updates:
       - type/dependencies
       - update/github-workflows
       - release/chore
-    reviewers:
-      - n3tuk/infra-reviewers
 
   - package-ecosystem: terraform
     directory: terraform/
@@ -31,5 +29,3 @@ updates:
       - type/dependencies
       - update/terraform
       - release/chore
-    reviewers:
-      - n3tuk/infra-reviewers
