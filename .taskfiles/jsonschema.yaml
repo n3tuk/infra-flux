@@ -24,6 +24,7 @@ tasks:
     cmds:
       - task: taskfiles
       - task: dependabot
+      - task: mergify
       - task: workflows
       - task: pre-commit-config
 
@@ -54,6 +55,23 @@ tasks:
             --builtin-schema vendor.dependabot \
             .github/dependabot.yaml
           echo -e '{{ .cg }}Passed{{ .cc }}'
+
+  mergify:
+    internal: true
+    silent: true
+    sources:
+      - .github/mergify.yml
+    cmds:
+      # yamllint disable rule:line-length
+      - cmd: |-
+          [[ -f .github/mergify.yml ]] || exit 0
+          check-jsonschema \
+            --output-format text --verbose \
+            --cache-filename mergify.json \
+            --schemafile https://github.com/mergifyio/docs/raw/main/public/mergify-configuration-schema.json \
+            .github/mergify.yml
+          echo -e '{{ .cg }}Passed{{ .cc }}'
+      # yamllint enable rule:line-length
 
   workflows:
     internal: true
