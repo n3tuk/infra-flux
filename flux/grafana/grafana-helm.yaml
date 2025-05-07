@@ -14,7 +14,7 @@ spec:
         name: grafana
       chart: grafana
       interval: 5m
-      version: 8.5.5
+      version: 9.0.0
   interval: 3h
   install:
     crds: CreateReplace
