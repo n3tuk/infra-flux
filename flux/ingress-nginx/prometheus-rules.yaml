@@ -30,6 +30,12 @@ spec:
               ),
               "job", "$1", "job", "^(.*)-metrics$"
             ) > 0.05
+            and
+            sum by (job, exported_namespace, ingress, host) (
+              rate(
+                nginx_ingress_controller_requests[5m]
+              )
+            ) > 10
           for: 3m
           annotations:
             title: Elevated `Ingress` Error Rates
@@ -67,6 +73,12 @@ spec:
               ),
               "job", "$1", "job", "^(.*)-metrics$"
             ) > 0.1
+            and
+            sum by (job, exported_namespace, ingress, host) (
+              rate(
+                nginx_ingress_controller_requests[5m]
+              )
+            ) > 10
           for: 3m
           annotations:
             title: Elevated `Ingress` Latency
