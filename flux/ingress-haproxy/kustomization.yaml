@@ -19,4 +19,4 @@ resources:
   - internal
   - external
   - certificates.yaml
-  # - prometheus-rules.yaml
+  - prometheus-rules.yaml
