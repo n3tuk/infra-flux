@@ -1,0 +1,22 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization.json
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: ingress-haproxy
+namespace: ingress-system
+
+labels:
+  - includeSelectors: false
+    pairs:
+      flux.kub3.uk/organisation: n3tuk
+      flux.kub3.uk/repository: infra-flux
+      flux.kub3.uk/kustomization: ingress-haproxy
+      flux.kub3.uk/name: ingress-haproxy
+      flux.kub3.uk/managed-by: kustomization
+
+resources:
+  - internal
+  - external
+  - certificates.yaml
+  # - prometheus-rules.yaml
