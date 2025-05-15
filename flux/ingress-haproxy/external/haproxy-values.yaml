@@ -89,14 +89,18 @@ controller:
       labelSelector:
         matchLabels:
           app.kubernetes.io/name: haproxy-external
-          app.kubernetes.io/instance: haproxy
+          app.kubernetes.io/instance: haproxy-external
+      matchLabelKeys:
+        - pod-template-hash
     - maxSkew: 1
       topologyKey: kubernetes.io/hostname
       whenUnsatisfiable: DoNotSchedule
       labelSelector:
         matchLabels:
           app.kubernetes.io/name: haproxy-external
-          app.kubernetes.io/instance: haproxy
+          app.kubernetes.io/instance: haproxy-external
+      matchLabelKeys:
+        - pod-template-hash
 
   strategy:
     type: RollingUpdate
