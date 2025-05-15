@@ -1,0 +1,65 @@
+---
+controller:
+  kind: Deployment
+  replicaCount: 2
+
+  config:
+    # Reduce the default from 42 to 5 to limit the number of default series being created for
+    # monitoring, with overrides for selected Ingress and Service through annotations, as needed
+    scale-server-slots: '5'
+
+  ingressClassResource:
+    name: haproxy
+    default: false
+
+  ingressClass: haproxy
+
+  kubernetesGateway:
+    enabled: true
+    gatewayControllerName: haproxy.org/gateway-controller
+
+  defaultTLSSecret:
+    enabled: false
+    # secretNamespace: '{{ include "kubernetes-ingress.namespace" . }}'
+    # secret: null
+
+  resources:
+    limits: # Don't limit the CPU
+      memory: 256Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+  podDisruptionBudget:
+    enable: true
+    minAvailable: 1
+
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: kubernetes-ingress
+          app.kubernetes.io/instance: kubernetes-ingress
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: kubernetes-ingress
+          app.kubernetes.io/instance: kubernetes-ingress
+
+  service:
+    enabled: true
+    type: LoadBalancer
+
+    metrics:
+      type: ClusterIP
+
+  strategy:
+    type: RollingUpdate
+    maxUnavailable: 1
+
+  serviceMonitor:
+    enabled: true

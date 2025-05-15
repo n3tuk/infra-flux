@@ -1,13 +1,12 @@
 ---
 # yamllint disable-line rule:line-length
 # yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/policy.cert-manager.io/certificaterequestpolicy_v1alpha1.json
-
-# This policy configures all options to allow all possible values.
 apiVersion: policy.cert-manager.io/v1alpha1
 kind: CertificateRequestPolicy
 metadata:
   name: allow-all
 spec:
+  # This policy configures all options to allow all possible values.
   allowed:
     commonName:
       value: '*'
@@ -56,7 +55,8 @@ spec:
   selector:
     issuerRef: {}
 ---
-# This policy configures all options to allow all possible values.
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/policy.cert-manager.io/certificaterequestpolicy_v1alpha1.json
 apiVersion: policy.cert-manager.io/v1alpha1
 kind: CertificateRequestPolicy
 metadata:
@@ -94,6 +94,47 @@ spec:
       kind: ClusterIssuer
       name: self-signed
 ---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/policy.cert-manager.io/certificaterequestpolicy_v1alpha1.json
+apiVersion: policy.cert-manager.io/v1alpha1
+kind: CertificateRequestPolicy
+metadata:
+  name: ingress-haproxy-ca
+spec:
+  allowed:
+    isCA: true
+    commonName:
+      value: ingress-haproxy Private Certificate Authority
+      required: true
+    subject:
+      organizations:
+        values:
+          - n3t.uk Lab Environment
+      organizationalUnits:
+        values:
+          - n3tuk Kubernetes Clusters
+          - n3tuk Kubernetes Certificate Authority
+      provinces:
+        values:
+          - Bridgend
+      localities:
+        values:
+          - Wales
+      countries:
+        values:
+          - UK
+      streetAddresses:
+        values: []
+      postalCodes:
+        values: []
+  selector:
+    issuerRef:
+      group: cert-manager.io
+      kind: ClusterIssuer
+      name: self-signed
+---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/yannh/kubernetes-json-schema/raw/refs/heads/master/master/clusterrole-rbac-v1.json
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -108,7 +149,10 @@ rules:
     resourceNames:
       - allow-all
       - ingress-nginx-ca
+      - ingress-haproxy-ca
 ---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/yannh/kubernetes-json-schema/raw/refs/heads/master/master/clusterrolebinding-rbac-v1.json
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
