@@ -18,9 +18,8 @@ labels:
       flux.kub3.uk/managed-by: kustomization
 
 resources:
-  - namespace.yaml
   - certificates.yaml
-  # - prometheus-rules.yaml
+  - prometheus-rules.yaml
   - haproxy-helm.yaml
 
 configMapGenerator:
