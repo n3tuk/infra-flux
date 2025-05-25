@@ -11,7 +11,7 @@ metadata:
   labels:
     prometheus: metrics
 spec:
-  ingressClassName: internal
+  ingressClassName: nginx-internal
   rules:
     - host: prometheus.${cluster_domain}
       http:

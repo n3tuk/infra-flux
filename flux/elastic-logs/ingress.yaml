@@ -9,7 +9,7 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare-production
 spec:
-  ingressClassName: internal
+  ingressClassName: nginx-internal
   rules:
     - host: elasticsearch.${cluster_domain}
       http:
