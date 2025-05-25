@@ -8,10 +8,14 @@ metadata:
   namespace: prometheus-metrics
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare-production
+    # Use the source address as the selector of which Prometheus Pod to direct traffic to to limit
+    # an subtle differences between instances affecting queries as each instance scrapes and saves
+    # results at different times
+    haproxy.org/load-balance: source
   labels:
     prometheus: metrics
 spec:
-  ingressClassName: nginx-internal
+  ingressClassName: haproxy-internal
   rules:
     - host: prometheus.${cluster_domain}
       http:
