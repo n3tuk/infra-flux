@@ -1,0 +1,132 @@
+---
+fullnameOverride: haproxy-internal
+# fullnameOverride does not override the name attribute, so explicitly set an override for the name
+# as well, ensuring that the correct labels are set for resources, alongside the name of the
+# resources being created by the above override
+nameOverride: haproxy-internal
+
+controller:
+  kind: Deployment
+  replicaCount: 2
+
+  config:
+    # Reduce the default from 42 to 5 to limit the number of default series being created for
+    # monitoring, with overrides for selected Ingress and Service through annotations, as needed
+    scale-server-slots: '5'
+    # Increase the allowed connections to a Pod from the default one of per HAProxy per Pod, to 200
+    # for each HAProxy instance and 20 across all HAProxy backend servers, which should help manage
+    # concurrency and system alerts
+    maxconn: '200'
+    pod-maxconn: '20'
+    # Only allow 30s after receiving a termination signal before forcing connections to close, as we
+    # want a quicker cycling of the Pods on changes and deployments (default is 30m)
+    hard-stop-after: 30s
+    # Configure only TLS v1.3 for the endpoints as this will be for internal endpoints only and we
+    # can attest that v1.3 is supported by all clients, which all override the global defaults
+    # yamllint disable rule:line-length
+    global-config-snippet: |
+      ssl-default-bind-options no-sslv3 no-tlsv10 no-tlsv11 no-tlsv12
+      ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+      tune.ssl.default-dh-param 4096
+    # yamllint enable rule:line-length
+    # Enable support for metrics based on the listeners as well, which can be passed through to
+    # Prometheus via the ServiceMonitor, which is extended with the extra-counters parameter
+    frontend-config-snippet: |
+      option socket-stats
+    # Update the default logging format to use a flat-level form of JSON, which will allow
+    # searching, processing, and manipulation in ElasticSearch or Loki easier
+    log-format: >-
+      %{+json}o
+      %(time)Tl
+      %(client-ip)ci
+      %(client-port)cp
+      %(frontend-name)ft
+      %(backend-name)b
+      %(server-name)s
+      %(server-ip)si
+      %(server-port)sp
+      %(ssl-version)sslv
+      %(ssl-cipher)sslc
+      %(ssl-client-auth)[ssl_c_used]
+      %(ssl-client-ca)[ssl_c_r_dn(CN)]
+      %(ssl-client-cn)[ssl_c_s_dn(CN)]
+      %(ssl-client-serial)[ssl_c_serial,hex]
+      %(ssl-sni)[ssl_fc_sni]
+      %(pod)H
+      %(http-protocol)HV
+      %(http-method)HM
+      %(http-uri){+Q}HU
+      %(http-status-code)ST
+      %(bytes-in)U
+      %(retries)rc
+      %(bytes-out)B
+      %(termination-state)ts
+
+  logging:
+    traffic:
+      address: stdout
+      format: raw
+      facility: daemon
+
+  service:
+    enabled: true
+    type: LoadBalancer
+
+    metrics:
+      type: ClusterIP
+    enablePorts:
+      admin: false
+
+  ingressClassResource:
+    name: haproxy-internal
+    default: false
+
+  ingressClass: haproxy-internal
+
+  kubernetesGateway:
+    enabled: true
+    gatewayControllerName: haproxy.org/gateway-internal
+
+  resources:
+    limits: # Don't limit the CPU
+      memory: 128Mi
+    requests:
+      cpu: 25m
+      memory: 64Mi
+
+  podDisruptionBudget:
+    enable: true
+    minAvailable: 1
+
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: haproxy-internal
+          app.kubernetes.io/instance: haproxy
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: haproxy-internal
+          app.kubernetes.io/instance: haproxy
+
+  strategy:
+    type: RollingUpdate
+    maxUnavailable: 1
+
+  serviceMonitor:
+    enabled: true
+    endpoints:
+      - port: stat
+        path: /metrics
+        scheme: http
+        interval: 30s
+        params:
+          no-maint:
+            - empty
+          extra-counters:
+            - 'on'

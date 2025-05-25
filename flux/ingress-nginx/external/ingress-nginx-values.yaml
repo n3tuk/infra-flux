@@ -1,13 +1,13 @@
 ---
-fullnameOverride: external
+fullnameOverride: nginx-external
 
 controller:
   image:
     readOnlyRootFilesystem: false
   ingressClassResource:
-    name: external
+    name: nginx-external
     default: false
-  ingressClass: external
+  ingressClass: nginx-external
 
   kind: Deployment
   updateStrategy:
@@ -32,7 +32,7 @@ controller:
       labelSelector:
         matchLabels:
           app.kubernetes.io/name: ingress-nginx
-          app.kubernetes.io/instance: external
+          app.kubernetes.io/instance: nginx-external
           app.kubernetes.io/component: controller
     - maxSkew: 1
       topologyKey: kubernetes.io/hostname
@@ -40,7 +40,7 @@ controller:
       labelSelector:
         matchLabels:
           app.kubernetes.io/name: ingress-nginx
-          app.kubernetes.io/instance: external
+          app.kubernetes.io/instance: nginx-external
           app.kubernetes.io/component: controller
 
   service:
@@ -53,17 +53,6 @@ controller:
 
   opentelemetry:
     enabled: false
-
-  # admissionWebhooks:
-  #   certManager:
-  #     enabled: true
-  #     rootCert:
-  #       duration: 43800h # 5y
-  #     admissionCert:
-  #       duration: 2184h # 13w
-  #       issuerRef:
-  #         kind: ClusterIssuer
-  #         name: ingress-nginx
 
   metrics:
     port: 10254

@@ -1,0 +1,706 @@
+---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/monitoring.coreos.com/prometheusrule_v1.json
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: haproxy
+  namespace: ingress-system
+  labels:
+    alertmanager: metrics
+spec:
+  groups:
+    - name: haproxy-service
+      rules:
+        - alert: HAProxyInternalAbsent
+          expr: |-
+            absent(
+              up{
+                namespace="ingress-system",
+                job="haproxy-internal",
+              } == 1
+            )
+          for: 3m
+          annotations:
+            title: >-
+              HAProxy has disappeared from Prometheus
+            summary: >-
+              The *internal* HAProxy Ingress Controller in the `{{$externalLabels.cluster}}` Cluster
+              has *dissappeared* from Prometheus' service discovery and may not be running, or the
+              `Service` may not be being scraped, and hence cannot be checked and monitored.
+            description: >-
+              `ingress-system/haproxy-internal` has *disappeared*
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: never
+            # severity can be info, errors, warning, critical
+            severity: critical
+            # slack is the name of the channel to send messages to
+            slack: kub3-${cluster}-alerts-infra
+            # pagerduty can either be send or ignore for Alerts
+            pagerduty: send
+            # incidentio can either create incidents, send Alerts, or ignore
+            incidentio: create
+            # team sets the Team and Escalation Path to use for the incident
+            team: platform
+
+        - alert: HAProxyExternalAbsent
+          expr: |-
+            absent(
+              up{
+                namespace="ingress-system",
+                job="haproxy-external",
+              } == 1
+            )
+          for: 3m
+          annotations:
+            title: >-
+              HAProxy has disappeared from Prometheus
+            summary: >-
+              The *external* HAProxy Ingress Controller in the `{{$externalLabels.cluster}}` Cluster
+              has *dissappeared* from Prometheus' service discovery and may not be running, or the
+              `Service` may not be being scraped, and hence cannot be checked and monitored.
+            description: >-
+              `ingress-system/haproxy-external` has *disappeared*
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: never
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+    - name: haproxy-backends
+      rules:
+        - alert: HAProxyBackend4xxErrors
+          expr: |2-
+            (
+              sum by (namespace, pod, proxy) (
+                rate(
+                  haproxy_server_http_responses_total{
+                    proxy!~"^ingress-system_.*$",
+                    code="4xx"
+                  }[1m]
+                )
+              )
+            / sum by (namespace, pod, proxy) (
+                rate(
+                  haproxy_server_http_responses_total[1m]
+                )
+              )
+            )
+            * on(pod) group_left(node) kube_pod_info
+            > 0.05
+              and
+              rate(
+                haproxy_server_http_responses_total[1m]
+              )
+            > 3
+          for: 1m
+          annotations:
+            title: HAProxy Backend 4xx Errors
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              an excessive number of responses with HTTP `4xx` status codes from at least one
+              backend service, passing 5% of responses while also having processed at least three
+              responses per second, on average, in the last minute.
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` backend
+              ({{$value|humanizePercentage}})
+          labels:
+            ignore: outside-extended-hours
+            severity: info
+            slack: kub3-${cluster}-alerts-applications
+            pagerduty: ignore
+            incidentio: ignore
+            team: platform
+
+        - alert: HAProxyBackend5xxErrors
+          expr: |2-
+            (
+              sum by (namespace, pod, proxy) (
+                rate(
+                  haproxy_server_http_responses_total{
+                    proxy!~"^ingress-system_.*$",
+                    code="5xx"
+                  }[1m]
+                )
+              )
+            / sum by (namespace, pod, proxy) (
+                rate(
+                  haproxy_server_http_responses_total[1m]
+                )
+              )
+            )
+            * on(pod) group_left(node) kube_pod_info
+            > 0.05
+              and
+              rate(
+                haproxy_server_http_responses_total[1m]
+              )
+            > 3
+          for: 1m
+          annotations:
+            title: HAProxy Backend 5xx Errors
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              an excessive number of responses with HTTP `4xx` status codes from at least one
+              backend service, passing 5% of responses while also having processed at least three
+              responses per second, on average, in the last minute.
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` backend
+              ({{$value|humanizePercentage}})
+          labels:
+            ignore: outside-extended-hours
+            severity: info
+            slack: kub3-${cluster}-alerts-applications
+            pagerduty: ignore
+            incidentio: ignore
+            team: platform
+
+        - alert: HAProxyBackendConnectionErrors
+          expr: |-
+            sum by (namespace, pod, proxy) (
+              rate(
+                haproxy_backend_connection_errors_total{
+                  proxy!~"^ingress-system_.*$"
+                }[1m]
+              )
+            )
+            * on(pod) group_left(node) kube_pod_info
+            > 1
+          for: 1m
+          annotations:
+            title: HAProxy Backend Connection Errors
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              that *there has been at least one connection error, per second, on average, to a
+              backend* for at least the last minute.
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` backend
+              ({{$value|humanizePercentage}})
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: HAProxyBackendSessionsWarning
+          expr: |-
+            (
+              sum by (namespace, pod, proxy) (
+                avg_over_time(
+                  haproxy_server_current_sessions{
+                    proxy!~"^ingress-system_.*$"
+                  }[2m]
+                )
+              )
+            / sum by (namespace, pod, proxy) (
+                haproxy_server_limit_sessions{
+                  proxy!~"^ingress-system_.*$"
+                }
+              * on (namespace, pod, proxy, server)
+                group_left(state)
+                haproxy_server_status{
+                  proxy!~"^ingress-system_.*$",
+                  state=~"UP"
+                }
+              )
+            )
+            * on(pod) group_left(node) kube_pod_info
+            > 0.8
+          for: 3m
+          annotations:
+            title: HAProxy Backend Sessions Active
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              that *at least 80% of the maximum sessions to a backend are active* during at least
+              the last three minutes, which is above the *warning* threshold.
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` backend
+              (*{{$value|humanizePercentage}}* Sessions Active)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: HAProxyBackendSessionsCritical
+          expr: |-
+            (
+              sum by (namespace, pod, proxy) (
+                avg_over_time(
+                  haproxy_server_current_sessions{
+                    proxy!~"^ingress-system_.*$"
+                  }[2m]
+                )
+              )
+            / sum by (namespace, pod, proxy) (
+                haproxy_server_limit_sessions{
+                  proxy!~"^ingress-system_.*$"
+                }
+              * on (namespace, pod, proxy, server)
+                group_left(state)
+                haproxy_server_status{
+                  proxy!~"^ingress-system_.*$",
+                  state=~"UP"
+                }
+              )
+            )
+            * on(pod) group_left(node) kube_pod_info
+            > 0.95
+          for: 3m
+          annotations:
+            title: HAProxy Backend Sessions Active
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              that *at least 95% of the maximum sessions to a backend are active* during at least
+              the last three minutes, which is above the *critical* threshold.
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` backend
+              (*{{$value|humanizePercentage}}* Sessions Active)
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: HAProxyBackendQueuedRequestsWarning
+          expr: |-
+            sum by (namespace, pod, proxy) (
+              haproxy_backend_current_queue
+            )
+            * on(pod) group_left(node) kube_pod_info
+            > 0
+          for: 1m
+          annotations:
+            title: HAProxy Backend Queued Requests
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              *at least one request to a backend is continually pending in a queue* before being
+              sent, preventing it from being processed timely during at least the last minute,
+              which is above the *warning* threshold.
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` backend
+              (*{{$value|humanize}} Connection{{if ne $value 1.0}}s{{end}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: HAProxyBackendQueueDelayWarning
+          expr: |-
+            avg by (namespace, pod, proxy) (
+              haproxy_backend_max_queue_time_seconds{
+                proxy!~"^ingress-system_.*$"
+              }
+            )
+            * on(pod) group_left(node) kube_pod_info
+            > 0.05
+          for: 3m
+          annotations:
+            title: HAProxy Backend Queue Delay
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              *the average time spent in the queue for a backend connection is above 50ms* during at
+              least the last three minutes, which is above the *warning* threshold.
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` backend
+              (*{{$value|humanizeDuration}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: HAProxyBackendQueueDelayCritical
+          expr: |-
+            avg by (namespace, pod, proxy) (
+              haproxy_backend_max_queue_time_seconds{
+                proxy!~"^ingress-system_.*$"
+              }
+            )
+            * on(pod) group_left(node) kube_pod_info
+            > 0.25
+          for: 3m
+          annotations:
+            title: HAProxy Backend Queue Delay
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              *the average time spent in the queue for a backend connection is above 250ms* during
+              at least the last three minutes, which is above the *critical* threshold.
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` backend
+              (*{{$value|humanizeDuration}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: HAProxyBackendSlowConnectionsWarning
+          expr: |-
+            avg by (namespace, pod, proxy) (
+              haproxy_backend_max_connect_time_seconds{
+                proxy!~"^ingress-system_.*$"
+              }
+            )
+            * on(pod) group_left(node) kube_pod_info
+            > 0.25
+          for: 3m
+          annotations:
+            title: HAProxy Backend Slow Connections
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              *the average time to connect to a backend is above 250ms* during at least the last
+              three minutes, which is above the *warning* threshold.
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` backend
+              (*{{$value|humanizeDuration}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-applications
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: HAProxyBackendSlowConnectionsCritical
+          expr: |-
+            avg by (namespace, pod, proxy) (
+              haproxy_backend_max_connect_time_seconds{
+                proxy!~"^ingress-system_.*$"
+              }
+            )
+            * on(pod) group_left(node) kube_pod_info
+            > 1
+          for: 1m
+          annotations:
+            title: HAProxy Backend Slow Connections
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              *the average time to connect to a backend is above 1s* during at least the last
+              minute, which is above the *warning* threshold.
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` backend
+              (*{{$value|humanizeDuration}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-applications
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+        - alert: HAProxyBackendSlowResponsesWarning
+          expr: |-
+            avg by (namespace, pod, proxy) (
+              haproxy_backend_max_response_time_seconds{
+                proxy!~"^ingress-system_.*$"
+              }
+            )
+            * on(pod) group_left(node) kube_pod_info
+            > 0.25
+          for: 3m
+          annotations:
+            title: HAProxy Backend Slow Responses
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              *the average time to recieve a response from a backend is above 250ms* during at least
+              the last three minutes, which is above the *warning* threshold.
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` backend
+              (*{{$value|humanizeDuration}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: info
+            slack: kub3-${cluster}-alerts-applications
+            pagerduty: ignore
+            incidentio: ignore
+            team: platform
+
+        - alert: HAProxyBackendSlowResponsesCritical
+          expr: |-
+            avg by (namespace, pod, proxy) (
+              haproxy_backend_max_response_time_seconds{
+                proxy!~"^ingress-system_.*$"
+              }
+            )
+            * on(pod) group_left(node) kube_pod_info
+            > 1
+          for: 1m
+          annotations:
+            title: HAProxy Backend Slow Responses
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              *the average time to recieve a response from a backend is above 1s* during at least
+              the last minute, which is above the *critical* threshold.
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` backend
+              (*{{$value|humanizeDuration}}*)
+          labels:
+            ignore: outside-extended-hours
+            severity: info
+            slack: kub3-${cluster}-alerts-applications
+            pagerduty: ignore
+            incidentio: ignore
+            team: platform
+
+        - alert: HAProxyRetryWarning
+          expr: |-
+            sum by (namespace, pod, proxy) (
+              increase(
+                haproxy_backend_retry_warnings_total{
+                  proxy!~"^ingress-system_.*$"
+                }[1m]
+              )
+            )
+            * on(pod) group_left(node) kube_pod_info
+            > 1
+          for: 2m
+          annotations:
+            title: HAProxy Backend Retries
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              *the multiple retries to connect to a backends* during at least the last minute, which
+              is above the *warning* threshold.
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` backend
+              (*{{$value|humanize}}* Retr{{if eq $value 1.0}}y{{else}}ies{{end}})
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+    - name: haproxy-servers
+      rules:
+        - alert: HAProxyBackendServerCountWarning
+          expr: |-
+            (
+              count by (namespace, pod, proxy) (
+                haproxy_server_status{
+                  proxy!~"^ingress-system_.*$",
+                  state="DOWN"
+                }
+              )
+            / count by (namespace, pod, proxy) (
+                haproxy_server_status{
+                  proxy!~"^ingress-system_.*$",
+                  state!~"MAINT|NOLB|DRAIN"
+                }
+              )
+            )
+            * on(pod) group_left(node) kube_pod_info
+            > 0.5
+          for: 0m
+          annotations:
+            title: HAProxy Backend Servers Down
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              *that at least 50% of the configured servers for a backend are down* (i.e. unhealthy
+              and unable to receive requests).
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` backend
+              (*{{$value|humanizePercentage}}* `DOWN`)
+          labels:
+            ignore: never
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: HAProxyBackendServerCountCritical
+          expr: |-
+            (
+              count by (namespace, pod, proxy) (
+                haproxy_server_status{
+                  proxy!~"^ingress-system_.*$",
+                  state="DOWN"
+                }
+              )
+            / count by (namespace, pod, proxy) (
+                haproxy_server_status{
+                  proxy!~"^ingress-system_.*$",
+                  state!~"MAINT|NOLB|DRAIN"
+                }
+              )
+            )
+            * on(pod) group_left(node) kube_pod_info
+            > 0.8
+          for: 0m
+          annotations:
+            title: HAProxy Backend Servers Down
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              *that at least 80% of the configured servers for a backend are down* (i.e. unhealthy
+              and unable to receive requests).
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` backend
+              (*{{$value|humanizePercentage}}* `DOWN`)
+          labels:
+            ignore: never
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: HAProxyBackendDown
+          expr: |-
+            haproxy_backend_active_servers{
+              proxy!~"^ingress-system_.*$"
+            }
+            * on(pod) group_left(node) kube_pod_info
+            == 0
+          for: 0m
+          annotations:
+            title: HAProxy Backend Servers Down
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              *that there are no active (i.e. primary) backend servers alive and healthy* to service
+              any incoming requests, potentially resulting in some, or all, requested being
+              rejected.
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` backend
+          labels:
+            ignore: never
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
+    - name: haproxy-frontend
+      rules:
+        - alert: HAProxyFrontendRequestsDeniedWarning
+          expr: |-
+            sum by (frontend) (
+              rate(
+                haproxy_frontend_requests_denied_total{
+                  proxy!~"healthz|stats"
+                }[2m]
+              )
+            ) > 3
+          for: 2m
+          annotations:
+            title: HAProxy Frontend Requests Denied
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              *that there is an elevated rate of denied requests on a frontend, potentially due to
+              security settings*, at a rate of at least three requests per second, on average,
+              during the last two minutes, which is above the *warning* threshold.
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` frontend
+              (*{{$value|humanize}}* per Second)
+          labels:
+            ignore: never
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: HAProxyFrontendSessionsWarning
+          expr: |-
+            (
+              sum by (namespace, pod, proxy) (
+                avg_over_time(
+                  haproxy_frontend_current_sessions{
+                    proxy!~"healthz|stats"
+                  }[2m]
+                )
+              )
+            / sum by (namespace, pod, proxy) (
+                haproxy_frontend_limit_sessions
+              )
+            )
+            * on(pod) group_left(node) kube_pod_info
+            > 0.8
+          for: 3m
+          annotations:
+            title: HAProxy Frontend Sessions Active
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              that *at least 80% of the maximum sessions to a frontend are active* during at least
+              the last three minutes, which is above the *warning* threshold.
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` frontend
+              (*{{$value|humanizePercentage}}* Sessions Active)
+          labels:
+            ignore: outside-extended-hours
+            severity: warning
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: send
+            team: platform
+
+        - alert: HAProxyFrontendSessionsCritical
+          expr: |-
+            (
+              sum by (namespace, pod, proxy) (
+                avg_over_time(
+                  haproxy_frontend_current_sessions{
+                    proxy!~"healthz|stats"
+                  }[2m]
+                )
+              )
+            / sum by (namespace, pod, proxy) (
+                haproxy_frontend_limit_sessions
+              )
+            )
+            * on(pod) group_left(node) kube_pod_info
+            > 0.95
+          for: 3m
+          annotations:
+            title: HAProxy Frontend Sessions Active
+            summary: >-
+              One or more HAProxy `Pods` in the `{{$externalLabels.cluster}}` Cluster is reporting
+              that *at least 95% of the maximum sessions to a frontend are active* during at least
+              the last three minutes, which is above the *critical* threshold.
+            description: >-
+              `{{$labels.namespace}}/{{$labels.pod}}` on `Node` `{{$labels.node}}` via the
+              `{{$labels.proxy | reReplaceAll "^([^_]+)_([^_]+)_([^_]+)$" "$1/$2/$3" }}` frontend
+              (*{{$value|humanizePercentage}}* Sessions Active)
+          labels:
+            ignore: outside-extended-hours
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform

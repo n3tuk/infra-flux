@@ -3,22 +3,20 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 metadata:
-  name: ingress-nginx
+  name: ingress-haproxy
 namespace: ingress-system
 
 labels:
-  - includeSelectors: true
+  - includeSelectors: false
     pairs:
       flux.kub3.uk/organisation: n3tuk
       flux.kub3.uk/repository: infra-flux
-      flux.kub3.uk/kustomization: ingress-nginx
-      flux.kub3.uk/name: ingress-nginx
-      flux.kub3.uk/application: ingress-nginx
+      flux.kub3.uk/kustomization: ingress-haproxy
+      flux.kub3.uk/name: ingress-haproxy
       flux.kub3.uk/managed-by: kustomization
 
 resources:
-  - namespace.yaml
-  - certificates.yaml
-  - prometheus-rules.yaml
   - internal
   - external
+  - certificates.yaml
+  - prometheus-rules.yaml

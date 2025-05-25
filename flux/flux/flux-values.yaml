@@ -36,7 +36,7 @@ notificationController:
   webhookReceiver:
     ingress:
       create: true
-      ingressClassName: internal
+      ingressClassName: nginx-internal
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-cloudflare-production
       hosts:

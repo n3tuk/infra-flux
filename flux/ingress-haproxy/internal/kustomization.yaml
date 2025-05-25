@@ -6,17 +6,18 @@ metadata:
   name: internal
 
 labels:
-  - includeSelectors: true
+  - includeSelectors: false
     pairs:
-      flux.kub3.uk/component: internal
+      flux.kub3.uk/application: haproxy-internal
 
 resources:
-  - ingress-nginx-helm.yaml
+  - haproxy-helm.yaml
 
 configMapGenerator:
-  - name: helm-nginx-internal-values
+  - name: helm-haproxy-internal-values
+    namespace: ingress-system
     files:
-      - values.yaml=ingress-nginx-values.yaml
+      - values.yaml=haproxy-values.yaml
 
 configurations:
   - kustomize-config.yaml

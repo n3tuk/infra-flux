@@ -69,26 +69,29 @@ spec:
             incidentio: create
             team: platform
 
-        - alert: CertificateNotRenewed
+        - alert: CertManagerPublicCertificateNotRenewed
           expr: |-
-            floor(
-              (   certmanager_certificate_expiration_timestamp_seconds
-                - time()
-              ) / 86400
-            ) < 14
+            ( certmanager_certificate_expiration_timestamp_seconds{
+                issuer_name=~"^letsencrypt-[a-z]+-(production|staging)$"
+              }
+            - time()
+            )
+            < (14 * 86400)
+            > -14
           for: 5m
           annotations:
             title: >-
-              `Certificate` Not Renewing
+              Public `Certificate` Not Renewing
             summary: >-
-              One of more of the `Certificate` resources managed by `cert-manager` is *nearing its
-              expiration date and has not yet been renewed*, and therefore will expire in less than
-              fourteen days.
+              One of more of the LetsEncrypt `Certificate` resources managed by `cert-manager` is
+              *nearing its expiration date and has not yet been renewed*, and therefore will expire
+              in less than fourteen days.
             # exported_namespace here is used for the namespace of the certificate, rather than the
             # namespace cert-manager is running within
             description: >-
-              `{{$labels.exported_namespace}}`/`{{$labels.name}}` `Certificate` (*{{$value}} days
-              left*, `{{$labels.issuer_group}}`/`{{$labels.issuer_kind}}` `{{$labels.issuer_name}}`)
+              `{{$labels.exported_namespace}}`/`{{$labels.name}}` `Certificate`
+              (*{{$value|humanizeDuration}} days left*)
+              `{{$labels.issuer_group}}`/`{{$labels.issuer_kind}}` `{{$labels.issuer_name}}`)
           labels:
             ignore: outside-non-work-hours
             severity: warning
@@ -97,7 +100,7 @@ spec:
             incidentio: create
             team: platform
 
-        - alert: CertificateNotReady
+        - alert: CertManagerCertificateNotReady
           expr: |-
             certmanager_certificate_ready_status{
               condition="True"

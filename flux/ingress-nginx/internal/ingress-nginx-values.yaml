@@ -1,5 +1,5 @@
 ---
-fullnameOverride: internal
+fullnameOverride: nginx-internal
 
 controller:
   image:
@@ -9,9 +9,9 @@ controller:
     # system
     readOnlyRootFilesystem: false
   ingressClassResource:
-    name: internal
+    name: nginx-internal
     default: true
-  ingressClass: internal
+  ingressClass: nginx-internal
 
   kind: Deployment
   updateStrategy:
@@ -36,7 +36,7 @@ controller:
       labelSelector:
         matchLabels:
           app.kubernetes.io/name: ingress-nginx
-          app.kubernetes.io/instance: internal
+          app.kubernetes.io/instance: nginx-internal
           app.kubernetes.io/component: controller
     - maxSkew: 1
       topologyKey: kubernetes.io/hostname
@@ -44,7 +44,7 @@ controller:
       labelSelector:
         matchLabels:
           app.kubernetes.io/name: ingress-nginx
-          app.kubernetes.io/instance: internal
+          app.kubernetes.io/instance: nginx-internal
           app.kubernetes.io/component: controller
 
   service:
@@ -57,17 +57,6 @@ controller:
 
   opentelemetry:
     enabled: false
-
-  # admissionWebhooks:
-  #   certManager:
-  #     enabled: true
-  #     rootCert:
-  #       duration: 43800h # 5y
-  #     admissionCert:
-  #       duration: 2184h # 13w
-  #       issuerRef:
-  #         kind: ClusterIssuer
-  #         name: ingress-nginx
 
   metrics:
     port: 10254
