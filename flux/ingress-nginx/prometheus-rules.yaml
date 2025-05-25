@@ -10,6 +10,67 @@ metadata:
     alertmanager: metrics
 spec:
   groups:
+    - name: ingress-nginx-service
+      rules:
+        - alert: IngressNginxInternalAbsent
+          expr: |-
+            absent(
+              up{
+                namespace="ingress-system",
+                job="nginx-internal-controller-metrics",
+              } == 1
+            )
+          for: 3m
+          annotations:
+            title: >-
+              `ingress-nginx` has disappeared from Prometheus
+            summary: >-
+              The `internal` `ingress-nginx` Ingress Controller in the `{{$externalLabels.cluster}}`
+              Cluster has *dissappeared* from Prometheus' service discovery and may not be running,
+              or the `Service` may not be being scraped, and hence cannot be checked and monitored.
+            description: >-
+              `ingress-system/nginx-internal` has *disappeared*
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: never
+            # severity can be info, errors, warning, critical
+            severity: critical
+            # slack is the name of the channel to send messages to
+            slack: kub3-${cluster}-alerts-infra
+            # pagerduty can either be send or ignore for Alerts
+            pagerduty: send
+            # incidentio can either create incidents, send Alerts, or ignore
+            incidentio: create
+            # team sets the Team and Escalation Path to use for the incident
+            team: platform
+
+        - alert: IngressNginxExternalAbsent
+          expr: |-
+            absent(
+              up{
+                namespace="ingress-system",
+                job="nginx-external-controller-metrics",
+              } == 1
+            )
+          for: 3m
+          annotations:
+            title: >-
+              `ingress-nginx` has disappeared from Prometheus
+            summary: >-
+              The `external` `ingress-nginx` Ingress Controller in the `{{$externalLabels.cluster}}`
+              Cluster has *dissappeared* from Prometheus' service discovery and may not be running,
+              or the `Service` may not be being scraped, and hence cannot be checked and monitored.
+            description: >-
+              `ingress-system/nginx-external` has *disappeared*
+            runbook: https://d.n3t.uk/runbooks/
+          labels:
+            ignore: never
+            severity: critical
+            slack: kub3-${cluster}-alerts-infra
+            pagerduty: send
+            incidentio: create
+            team: platform
+
     - name: ingress-nginx-ingresses
       rules:
         - alert: IngressNginxErrorRates
