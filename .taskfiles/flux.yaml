@@ -98,8 +98,7 @@ tasks:
           kubeconform \
             -kubernetes-version {{ .kubernetes_version }} \
             -ignore-missing-schemas \
-            -schema-location 'https://json.schemastore.org/{{.ResourceKind}}.json' \
-            -schema-location 'https://github.com/yannh/kubernetes-json-schema/raw/master/{{printf "{{.NormalizedKubernetesVersion}}{{.StrictSuffix}}/{{.ResourceKind}}{{.KindSuffix}}"}}.json' \
+            -schema-location default \
             -schema-location 'https://github.com/datreeio/crds-catalog/raw/main/{{printf "{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}"}}.json' \
             -cache .kubeconform \
             -output pretty \
@@ -113,8 +112,7 @@ tasks:
           kubeconform \
             -kubernetes-version {{ .kubernetes_version }} \
             -ignore-missing-schemas \
-            -schema-location 'https://json.schemastore.org/{{ .ResourceKind }}.json' \
-            -schema-location 'https://github.com/yannh/kubernetes-json-schema/raw/master/{{printf "{{.NormalizedKubernetesVersion}}{{.StrictSuffix}}/{{.ResourceKind}}{{.KindSuffix}}"}}.json' \
+            -schema-location default \
             -schema-location 'https://github.com/datreeio/crds-catalog/raw/main/{{printf "{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}"}}.json'\
             -cache .kubeconform \
             -output junit \

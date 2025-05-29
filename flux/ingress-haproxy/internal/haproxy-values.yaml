@@ -105,14 +105,18 @@ controller:
       labelSelector:
         matchLabels:
           app.kubernetes.io/name: haproxy-internal
-          app.kubernetes.io/instance: haproxy
+          app.kubernetes.io/instance: haproxy-internal
+      matchLabelKeys:
+        - pod-template-hash
     - maxSkew: 1
       topologyKey: kubernetes.io/hostname
       whenUnsatisfiable: DoNotSchedule
       labelSelector:
         matchLabels:
           app.kubernetes.io/name: haproxy-internal
-          app.kubernetes.io/instance: haproxy
+          app.kubernetes.io/instance: haproxy-internal
+      matchLabelKeys:
+        - pod-template-hash
 
   strategy:
     type: RollingUpdate

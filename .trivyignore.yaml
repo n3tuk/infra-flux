@@ -231,3 +231,10 @@ misconfigurations:
       # container "manager" of statefulset "elastic-operator" in "elastic-system" namespace should
       # specify a seccomp profile
       - elastic-crds/operator.yaml
+
+  - id: AVD-KSV-0125 # MEDIUM
+    # All container images must start with the *.azurecr.io domain
+    statement: >
+      There are currently no plans to locally cache any container images used in dedicated,
+      personally controlled registries as these clusters are mainly for learning and development
+      currently.
