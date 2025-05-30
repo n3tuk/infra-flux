@@ -32,20 +32,28 @@ tasks:
     dir: flux
     sources:
       - '**/prometheus-rules.yaml'
+      - flux/prometheus-rules/*.yaml
+      - exclude: flux/prometheus-rules/kustomization.yaml
     vars:
       files:
         sh: |-
-          find . \
-            -ignore_readdir_race \
-            -type f \
-            -iname 'prometheus-rules.yaml' \
-            -printf '%P ' \
-          2> /dev/null || true
+          ( find . \
+              -ignore_readdir_race \
+              -type f \
+              -iname 'prometheus-rules.yaml' \
+              -printf '%P ' \
+            2> /dev/null && \
+            find prometheus-rules \
+              -ignore_readdir_race \
+              -type f \
+              -not -iname 'kustomization.yaml' \
+              -printf 'prometheus-rules/%P ' \
+            2> /dev/null
+          ) || true
     deps:
       - task: yamllint
       - task: flux:conform
     cmds:
-      # yamllint disable rule:line-length
       - for:
           var: files
           as: file
@@ -54,10 +62,8 @@ tasks:
           | promtool check rules --lint-fatal \
           | sed -e 's|standard input|{{.file}}|' \
                 -e '/^$/d'
-
       - cmd: |-
           echo -e '{{ .cg }}Passed{{ .cc }}'
-      # yamllint enable rule:line-length
 
   flux:conform:
     aliases:
