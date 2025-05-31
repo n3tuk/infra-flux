@@ -5,6 +5,7 @@ apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: OCIRepository
 metadata:
   name: proxmox-csi-plugin
+  namespace: flux-system
 spec:
   secretRef:
     name: ghcr-login
