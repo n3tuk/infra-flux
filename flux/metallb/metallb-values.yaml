@@ -12,7 +12,7 @@ controller:
       memory: 256Mi
     request:
       cpu: 100m
-      memory: 64Mi
+      memory: 32Mi
 
 speaker:
   enabled: true
@@ -28,10 +28,10 @@ speaker:
   logLevel: info
   resources:
     limits:
-      memory: 256Mi
+      memory: 128Mi
     request:
       cpu: 100m
-      memory: 64Mi
+      memory: 32Mi
 
 crds:
   enabled: true

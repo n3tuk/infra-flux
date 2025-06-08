@@ -23,20 +23,28 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cluster" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.cluster.id
 
   config {
+    ingress_rule {
+      hostname = "dashboard.t3st.uk"
+      service  = "http://haproxy-external.ingress-system.svc"
+      origin_request {
+        connect_timeout = "3s"
+      }
+    }
+
     dynamic "ingress_rule" {
       for_each = local.cloudflare_domains
 
       content {
         hostname = "*.${ingress_rule.value}"
-        service  = "http://external-controller.ingress-system.svc"
+        service  = "http://nginx-external-controller.ingress-system.svc"
         origin_request {
-          connect_timeout = "10s"
+          connect_timeout = "3s"
         }
       }
     }
 
     ingress_rule {
-      service = "http://external-controller.ingress-nginx.svc"
+      service = "http://nginx-external-controller.ingress-nginx.svc"
     }
   }
 }

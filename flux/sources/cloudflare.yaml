@@ -5,6 +5,7 @@ apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
   name: cloudflare
+  namespace: flux-system
 spec:
   url: https://cloudflare.github.io/helm-charts
   interval: 24h
