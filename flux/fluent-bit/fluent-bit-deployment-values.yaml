@@ -17,10 +17,10 @@ dashboards:
 
 resources:
   limits:
-    memory: 128Mi
+    memory: 64Mi
   requests:
     cpu: 10m
-    memory: 32Mi
+    memory: 16Mi
 
 hotReload:
   enabled: true

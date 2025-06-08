@@ -76,7 +76,7 @@ controller:
       memory: 128Mi
     requests:
       cpu: 25m
-      memory: 64Mi
+      memory: 96Mi
 
   podDisruptionBudget:
     enable: true

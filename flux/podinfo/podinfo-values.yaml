@@ -43,7 +43,7 @@ ingress:
 
 resources:
   limits: # Don't limit the CPU
-    memory: 256Mi
+    memory: 64Mi
   requests:
     cpu: 10m
-    memory: 64Mi
+    memory: 17Mi
