@@ -399,6 +399,7 @@ spec:
               max by (namespace, pod, container) (
                 rate(
                   container_cpu_usage_seconds_total{
+                    pod!~"^kube-((?:apiserver|scheduler)-controller-0[1-3]|controller-manager-0[1-3]|flannel-[a-z]{5})$",
                     container!=""
                   }[1h]
                 )
@@ -414,6 +415,10 @@ spec:
                 )
               )
             ) < 0.5
+            and
+            kube_pod_container_resource_requests{
+              resource="cpu"
+            } > 0.05
           for: 24h
           annotations:
             title: >-
@@ -527,7 +532,7 @@ spec:
             (
               max by (namespace, pod, container) (
                 container_memory_working_set_bytes{
-                  pod!~"^kube-apiserver-controller-0[1-3]$",
+                  pod!~"^kube-((?:apiserver|scheduler)-controller-0[1-3]|controller-manager-0[1-3]|flannel-[a-z]{5})$",
                   container!=""
                 }
               ) /
@@ -541,6 +546,10 @@ spec:
                 )
               )
             ) < 0.5
+            and
+            kube_pod_container_resource_requests{
+              resource="memory"
+            } > (16 * 1024^2)
           for: 24h
           annotations:
             title: >-
