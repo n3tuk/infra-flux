@@ -14,7 +14,7 @@ spec:
         name: jetstack
       chart: cert-manager-approver-policy
       interval: 5m
-      version: 0.17.0
+      version: 0.21.0
   interval: 3h
   install:
     crds: CreateReplace
