@@ -1,0 +1,15 @@
+---
+# nameOverride: csi-driver
+
+metrics:
+  enabled: true
+  podmonitor:
+    enabled: true
+    honorLabels: true
+
+resources:
+  limits:
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi

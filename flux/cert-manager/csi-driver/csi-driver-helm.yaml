@@ -4,7 +4,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: approver-policy
+  name: csi-driver
 spec:
   chart:
     spec:
@@ -12,9 +12,9 @@ spec:
         kind: HelmRepository
         namespace: flux-system
         name: jetstack
-      chart: cert-manager-approver-policy
+      chart: cert-manager-csi-driver
       interval: 5m
-      version: 0.21.0
+      version: 0.10.3
   interval: 3h
   install:
     crds: CreateReplace
@@ -34,4 +34,4 @@ spec:
 
   valuesFrom:
     - kind: ConfigMap
-      name: helm-approver-policy-values
+      name: helm-csi-driver-values
