@@ -51,7 +51,7 @@ jobs:
           version: latest
 
       - name: Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Create SARIF report
         run: |
@@ -87,7 +87,7 @@ jobs:
           version: latest
 
       - name: Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Create SARIF report
         run: |
