@@ -22,7 +22,7 @@ resources:
   - alertmanager.yaml
   - config.yaml
   - slack.yaml
-  # - pagerduty.yaml
+  - pagerduty.yaml
   - incidentio.yaml
   - service.yaml
   - service-monitor.yaml
