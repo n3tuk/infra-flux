@@ -6,6 +6,10 @@ kind: ServiceMonitor
 metadata:
   name: prometheus-operator
   namespace: prometheus-operator
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/name: prometheus-operator
+    app.kubernetes.io/version: 0.87.0
 spec:
   endpoints:
     - port: http

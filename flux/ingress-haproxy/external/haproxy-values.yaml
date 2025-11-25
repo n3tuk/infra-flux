@@ -73,10 +73,10 @@ controller:
 
   resources:
     limits: # Don't limit the CPU
-      memory: 128Mi
+      memory: 192Mi
     requests:
       cpu: 25m
-      memory: 96Mi
+      memory: 128Mi
 
   podDisruptionBudget:
     enable: true

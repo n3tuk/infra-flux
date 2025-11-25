@@ -10,14 +10,59 @@ metadata:
     alertmanager: metrics
 spec:
   groups:
+    - name: alerting-times.rules
+      rules:
+        - record: is_british_summer_time
+          expr: |-
+            ( vector(1)
+              and (     month() > 3
+                    and month() < 10
+                  )
+            )
+            or
+            ( vector(1)
+              and (     month() == 3
+                    and (day_of_month() - day_of_week()) >= 25)
+                    and absent(     (day_of_month() >= 25)
+                                and (day_of_week() == 0)
+                              )
+            )
+            or
+            ( vector(1)
+              and ( month() == 10
+                    and (day_of_month() - day_of_week()) < 25
+                  )
+              and absent(     (day_of_month() >= 25)
+                          and (day_of_week() == 0)
+                        )
+            )
+            or
+            ( vector(1)
+              and (    (month() == 10 and hour() < 1)
+                    or ( month() == 3
+                         and hour() > 0
+                       )
+                  ) and (     (day_of_month() >= 25)
+                          and (day_of_week() == 0)
+                        )
+            )
+            or
+            vector(0)
+        - record: europe_london_time
+          expr: time() + 3600 * is_british_summer_time
+        - record: europe_london_hour
+          expr: hour(europe_london_time)
+        - record: europe_london_day_of_week
+          expr: day_of_week(europe_london_time)
+
     - name: alerting-times
       rules:
         - alert: OutsideWorkingHours
           expr: |-
-            day_of_week() == 0 or
-            day_of_week() == 6 or
-            hour() < 9 or
-            hour() >= 17
+            europe_london_day_of_week == 0 or
+            europe_london_day_of_week == 6 or
+            europe_london_hour < 9 or
+            europe_london_hour >= 17
           annotations:
             title: Outside Working Hours
             summary: >-
@@ -30,15 +75,15 @@ spec:
 
         - alert: OutsideNonWorkingHours
           expr: |-
-            ( ( day_of_week() >= 1 and
-                day_of_week() <= 5 ) and
-              ( hour() < 17 or
-                hour() >= 22 )
+            ( ( europe_london_day_of_week >= 1 and
+                europe_london_day_of_week <= 5 ) and
+              ( europe_london_hour < 17 or
+                europe_london_hour >= 22 )
             ) or (
-              ( day_of_week() == 0 or
-                day_of_week() == 6 ) and
-              ( hour() < 10 or
-                hour() >= 22 )
+              ( europe_london_day_of_week == 0 or
+                europe_london_day_of_week == 6 ) and
+              ( europe_london_hour < 10 or
+                europe_london_hour >= 22 )
             )
           annotations:
             title: Outside Non-Working Hours
@@ -52,8 +97,8 @@ spec:
 
         - alert: OutsideExtendedHours
           expr: |-
-            hour() < 10 or
-            hour() >= 22
+            europe_london_hour < 10 or
+            europe_london_hour >= 22
           annotations:
             title: Outside Extended Hours
             summary: >-
@@ -66,10 +111,10 @@ spec:
 
         - alert: OutsideWeekendHours
           expr: |-
-            ( day_of_week() >= 1 and
-              day_of_week() <= 5 ) or
-            ( hour() < 10 or
-              hour() >= 22 )
+            ( europe_london_day_of_week >= 1 and
+              europe_london_day_of_week <= 5 ) or
+            ( europe_london_hour < 10 or
+              europe_london_hour >= 22 )
           annotations:
             title: Outside Weekend Hours
             summary: >-
