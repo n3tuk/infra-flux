@@ -9,8 +9,8 @@ metadata:
   labels:
     prometheus: metrics
 spec:
-  image: quay.io/prometheus/prometheus:v3.2.0
-  version: v3.2.0
+  image: quay.io/prometheus/prometheus:v3.7.3
+  version: v3.7.3
 
   externalUrl: https://prometheus.${cluster_domain}/
 
