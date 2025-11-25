@@ -7,7 +7,7 @@ cloudflare:
   secretName: cloudflared-credentials
 
 image:
-  tag: 2024.11.1
+  tag: 2025.11.1
 
 resources:
   limits: # Don't limit the CPU
