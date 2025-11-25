@@ -852,13 +852,13 @@ spec:
                 es_data_node="true"
               } /
               elasticsearch_indices_search_fetch_total
-            ) > 0.1
+            ) > 1
           for: 2m
           annotations:
-            title: ElasticSearch Cluster Query Rate
+            title: ElasticSearch Cluster Query Latency
             summary: >-
               One or more ElasticSearch clusters in the `{{$externalLabels.cluster}}` Cluster have
-              reported *their average latency for queries at above 100m* during at least the last
+              reported *their average latency for queries at above 1s* during at least the last
               two minutes, which is above the *warning* threshold.
             description: >-
               `{{$labels.name}}` in `{{$labels.namespace}}`/`{{$labels.cluster}}` Cluster
