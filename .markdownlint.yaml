@@ -31,3 +31,6 @@ MD033:
 
 # no-bare-urls
 MD034: false
+
+# table
+MD060: false

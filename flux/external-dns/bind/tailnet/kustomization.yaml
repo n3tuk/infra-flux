@@ -10,15 +10,15 @@ namespace: dns-system
 labels:
   - includeSelectors: true
     pairs:
-      flux.kub3.uk/component: cloudflare
+      flux.kub3.uk/component: tailnet
 
 resources:
-  - cloudflare-helm.yaml
+  - tailnet-helm.yaml
 
 configMapGenerator:
-  - name: helm-cloudflare-values
+  - name: helm-tailnet-values
     files:
-      - values.yaml=cloudflare-values.yaml
+      - values.yaml=tailnet-values.yaml
 
 configurations:
   - kustomize-config.yaml

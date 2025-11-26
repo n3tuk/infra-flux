@@ -10,15 +10,15 @@ namespace: dns-system
 labels:
   - includeSelectors: true
     pairs:
-      flux.kub3.uk/component: cloudflare
+      flux.kub3.uk/component: n3tuk
 
 resources:
-  - cloudflare-helm.yaml
+  - n3tuk-helm.yaml
 
 configMapGenerator:
-  - name: helm-cloudflare-values
+  - name: helm-n3tuk-values
     files:
-      - values.yaml=cloudflare-values.yaml
+      - values.yaml=n3tuk-values.yaml
 
 configurations:
   - kustomize-config.yaml

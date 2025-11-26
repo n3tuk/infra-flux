@@ -1,0 +1,98 @@
+---
+# Enfoce an override on all naming to allow concurrent external-dns services to
+# operate within the same namespace, allowing DNS records to be managed
+# centrally for multiple providers, as needed
+nameOverride: tailnet
+
+serviceAccount:
+  create: true
+serviceMonitor:
+  enabled: true
+
+# Add a dedicated label to identify all resources created for the external-dns
+# tailnet instance so that we can manage anti-affinity rules for the Pods to
+# ensure all the different external-dns instances don't end up on the same node
+commonLabels:
+  app.kubernetes.io/part-of: external-dns
+
+podAntiAffinity:
+  preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+            - key: app.kubernetes.io/part-of
+              operator: In
+              values:
+                - external-dns
+        topologyKey: topology.kubernetes.io/node
+
+resources:
+  limits: # Don't limit the CPU
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 64Mi
+
+provider:
+  name: rfc2136
+domainFilters:
+  - kub3.uk
+  - t3st.uk
+
+interval: 3m
+triggerLoopOnEvent: true
+policy: sync
+sources:
+  - ingress
+  - service
+
+registry: txt
+txtOwnerId: ${cluster}/tailnet
+txtPrefix: _%{record_type}.
+
+logLevel: debug
+logFormat: json
+
+extraArgs:
+  rfc2136-zone:
+    # A recent change in external-dns to support multiple zones with RFC2136
+    # meant that there was a change in the way the zone names are handled,
+    # specifically requiring that the zones be bare, and not end explicitly with
+    # a dot. See:
+    #   https://github.com/kubernetes-sigs/external-dns/issues/4337
+    #   https://github.com/kubernetes-sigs/external-dns/pull/3976
+    - kub3.uk
+    - t3st.uk
+  rfc2136-min-ttl: 60s
+
+env:
+  - name: EXTERNAL_DNS_RFC2136_HOST
+    valueFrom:
+      secretKeyRef:
+        name: tailnet-rfc2136-key
+        key: tsig-host
+  - name: EXTERNAL_DNS_RFC2136_PORT
+    valueFrom:
+      secretKeyRef:
+        name: tailnet-rfc2136-key
+        key: tsig-port
+  - name: EXTERNAL_DNS_RFC2136_TSIG_KEYNAME
+    valueFrom:
+      secretKeyRef:
+        name: tailnet-rfc2136-key
+        key: tsig-keyname
+  - name: EXTERNAL_DNS_RFC2136_TSIG_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: tailnet-rfc2136-key
+        key: tsig-secret
+  - name: EXTERNAL_DNS_RFC2136_TSIG_SECRET_ALG
+    valueFrom:
+      secretKeyRef:
+        name: tailnet-rfc2136-key
+        key: tsig-alg
+  # Enable AXFR support for RFC2136 to allow zone transfers which is required
+  # to allow synchronisation of records between the cluster and server
+  - name: EXTERNAL_DNS_RFC2136_TSIG_AXFR
+    value: 'true'
