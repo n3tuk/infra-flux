@@ -14,7 +14,7 @@ spec:
         name: external-dns
       chart: external-dns
       interval: 5m
-      version: 1.15.0
+      version: 1.19.0
   interval: 3h
   install:
     crds: CreateReplace
