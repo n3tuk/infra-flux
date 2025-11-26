@@ -21,3 +21,7 @@ data "google_secret_manager_secret_version" "alertmanager_pagerduty_key" {
 data "google_secret_manager_secret_version" "alertmanager_incidentio_credentials" {
   secret = "github-infra-flux-${terraform.workspace}-alertmanager-incidentio-credentials"
 }
+
+data "google_secret_manager_secret_version" "external_dns_bind" {
+  secret = "github-infra-flux-${terraform.workspace}-external-dns-bind"
+}

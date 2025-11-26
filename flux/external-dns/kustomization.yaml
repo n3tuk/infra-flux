@@ -21,3 +21,5 @@ resources:
   - namespace.yaml
   - prometheus-rules.yaml
   - cloudflare
+  - bind/n3tuk
+  - bind/tailnet

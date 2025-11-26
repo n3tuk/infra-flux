@@ -20,5 +20,7 @@ spec:
 
   postBuild:
     substituteFrom:
+      - kind: ConfigMap
+        name: common-substitutions
       - kind: Secret
-        name: cert-manager-substitutions
+        name: external-dns-substitutions

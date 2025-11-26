@@ -33,6 +33,10 @@ resource "kubernetes_secret_v1" "flux_system_external_dns_substitutions" {
   type = "Opaque"
 
   data = {
-    cloudflare_api_token = cloudflare_api_token.external_dns.value
+    "cloudflare_api_token" = cloudflare_api_token.external_dns.value
+    "bind_n3tuk_host"      = local.external_dns_bind_secrets.n3tuk_host
+    "bind_n3tuk_secret"    = local.external_dns_bind_secrets.n3tuk_secret
+    "bind_tailnet_host"    = local.external_dns_bind_secrets.tailnet_host
+    "bind_tailnet_secret"  = local.external_dns_bind_secrets.tailnet_secret
   }
 }

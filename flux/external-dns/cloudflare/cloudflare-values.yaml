@@ -35,7 +35,7 @@ sources:
   - service
 
 registry: txt
-txtOwnerId: ${cluster_name}/external-dns/cloudflare
+txtOwnerId: ${cluster}/external-dns/cloudflare
 txtPrefix: _%{record_type}.
 
 env:
