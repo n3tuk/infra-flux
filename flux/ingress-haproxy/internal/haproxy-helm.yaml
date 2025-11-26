@@ -15,7 +15,7 @@ spec:
         name: haproxytech
       chart: kubernetes-ingress
       interval: 5m
-      version: 1.44.3
+      version: 1.46.1
   interval: 3h
   install:
     crds: CreateReplace

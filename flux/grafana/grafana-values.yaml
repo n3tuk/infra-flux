@@ -46,6 +46,8 @@ imageRenderer:
     path: /metrics
 
 grafana.ini:
+  server:
+    root_url: https://grafana.${cluster_domain}
   feature_toggles:
     # Git Sync for Dashboards
     provisioning: true

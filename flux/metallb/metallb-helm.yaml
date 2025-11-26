@@ -14,7 +14,7 @@ spec:
         name: metallb
       chart: metallb
       interval: 5m
-      version: 0.14.8
+      version: 0.15.2
   interval: 3h
   install:
     crds: CreateReplace
