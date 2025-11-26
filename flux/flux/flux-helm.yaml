@@ -14,7 +14,7 @@ spec:
         name: flux-community
       chart: flux2
       interval: 5m
-      version: 2.14.1
+      version: 2.17.1
   interval: 3h
   install:
     crds: CreateReplace
