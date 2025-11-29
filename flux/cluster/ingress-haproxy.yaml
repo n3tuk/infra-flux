@@ -15,8 +15,6 @@ spec:
     - name: sources
     - name: prometheus-crds
     - name: cert-manager-crds
-    # We need the ingress-system Namespace
-    - name: ingress-nginx
   interval: 1h
   retryInterval: 10m
   prune: true

@@ -16,6 +16,7 @@ labels:
       flux.kub3.uk/managed-by: kustomization
 
 resources:
+  - namespace.yaml
   - internal
   - external
   - prometheus-rules.yaml

@@ -36,7 +36,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cluster" {
 
       content {
         hostname = "*.${ingress_rule.value}"
-        service  = "http://nginx-external-controller.ingress-system.svc"
+        service  = "http://haproxy-external.ingress-system.svc"
         origin_request {
           connect_timeout = "3s"
         }
@@ -44,7 +44,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cluster" {
     }
 
     ingress_rule {
-      service = "http://nginx-external-controller.ingress-nginx.svc"
+      service = "http://haproxy-external.ingress-nginx.svc"
     }
   }
 }
