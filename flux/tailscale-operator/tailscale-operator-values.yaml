@@ -1,0 +1,26 @@
+---
+oauthSecretVolume:
+  secret:
+    # 420 is octal for 0644
+    defaultMode: 420
+    secretName: ${tailscale_oauth_secret_name}
+
+operatorConfig:
+  hostname: kub3-${cluster}-operator
+  defaultTags:
+    - ${tailscale_tag}
+
+  resources:
+    limits: # Don't limit the CPU
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+
+ingressClass:
+  enabled: false
+  name: tailscale
+
+apiServerProxyConfig:
+  allowImpersonation: 'true'
+  mode: 'false'

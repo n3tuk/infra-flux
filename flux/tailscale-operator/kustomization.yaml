@@ -1,0 +1,30 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization.json
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: tailscale-operator
+  namespace: flux-system
+namespace: tailscale-operator
+
+labels:
+  - includeSelectors: true
+    pairs:
+      flux.kub3.uk/organisation: n3tuk
+      flux.kub3.uk/repository: infra-flux
+      flux.kub3.uk/kustomization: tailscale
+      flux.kub3.uk/name: tailscale
+      flux.kub3.uk/application: tailscale
+      flux.kub3.uk/component: operator
+      flux.kub3.uk/managed-by: kustomization
+
+resources:
+  - tailscale-operator-helm.yaml
+
+configMapGenerator:
+  - name: helm-tailscale-operator-values
+    files:
+      - values.yaml=tailscale-operator-values.yaml
+
+configurations:
+  - kustomize-config.yaml

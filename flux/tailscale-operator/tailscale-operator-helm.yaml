@@ -1,0 +1,37 @@
+---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: tailscale-operator
+spec:
+  chart:
+    spec:
+      sourceRef:
+        kind: HelmRepository
+        namespace: flux-system
+        name: tailscale
+      chart: tailscale-operator
+      interval: 5m
+      version: 1.90.9
+  interval: 3h
+  install:
+    crds: CreateReplace
+    createNamespace: false
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  test:
+    enable: true
+  driftDetection:
+    mode: enabled
+
+  valuesFrom:
+    - kind: ConfigMap
+      name: helm-tailscale-operator-values

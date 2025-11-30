@@ -1,0 +1,11 @@
+---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/source.toolkit.fluxcd.io/helmrepository_v1.json
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: tailscale
+  namespace: flux-system
+spec:
+  url: https://pkgs.tailscale.com/helmcharts
+  interval: 24h

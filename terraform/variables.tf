@@ -87,3 +87,9 @@ variable "metallb_routers" {
   })
   # required
 }
+
+variable "tailscale_operator_tag" {
+  description = "The ACL tag to be used by the Tailscale operator"
+  type        = string
+  default     = "k8s-operator"
+}

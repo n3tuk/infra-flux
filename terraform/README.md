@@ -12,8 +12,9 @@ TODO
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.14.0 |
 | <a name="requirement_cloudflare"></a> [cloudflare](#requirement\_cloudflare) | ~> 4.23 |
 | <a name="requirement_google"></a> [google](#requirement\_google) | ~> 7.0 |
-| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | ~> 2.38.0 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.7.1 |
+| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | ~> 2.38 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.7 |
+| <a name="requirement_tailscale"></a> [tailscale](#requirement\_tailscale) | ~> 0.24 |
 
 ## Providers
 
@@ -23,6 +24,7 @@ TODO
 | <a name="provider_google"></a> [google](#provider\_google) | 7.12.0 |
 | <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | 2.38.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | 3.7.2 |
+| <a name="provider_tailscale"></a> [tailscale](#provider\_tailscale) | 0.24.0 |
 
 ## Modules
 
@@ -40,8 +42,10 @@ No modules.
 | [kubernetes_config_map_v1.flux_system_cloudflared_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
 | [kubernetes_config_map_v1.flux_system_routing_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
 | [kubernetes_config_map_v1.proxmox_csi_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
+| [kubernetes_config_map_v1.tailscale_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/config_map_v1) | resource |
 | [kubernetes_manifest.flux_system_baseline](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
 | [kubernetes_manifest.flux_system_cluster](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
+| [kubernetes_namespace_v1.tailscale_operator](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
 | [kubernetes_secret_v1.flux_system_cert_manager_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.flux_system_cloudflared_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.flux_system_dns_system_cloudflare_token](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
@@ -53,10 +57,12 @@ No modules.
 | [kubernetes_secret_v1.prometheus_metrics_pagerduty_keys](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.prometheus_metrics_slack_webhooks](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.proxmox_csi_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
+| [kubernetes_secret_v1.tailscale_operator_tailscale_oauth_client](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [random_password.elastic_logs_exporter_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 | [random_password.elastic_logs_fluent_bit_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 | [random_password.elastic_logs_grafana_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 | [random_password.tunnel](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
+| [tailscale_oauth_client.cluster](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/oauth_client) | resource |
 | [cloudflare_api_token_permission_groups.all](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/data-sources/api_token_permission_groups) | data source |
 | [cloudflare_zone.n3tuk](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/data-sources/zone) | data source |
 | [google_secret_manager_secret_version.alertmanager_incidentio_credentials](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/secret_manager_secret_version) | data source |
@@ -82,6 +88,7 @@ No modules.
 | <a name="input_cloudflare_account_id"></a> [cloudflare\_account\_id](#input\_cloudflare\_account\_id) | The Account ID for the Cloudflare account to be used | `string` | `"e0d4aae3f32f077cd16bbc26f615738d"` | no |
 | <a name="input_flux_artifact_repository"></a> [flux\_artifact\_repository](#input\_flux\_artifact\_repository) | The path to the repository for the Flux artifact to be uploaded to in GHCR | `string` | `"n3tuk/flux/baseline"` | no |
 | <a name="input_flux_artifact_tag"></a> [flux\_artifact\_tag](#input\_flux\_artifact\_tag) | The tag of the Flux artifact uploaded to GHCR which should be deployed to this cluster | `string` | `"latest"` | no |
+| <a name="input_tailscale_operator_tag"></a> [tailscale\_operator\_tag](#input\_tailscale\_operator\_tag) | The ACL tag to be used by the Tailscale operator | `string` | `"k8s-operator"` | no |
 
 ## Outputs
 
