@@ -17,6 +17,7 @@ labels:
 
 resources:
   - namespace.yaml
+  - tailnet
   - internal
   - external
   - prometheus-rules.yaml

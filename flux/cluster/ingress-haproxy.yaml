@@ -13,6 +13,7 @@ spec:
   path: ingress-haproxy
   dependsOn:
     - name: sources
+    - name: tailscale-operator
     - name: prometheus-crds
     - name: cert-manager-crds
     - name: gateway-api-crds
