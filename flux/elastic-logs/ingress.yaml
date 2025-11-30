@@ -9,7 +9,7 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare-production
 spec:
-  ingressClassName: haproxy-internal
+  ingressClassName: haproxy-tailnet
   rules:
     - host: elasticsearch.${cluster_domain}
       http:

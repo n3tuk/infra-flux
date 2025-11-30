@@ -11,7 +11,7 @@ metadata:
   labels:
     prometheus: metrics
 spec:
-  ingressClassName: haproxy-internal
+  ingressClassName: haproxy-tailnet
   rules:
     - host: alerts.${cluster_domain}
       http:

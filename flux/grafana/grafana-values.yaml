@@ -15,7 +15,7 @@ serviceMonitor:
 
 ingress:
   enabled: true
-  ingressClassName: haproxy-internal
+  ingressClassName: haproxy-tailnet
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare-production
   hosts:

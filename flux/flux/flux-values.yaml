@@ -35,19 +35,7 @@ notificationController:
       memory: 32Mi
   webhookReceiver:
     ingress:
-      create: true
-      ingressClassName: haproxy-internal
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt-cloudflare-production
-      hosts:
-        - host: flux.${cluster_domain}
-          paths:
-            - path: /
-              pathType: Prefix
-      tls:
-        - secretName: ingress-flux-tls
-          hosts:
-            - flux.${cluster_domain}
+      create: false
 
 sourceController:
   create: true
