@@ -20,5 +20,5 @@ spec:
 
   postBuild:
     substituteFrom:
-      - kind: Secret
-        name: cert-manager-substitutions
+      - kind: ConfigMap
+        name: common-substitutions

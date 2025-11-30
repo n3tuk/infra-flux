@@ -10,10 +10,10 @@ resources:
   - flux-community.yaml
   - proxmox-csi.yaml
   - metrics-server.yaml
+  - tailscale.yaml
   - cloudflare.yaml
   - jetstack.yaml
   - external-dns.yaml
-  - ingress-nginx.yaml
   - haproxytech.yaml
   - metallb.yaml
   - prometheus-community.yaml

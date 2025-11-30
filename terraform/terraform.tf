@@ -12,11 +12,15 @@ terraform {
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 2.38.0"
+      version = "~> 2.38"
+    }
+    tailscale = {
+      source  = "tailscale/tailscale"
+      version = "~> 0.24"
     }
     random = {
       source  = "hashicorp/random"
-      version = "~> 3.7.1"
+      version = "~> 3.7"
     }
   }
 

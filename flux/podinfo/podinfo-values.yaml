@@ -29,7 +29,7 @@ topologySpreadConstraints:
 
 ingress:
   enabled: true
-  className: nginx-external
+  className: haproxy-external
   annotations:
     external-dns.alpha.kubernetes.io/target: ${cloudflare_tunnel}
     external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'

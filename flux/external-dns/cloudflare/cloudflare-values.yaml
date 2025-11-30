@@ -9,7 +9,23 @@ serviceAccount:
 serviceMonitor:
   enabled: true
 
-logFormat: json
+# Add a dedicated label to identify all resources created for the external-dns
+# cloudflare instance so that we can manage anti-affinity rules for the Pods to
+# ensure all the different external-dns instances don't end up on the same node
+commonLabels:
+  app.kubernetes.io/part-of: external-dns
+
+podAntiAffinity:
+  preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+            - key: app.kubernetes.io/part-of
+              operator: In
+              values:
+                - external-dns
+        topologyKey: topology.kubernetes.io/node
 
 resources:
   limits: # Don't limit the CPU
@@ -27,7 +43,7 @@ domainFilters:
   - sit3.uk
   - liv3.uk
 
-interval: 15m
+interval: 3m
 triggerLoopOnEvent: true
 policy: sync
 sources:
@@ -35,8 +51,11 @@ sources:
   - service
 
 registry: txt
-txtOwnerId: ${cluster_name}/external-dns/cloudflare
+txtOwnerId: ${cluster}/cloudflare
 txtPrefix: _%{record_type}.
+
+logLevel: info
+logFormat: json
 
 env:
   - name: CF_API_TOKEN

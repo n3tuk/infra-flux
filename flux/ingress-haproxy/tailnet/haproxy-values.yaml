@@ -1,9 +1,9 @@
 ---
-fullnameOverride: haproxy-internal
+fullnameOverride: haproxy-tailnet
 # fullnameOverride does not override the name attribute, so explicitly set an override for the name
 # as well, ensuring that the correct labels are set for resources, alongside the name of the
 # resources being created by the above override
-nameOverride: haproxy-internal
+nameOverride: haproxy-tailnet
 
 controller:
   kind: Deployment
@@ -71,7 +71,12 @@ controller:
   service:
     enabled: true
     type: LoadBalancer
-    externalTrafficPolicy: Local
+    loadBalancerClass: tailnet
+    annotations:
+      tailscale.com/expose: 'true'
+      tailscale.com/hostname: kub3-${cluster}-haproxy
+      tailscale.com/proxy-group: haproxy
+      tailscale.com/tags: tag:k8s-ingress,tag:k8s-${cluster}-ingress
 
     metrics:
       type: ClusterIP
@@ -79,14 +84,14 @@ controller:
       admin: false
 
   ingressClassResource:
-    name: haproxy-internal
-    default: false
+    name: haproxy-tailnet
+    default: true
 
-  ingressClass: haproxy-internal
+  ingressClass: haproxy-tailnet
 
   kubernetesGateway:
     enabled: true
-    gatewayControllerName: haproxy.org/gateway-internal
+    gatewayControllerName: haproxy.org/gateway-tailnet
 
   resources:
     limits: # Don't limit the CPU
@@ -105,8 +110,8 @@ controller:
       whenUnsatisfiable: ScheduleAnyway
       labelSelector:
         matchLabels:
-          app.kubernetes.io/name: haproxy-internal
-          app.kubernetes.io/instance: haproxy-internal
+          app.kubernetes.io/name: haproxy-tailnet
+          app.kubernetes.io/instance: haproxy-tailnet
       matchLabelKeys:
         - pod-template-hash
     - maxSkew: 1
@@ -114,8 +119,8 @@ controller:
       whenUnsatisfiable: DoNotSchedule
       labelSelector:
         matchLabels:
-          app.kubernetes.io/name: haproxy-internal
-          app.kubernetes.io/instance: haproxy-internal
+          app.kubernetes.io/name: haproxy-tailnet
+          app.kubernetes.io/instance: haproxy-tailnet
       matchLabelKeys:
         - pod-template-hash
 

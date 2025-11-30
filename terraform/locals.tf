@@ -17,4 +17,8 @@ locals {
     "flux.kub3.uk/repository" = "infra-flux"
     "flux.kub3.uk/cluster"    = terraform.workspace
   }
+
+  external_dns_bind_secrets = jsondecode(
+    data.google_secret_manager_secret_version.external_dns_bind.secret_data
+  )
 }

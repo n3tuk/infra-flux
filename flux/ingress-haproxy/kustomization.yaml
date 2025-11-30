@@ -16,7 +16,8 @@ labels:
       flux.kub3.uk/managed-by: kustomization
 
 resources:
+  - namespace.yaml
+  - tailnet
   - internal
   - external
-  - certificates.yaml
   - prometheus-rules.yaml

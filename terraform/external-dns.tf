@@ -1,3 +1,7 @@
+# TODO: This will mostly likely require the creation of the Namespace for
+#       dns-system first in order to allow the Secrets to be created there
+#       during the initial bootstrapping of the cluster.
+
 resource "cloudflare_api_token" "external_dns" {
   name = "external-dns@${var.cluster_domain}"
 
@@ -19,20 +23,67 @@ resource "cloudflare_api_token" "external_dns" {
   }
 }
 
-resource "kubernetes_secret_v1" "flux_system_external_dns_substitutions" {
+resource "kubernetes_secret_v1" "flux_system_dns_system_cloudflare_token" {
   metadata {
-    name      = "external-dns-substitutions"
-    namespace = "flux-system"
+    name      = "cloudflare-token"
+    namespace = "dns-system"
 
     labels = merge(local.kubernetes_labels, {
-      "flux.kub3.uk/name"     = "external-dns"
-      "flux.kub3.uk/instance" = "external-dns"
+      "flux.kub3.uk/name"     = "cloudflare"
+      "flux.kub3.uk/instance" = "cloudflare"
+      "flux.kub3.uk/part-of"  = "external-dns"
     })
   }
 
   type = "Opaque"
 
   data = {
-    cloudflare_api_token = cloudflare_api_token.external_dns.value
+    "api-token" = cloudflare_api_token.external_dns.value
+  }
+}
+
+resource "kubernetes_secret_v1" "flux_system_dns_system_n3tuk_rfc2136_key" {
+  metadata {
+    name      = "n3tuk-rfc2136-key"
+    namespace = "dns-system"
+
+    labels = merge(local.kubernetes_labels, {
+      "flux.kub3.uk/name"     = "n3tuk"
+      "flux.kub3.uk/instance" = "n3tuk"
+      "flux.kub3.uk/part-of"  = "external-dns"
+    })
+  }
+
+  type = "Opaque"
+
+  data = {
+    "tsig-host"    = local.external_dns_bind_secrets.n3tuk.host
+    "tsig-port"    = local.external_dns_bind_secrets.n3tuk.port
+    "tsig-keyname" = local.external_dns_bind_secrets.n3tuk.keyname
+    "tsig-secret"  = local.external_dns_bind_secrets.n3tuk.secret
+    "tsig-alg"     = local.external_dns_bind_secrets.n3tuk.alg
+  }
+}
+
+resource "kubernetes_secret_v1" "flux_system_dns_system_tailnet_rfc2136_key" {
+  metadata {
+    name      = "tailnet-rfc2136-key"
+    namespace = "dns-system"
+
+    labels = merge(local.kubernetes_labels, {
+      "flux.kub3.uk/name"     = "tailnet"
+      "flux.kub3.uk/instance" = "tailnet"
+      "flux.kub3.uk/part-of"  = "external-dns"
+    })
+  }
+
+  type = "Opaque"
+
+  data = {
+    "tsig-host"    = local.external_dns_bind_secrets.tailnet.host
+    "tsig-port"    = local.external_dns_bind_secrets.tailnet.port
+    "tsig-keyname" = local.external_dns_bind_secrets.tailnet.keyname
+    "tsig-secret"  = local.external_dns_bind_secrets.tailnet.secret
+    "tsig-alg"     = local.external_dns_bind_secrets.tailnet.alg
   }
 }

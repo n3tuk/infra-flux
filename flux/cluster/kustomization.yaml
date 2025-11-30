@@ -13,11 +13,11 @@ resources:
   - core-dns.yaml
   - proxmox-csi.yaml
   - metrics-server.yaml
+  - tailscale.yaml
   - cloudflared.yaml
   - cert-manager.yaml
   - certificates.yaml
   - external-dns.yaml
-  - ingress-nginx.yaml
   - ingress-haproxy.yaml
   - metallb.yaml
   - routing.yaml

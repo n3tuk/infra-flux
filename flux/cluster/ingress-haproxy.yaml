@@ -13,10 +13,10 @@ spec:
   path: ingress-haproxy
   dependsOn:
     - name: sources
+    - name: tailscale-operator
     - name: prometheus-crds
     - name: cert-manager-crds
-    # We need the ingress-system Namespace
-    - name: ingress-nginx
+    - name: gateway-api-crds
   interval: 1h
   retryInterval: 10m
   prune: true

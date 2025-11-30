@@ -8,7 +8,7 @@ output: prefixed
 # there are issues with tasks running continuously, or being re-added to the
 # queue multiple times due to regular changes, increase the value for the watch
 # interval to take into account the typical longest running task in the set.
-# interval: 5s
+interval: 1m
 
 # Enforce the pipefail option in the Bash library to ensure that where commands
 # are run through pipes, the failure of any one step in the pipeline fails the

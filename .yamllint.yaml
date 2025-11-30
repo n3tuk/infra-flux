@@ -9,6 +9,8 @@ ignore:
   - flux/elastic-crds/operator.yaml
   - flux/grafana-crds/resources.yaml
   - flux/keda-crds/resources.yaml
+  - flux/gateway-api-crds/resources.yaml
+  - flux/tailscale-crds/resources.yaml
 
 rules:
   document-start:
