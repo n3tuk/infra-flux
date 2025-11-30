@@ -72,7 +72,11 @@ controller:
     enabled: true
     type: LoadBalancer
     loadBalancerClass: tailnet
-    externalTrafficPolicy: Local
+    annotations:
+      tailscale.com/expose: 'true'
+      tailscale.com/hostname: kub3-${cluster}-haproxy
+      tailscale.com/proxy-group: haproxy
+      tailscale.com/tags: tag:k8s-ingress,tag:k8s-${cluster}-ingress
 
     metrics:
       type: ClusterIP

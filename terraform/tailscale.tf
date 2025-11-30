@@ -21,6 +21,9 @@ resource "kubernetes_namespace_v1" "tailscale_operator" {
       "flux.kub3.uk/instance"    = "tailscale"
       "flux.kub3.uk/application" = "tailscale"
       "flux.kub3.uk/component"   = "operator"
+      "pod-security.kubernetes.io/enforce" : "privileged"
+      "pod-security.kubernetes.io/audit" : "privileged"
+      "pod-security.kubernetes.io/warn" : "privileged"
     })
   }
 }

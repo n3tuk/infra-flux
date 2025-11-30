@@ -20,6 +20,7 @@ labels:
 
 resources:
   - tailscale-operator-helm.yaml
+  - proxy-groups.yaml
 
 configMapGenerator:
   - name: helm-tailscale-operator-values
