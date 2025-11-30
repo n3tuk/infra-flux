@@ -15,6 +15,7 @@ spec:
     - name: sources
     - name: prometheus-crds
     - name: cert-manager-crds
+    - name: gateway-api-crds
   interval: 1h
   retryInterval: 10m
   prune: true
