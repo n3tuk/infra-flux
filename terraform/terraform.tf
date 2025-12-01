@@ -18,6 +18,10 @@ terraform {
       source  = "tailscale/tailscale"
       version = "~> 0.24"
     }
+    authentik = {
+      source  = "goauthentik/authentik"
+      version = "2025.10.1"
+    }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.7"

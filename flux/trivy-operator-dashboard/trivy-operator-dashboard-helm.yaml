@@ -1,0 +1,33 @@
+---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: trivy-operator-dashboard
+  namespace: trivy-operator
+spec:
+  chartRef:
+    kind: OCIRepository
+    namespace: flux-system
+    name: trivy-operator-dashboard
+  interval: 3h
+  install:
+    crds: CreateReplace
+    createNamespace: false
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+  test:
+    enable: true
+  driftDetection:
+    mode: enabled
+
+  valuesFrom:
+    - kind: ConfigMap
+      name: helm-trivy-operator-dashboard-values

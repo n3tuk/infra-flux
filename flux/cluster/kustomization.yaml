@@ -29,5 +29,6 @@ resources:
   - node-exporter.yaml
   - kube-state-metrics.yaml
   - keda.yaml
+  - trivy-operator.yaml
   - grafana.yaml
   - podinfo.yaml

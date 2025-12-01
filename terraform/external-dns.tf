@@ -1,4 +1,4 @@
-# TODO: This will mostly likely require the creation of the Namespace for
+# TODO: This will most likely require the creation of the Namespace for
 #       dns-system first in order to allow the Secrets to be created there
 #       during the initial bootstrapping of the cluster.
 

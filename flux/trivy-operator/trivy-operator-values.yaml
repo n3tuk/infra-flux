@@ -1,0 +1,43 @@
+---
+serviceMonitor:
+  enabled: true
+
+trivy:
+  storageClassEnabled: true
+  storageClassName: proxmox-rbd-ext4
+  storageSize: 10Gi
+
+  severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+  ignoreUnfixed: false
+  timeout: 5m0s
+
+  ignoreFile: []
+  #   - CVE-1970-0001
+  #   - CVE-1970-0002
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 100M
+      # ephemeralStorage: "2Gi"
+    limits:
+      cpu: 500m
+      memory: 500M
+      # ephemeralStorage: "2Gi"
+
+  githubToken: ${trivy_operator_github_token}
+
+compliance:
+  reportType: summary
+  cron: 0 */6 * * *
+  specs:
+    - k8s-cis-1.23
+    - k8s-nsa-1.0
+
+resources: {}
+# limits:
+#   cpu: 100m
+#   memory: 128Mi
+# requests:
+#   cpu: 100m
+#   memory: 128Mi

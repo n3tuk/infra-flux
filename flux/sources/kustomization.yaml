@@ -21,4 +21,6 @@ resources:
   - elastic.yaml
   - fluent.yaml
   - kedacore.yaml
+  - aquasecurity.yaml
+  - raoulx24.yaml
   - podinfo.yaml

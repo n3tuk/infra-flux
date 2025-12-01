@@ -1,0 +1,26 @@
+---
+openTelemetry:
+  enabled: false
+replicaCount: 2
+
+ingress:
+  enabled: true
+  className: haproxy-tailnet
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare-production
+  hosts:
+    - host: trivy.${cluster_domain}
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: trivy-operator-dashboard-tls
+      hosts:
+        - trivy.${cluster_domain}
+
+resources:
+  limits: # Don't limit the CPU
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi

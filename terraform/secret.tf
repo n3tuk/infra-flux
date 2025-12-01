@@ -25,3 +25,7 @@ data "google_secret_manager_secret_version" "alertmanager_incidentio_credentials
 data "google_secret_manager_secret_version" "external_dns_bind" {
   secret = "github-infra-flux-${terraform.workspace}-external-dns-bind"
 }
+
+data "google_secret_manager_secret_version" "trivy_operator_github_token" {
+  secret = "github-infra-flux-${terraform.workspace}-trivy-operator-github-token"
+}

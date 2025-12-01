@@ -20,3 +20,7 @@ provider "kubernetes" {
 }
 
 provider "tailscale" {}
+
+provider "authentik" {
+  url = "https://auth.n3t.uk"
+}
