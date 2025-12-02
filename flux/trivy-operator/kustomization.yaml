@@ -1,0 +1,31 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization.json
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: trivy-operator
+  namespace: flux-system
+namespace: trivy-operator
+
+labels:
+  - includeSelectors: false
+    pairs:
+      flux.kub3.uk/organisation: n3tuk
+      flux.kub3.uk/repository: infra-flux
+      flux.kub3.uk/kustomization: trivy-operator
+      flux.kub3.uk/name: trivy-operator
+      flux.kub3.uk/application: trivy-operator
+      flux.kub3.uk/component: operator
+      flux.kub3.uk/managed-by: kustomization
+
+resources:
+  - namespace.yaml
+  - trivy-operator-helm.yaml
+
+configMapGenerator:
+  - name: helm-trivy-operator-values
+    files:
+      - values.yaml=trivy-operator-values.yaml
+
+configurations:
+  - kustomize-config.yaml

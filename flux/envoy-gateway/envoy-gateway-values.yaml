@@ -1,0 +1,23 @@
+---
+podDisruptionBudget:
+  minAvailable: 1
+
+deployment:
+  envoyGateway:
+    resources:
+      limits: # Don't limit the CPU
+        memory: 256Mi
+      requests:
+        cpu: 25m
+        memory: 64Mi
+  replicas: 2
+
+service:
+  trafficDistribution: PreferClose
+
+config:
+  envoyGateway:
+    gateway:
+      controllerName: gateway.envoyproxy.io/gatewayclass-controller
+    provider:
+      type: Kubernetes

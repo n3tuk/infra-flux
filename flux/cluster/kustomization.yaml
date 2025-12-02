@@ -19,6 +19,7 @@ resources:
   - certificates.yaml
   - external-dns.yaml
   - ingress-haproxy.yaml
+  - envoy-gateway.yaml
   - metallb.yaml
   - routing.yaml
   - elastic-operator.yaml
@@ -29,5 +30,6 @@ resources:
   - node-exporter.yaml
   - kube-state-metrics.yaml
   - keda.yaml
+  - trivy-operator.yaml
   - grafana.yaml
   - podinfo.yaml

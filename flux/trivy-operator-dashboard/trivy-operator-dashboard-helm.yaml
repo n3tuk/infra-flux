@@ -4,20 +4,14 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: metallb
+  name: trivy-operator-dashboard
+  namespace: trivy-operator
 spec:
-  chart:
-    spec:
-      sourceRef:
-        kind: HelmRepository
-        namespace: flux-system
-        name: metallb
-      chart: metallb
-      interval: 5m
-      version: 0.15.2
+  chartRef:
+    kind: OCIRepository
+    namespace: flux-system
+    name: trivy-operator-dashboard
   interval: 3h
-  # Allow more time for a rolling upgrade of the DaemonSet Pods
-  timeout: 15m
   install:
     crds: CreateReplace
     createNamespace: false
@@ -32,10 +26,8 @@ spec:
   test:
     enable: true
   driftDetection:
-    # metallb seems to continuously reconcile the configuration, so disabling
-    # until this can be investigated further
-    mode: disabled
+    mode: enabled
 
   valuesFrom:
     - kind: ConfigMap
-      name: helm-metallb-values
+      name: helm-trivy-operator-dashboard-values

@@ -1,0 +1,19 @@
+---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/source.toolkit.fluxcd.io/ocirepository_v1beta2.json
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: OCIRepository
+metadata:
+  name: trivy-operator-dashboard
+  namespace: flux-system
+spec:
+  secretRef:
+    name: ghcr-login
+  provider: generic
+  interval: 24h
+  url: oci://ghcr.io/raoulx24/charts/trivy-operator-dashboard
+  ref:
+    semver: 1.7.2
+  layerSelector:
+    mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
+    operation: copy

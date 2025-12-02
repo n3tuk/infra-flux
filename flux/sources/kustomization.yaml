@@ -15,10 +15,13 @@ resources:
   - jetstack.yaml
   - external-dns.yaml
   - haproxytech.yaml
+  - envoy-gateway.yaml
   - metallb.yaml
   - prometheus-community.yaml
   - grafana.yaml
   - elastic.yaml
   - fluent.yaml
   - kedacore.yaml
+  - aquasecurity.yaml
+  - raoulx24.yaml
   - podinfo.yaml

@@ -1,4 +1,6 @@
 ---
+loadBalancerClass: metallb
+
 controller:
   enabled: true
   strategy:
@@ -10,12 +12,15 @@ controller:
   resources:
     limits: # Don't limit the CPU
       memory: 256Mi
-    request:
+    requests:
       cpu: 100m
       memory: 32Mi
 
 speaker:
   enabled: true
+  # We won't put speakers on the controller nodes as normally they don't run
+  # workloads which require LoadBalancers to be connected via BGP to the router
+  tolerateMaster: false
   frr:
     enabled: true
     image:
@@ -29,7 +34,7 @@ speaker:
   resources:
     limits:
       memory: 128Mi
-    request:
+    requests:
       cpu: 100m
       memory: 32Mi
 

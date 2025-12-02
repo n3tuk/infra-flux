@@ -4,20 +4,19 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: metallb
+  name: trivy-operator
+  namespace: trivy-operator
 spec:
   chart:
     spec:
       sourceRef:
         kind: HelmRepository
         namespace: flux-system
-        name: metallb
-      chart: metallb
+        name: aquasecurity
+      chart: trivy-operator
       interval: 5m
-      version: 0.15.2
+      version: 0.31.0
   interval: 3h
-  # Allow more time for a rolling upgrade of the DaemonSet Pods
-  timeout: 15m
   install:
     crds: CreateReplace
     createNamespace: false
@@ -30,12 +29,10 @@ spec:
       retries: 3
       remediateLastFailure: true
   test:
-    enable: true
+    enable: false
   driftDetection:
-    # metallb seems to continuously reconcile the configuration, so disabling
-    # until this can be investigated further
-    mode: disabled
+    mode: enabled
 
   valuesFrom:
     - kind: ConfigMap
-      name: helm-metallb-values
+      name: helm-trivy-operator-values
