@@ -28,18 +28,8 @@ topologySpreadConstraints:
         app.kubernetes.io/name: podinfo
 
 ingress:
-  enabled: true
-  className: haproxy-external
-  annotations:
-    external-dns.alpha.kubernetes.io/target: ${cloudflare_tunnel}
-    external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
-  hosts:
-    - host: podinfo.${t3st_domain}
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  # TLS is not required as this is a proxied connection from Cloudflare
-  tls: []
+  # Ingress is now managed by HTTPRoute via the Gateway APIs
+  enabled: false
 
 resources:
   limits: # Don't limit the CPU

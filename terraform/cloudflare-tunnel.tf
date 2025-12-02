@@ -24,10 +24,23 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cluster" {
 
   config {
     ingress_rule {
-      hostname = "dashboard.t3st.uk"
+      hostname = "dashboard.${var.t3st_domain}"
       service  = "http://haproxy-external.ingress-system.svc"
       origin_request {
         connect_timeout = "3s"
+      }
+    }
+
+    ingress_rule {
+      hostname = "podinfo.${var.t3st_domain}"
+      service  = "https://external.envoy-gateway.svc"
+
+      origin_request {
+        origin_server_name = "podinfo.${var.t3st_domain}"
+
+        http2_origin    = true
+        connect_timeout = "3s"
+        tls_timeout     = "3s"
       }
     }
 

@@ -21,6 +21,7 @@ resources:
   - namespace.yaml
   - podinfo-helm.yaml
   - notifications.yaml
+  - http-routes.yaml
 
 configMapGenerator:
   - namespace: app-podinfo
