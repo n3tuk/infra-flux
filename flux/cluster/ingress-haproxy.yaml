@@ -16,7 +16,6 @@ spec:
     - name: tailscale-operator
     - name: prometheus-crds
     - name: cert-manager-crds
-    - name: gateway-api-crds
   interval: 1h
   retryInterval: 10m
   prune: true
