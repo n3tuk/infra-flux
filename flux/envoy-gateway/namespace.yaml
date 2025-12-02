@@ -1,0 +1,17 @@
+---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/yannh/kubernetes-json-schema/raw/master/master/namespace-v1.json
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: envoy-gateway
+  labels:
+    app.kubernetes.io/managed-by: kustomization
+    app.kubernetes.io/name: envoy-gateway
+    flux.kub3.uk/organisation: n3tuk
+    flux.kub3.uk/repository: infra-flux
+    flux.kub3.uk/kustomization: envoy-gateway
+    flux.kub3.uk/name: envoy-gateway
+    flux.kub3.uk/application: envoy-gateway
+    flux.kub3.uk/component: envoy-gateway
+    flux.kub3.uk/managed-by: kustomization

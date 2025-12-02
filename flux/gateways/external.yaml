@@ -1,0 +1,121 @@
+---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/refs/heads/main/gateway.envoyproxy.io/envoyproxy_v1alpha1.json
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: external
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyDeployment:
+        replicas: 3
+
+        strategy:
+          type: RollingUpdate
+          rollingUpdate:
+            maxSurge: 1
+
+        pod:
+          topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: kubernetes.io/zone
+              whenUnsatisfiable: ScheduleAnyway
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: envoy
+                  app.kubernetes.io/component: proxy
+                  app.kubernetes.io/managed-by: envoy-gateway
+                  gateway.envoyproxy.io/owning-gateway-name: external
+                  gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway
+              matchLabelKeys:
+                - pod-template-hash
+            - maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: DoNotSchedule
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: envoy
+                  app.kubernetes.io/component: proxy
+                  app.kubernetes.io/managed-by: envoy-gateway
+                  gateway.envoyproxy.io/owning-gateway-name: external
+                  gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway
+              matchLabelKeys:
+                - pod-template-hash
+
+        container:
+          resources:
+            limits: # Don't limit the CPU
+              memory: 256Mi
+            requests:
+              cpu: 25m
+              memory: 32Mi
+
+      envoyService:
+        # This will only be accepting connections from Cloudflare Argo Tunnels,
+        # so the ClusterIP is sufficient to expose it within the cluster only.
+        type: ClusterIP
+---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/refs/heads/main/gateway.networking.k8s.io/gatewayclass_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: external
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+  parametersRef:
+    group: gateway.envoyproxy.io
+    kind: EnvoyProxy
+    namespace: envoy-gateway
+    name: external
+---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/refs/heads/main/gateway.networking.k8s.io/gateway_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: external
+spec:
+  gatewayClassName: external
+  listeners:
+    - name: http
+      port: 80
+      protocol: HTTP
+    - name: https-kub3uk
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: wildcard-${cluster}-kub3-uk-tls
+      hostname: '*.${cluster_domain}'
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https-t3stuk
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: wildcard-${cluster}-t3st-uk-tls
+      hostname: '*.${t3st_domain}'
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https-sit3uk
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: wildcard-${cluster}-sit3-uk-tls
+      hostname: '*.${sit3_domain}'
+      allowedRoutes:
+        namespaces:
+          from: All

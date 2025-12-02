@@ -1,22 +1,12 @@
 ---
-openTelemetry:
-  enabled: false
 replicaCount: 2
 
+# Disable Ingress and associated resources as we are using a Gateway with
+# HTTPRoute and SecurityPolicy for OIDC controls instead
 ingress:
-  enabled: true
-  className: haproxy-tailnet
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-cloudflare-production
-  hosts:
-    - host: trivy.${cluster_domain}
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls:
-    - secretName: trivy-operator-dashboard-tls
-      hosts:
-        - trivy.${cluster_domain}
+  enabled: false
+openTelemetry:
+  enabled: false
 
 resources:
   limits: # Don't limit the CPU

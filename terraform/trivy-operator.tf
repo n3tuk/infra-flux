@@ -36,9 +36,14 @@ resource "kubernetes_secret_v1" "flux_system_trivy_operator_dashboard_substituti
   data = {
     trivy_operator_dashboard_client_id     = random_uuid.trivy_operator_dashboard_client_id.result
     trivy_operator_dashboard_client_secret = random_string.trivy_operator_dashboard_client_secret.result
+    trivy_operator_dashboard_issuer_url    = data.authentik_provider_oauth2_config.trivy_operator_dashboard.issuer_url
   }
 }
 
+
+data "authentik_flow" "default_authentication_flow" {
+  slug = "default-authentication-flow"
+}
 
 data "authentik_flow" "default_authorization_flow" {
   slug = "default-provider-authorization-implicit-consent"
@@ -46,6 +51,10 @@ data "authentik_flow" "default_authorization_flow" {
 
 data "authentik_flow" "default_invalidation_flow" {
   slug = "default-provider-invalidation-flow"
+}
+
+data "authentik_certificate_key_pair" "authentik_self_signed" {
+  name = "authentik Self-signed Certificate"
 }
 
 resource "random_uuid" "trivy_operator_dashboard_client_id" {}
@@ -67,25 +76,34 @@ resource "random_string" "trivy_operator_dashboard_client_secret" {
 resource "authentik_provider_oauth2" "trivy_operator_dashboard" {
   name = "trivy-operator-dashboard-${terraform.workspace}"
 
-  authorization_flow = data.authentik_flow.default_authorization_flow.id
-  invalidation_flow  = data.authentik_flow.default_invalidation_flow.id
+  authentication_flow = data.authentik_flow.default_authentication_flow.id
+  authorization_flow  = data.authentik_flow.default_authorization_flow.id
+  invalidation_flow   = data.authentik_flow.default_invalidation_flow.id
 
   client_id     = random_uuid.trivy_operator_dashboard_client_id.result
   client_secret = random_string.trivy_operator_dashboard_client_secret.result
+  signing_key   = data.authentik_certificate_key_pair.authentik_self_signed.id
 
   sub_mode = "user_email"
 
   allowed_redirect_uris = [
     {
       matching_mode = "strict",
-      url           = "https://trivy.${var.cluster_domain}/dashboard/auth/callback",
+      url           = "https://trivy.${var.cluster_domain}/oauth2/callback",
     }
   ]
+
+  logout_uri    = "https://trivy.${var.cluster_domain}/logout"
+  logout_method = "frontchannel"
+}
+
+data "authentik_provider_oauth2_config" "trivy_operator_dashboard" {
+  provider_id = authentik_provider_oauth2.trivy_operator_dashboard.id
 }
 
 resource "authentik_application" "trivy_operator_dashboard" {
-  name = "trivy-operator-dashboard-${terraform.workspace}"
-  slug = "trivy-operator-dashboard-${terraform.workspace}"
+  name = "Trivy Dashboard (${title(terraform.workspace)})"
+  slug = "trivy-dashboard-${terraform.workspace}"
 
   group            = "Security"
   meta_description = "Trivy Operator Dashboard for the ${terraform.workspace} Cluster"

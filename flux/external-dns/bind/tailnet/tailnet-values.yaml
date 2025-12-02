@@ -46,6 +46,8 @@ policy: sync
 sources:
   - ingress
   - service
+  - gateway-httproute
+  - gateway-grpcroute
 
 registry: txt
 txtOwnerId: ${cluster}/tailnet

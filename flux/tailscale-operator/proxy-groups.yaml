@@ -4,6 +4,29 @@
 apiVersion: tailscale.com/v1alpha1
 kind: ProxyClass
 metadata:
+  name: envoy
+spec: {}
+---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/refs/heads/main/tailscale.com/proxygroup_v1alpha1.json
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyGroup
+metadata:
+  name: envoy
+spec:
+  type: ingress
+  proxyClass: envoy
+  hostnamePrefix: kub3-${cluster}-envoy
+  replicas: 2
+  tags:
+    - tag:k8s-ingress
+    - tag:k8s-${cluster}-ingress
+---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/refs/heads/main/tailscale.com/proxyclass_v1alpha1.json
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyClass
+metadata:
   name: haproxy
 spec: {}
 ---

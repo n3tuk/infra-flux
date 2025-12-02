@@ -71,8 +71,11 @@ No modules.
 | [random_string.trivy_operator_dashboard_client_secret](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [random_uuid.trivy_operator_dashboard_client_id](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) | resource |
 | [tailscale_oauth_client.cluster](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/oauth_client) | resource |
+| [authentik_certificate_key_pair.authentik_self_signed](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/data-sources/certificate_key_pair) | data source |
+| [authentik_flow.default_authentication_flow](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/data-sources/flow) | data source |
 | [authentik_flow.default_authorization_flow](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/data-sources/flow) | data source |
 | [authentik_flow.default_invalidation_flow](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/data-sources/flow) | data source |
+| [authentik_provider_oauth2_config.trivy_operator_dashboard](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/data-sources/provider_oauth2_config) | data source |
 | [cloudflare_api_token_permission_groups.all](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/data-sources/api_token_permission_groups) | data source |
 | [cloudflare_zone.n3tuk](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/data-sources/zone) | data source |
 | [google_secret_manager_secret_version.alertmanager_incidentio_credentials](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/secret_manager_secret_version) | data source |
