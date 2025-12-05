@@ -23,4 +23,4 @@ resources:
   - prometheus.yaml
   - service.yaml
   - service-monitor.yaml
-  - ingress.yaml
+  - http-routes.yaml
