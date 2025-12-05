@@ -16,7 +16,7 @@ provider "cloudflare" {
 
 provider "kubernetes" {
   config_path    = "~/.kube/config.yaml"
-  config_context = "admin@${terraform.workspace}"
+  config_context = "pryderi@kub3-${terraform.workspace}"
 }
 
 provider "tailscale" {}
