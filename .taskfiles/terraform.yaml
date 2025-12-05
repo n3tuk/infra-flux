@@ -200,8 +200,15 @@ tasks:
             -var=flux_artifact_repository={{ .repository }} \
             -var=flux_artifact_tag=${TAG:-latest} \
             -out terraform.tfplan \
-          |& tee '.terraform/plan.log'
-          echo -e '{{ .cg }}Completed{{ .cc }}'
+          |& tee '.terraform/plan.log' \
+
+          status=${?}
+          if [[ ${status} -ne 0 ]]; then
+            rm -f terraform.tfplan
+            exit ${status}
+          else
+            echo -e '{{ .cg }}Completed{{ .cc }}'
+          fi
       # yamllint enable rule:line-length
     status:
       - test -f terraform.tfplan
