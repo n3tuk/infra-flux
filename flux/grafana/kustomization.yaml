@@ -17,6 +17,7 @@ commonLabels:
 resources:
   - namespace.yaml
   - grafana-helm.yaml
+  - http-routes.yaml
 
 configMapGenerator:
   - name: helm-grafana-values
