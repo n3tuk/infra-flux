@@ -23,6 +23,8 @@ spec:
     substituteFrom:
       - kind: ConfigMap
         name: common-substitutions
+      - kind: Secret
+        name: prometheus-substitutions
 ---
 # yamllint disable-line rule:line-length
 # yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/main/kustomize.toolkit.fluxcd.io/kustomization_v1.json
