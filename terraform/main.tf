@@ -31,6 +31,20 @@ resource "kubernetes_manifest" "flux_system_baseline" {
       }
     }
   }
+
+  depends_on = [
+    kubernetes_config_map_v1.common_substitutions,
+
+    kubernetes_secret_v1.flux_system_alertmanager_substitutions,
+    kubernetes_secret_v1.flux_system_cert_manager_substitutions,
+    kubernetes_secret_v1.flux_system_cloudflared_substitutions,
+    kubernetes_config_map_v1.flux_system_cloudflared_substitutions,
+    kubernetes_secret_v1.flux_system_prometheus_substitutions,
+    kubernetes_config_map_v1.proxmox_csi_substitutions,
+    kubernetes_config_map_v1.flux_system_routing_substitutions,
+    kubernetes_config_map_v1.tailscale_substitutions,
+    kubernetes_secret_v1.flux_system_trivy_operator_substitutions,
+  ]
 }
 
 resource "kubernetes_manifest" "flux_system_cluster" {

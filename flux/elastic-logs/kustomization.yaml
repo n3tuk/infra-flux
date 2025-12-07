@@ -24,7 +24,7 @@ resources:
   - elastic-users.yaml
   - elastic-secrets.yaml
   - elastic-server.yaml
-  - ingress.yaml
+  - http-routes.yaml
   - elasticsearch-exporter-helm.yaml
   - prometheus-rules.yaml
 

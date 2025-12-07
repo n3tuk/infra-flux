@@ -22,11 +22,10 @@ resources:
   - alertmanager.yaml
   - config.yaml
   - slack.yaml
-  - pagerduty.yaml
   - incidentio.yaml
   - service.yaml
   - service-monitor.yaml
-  - ingress.yaml
+  - http-routes.yaml
 
 configMapGenerator:
   - name: alertmanager-templates
@@ -38,4 +37,3 @@ configMapGenerator:
     files:
       - common.tmpl=common.tmpl
       - slack.tmpl=slack.tmpl
-      - pagerduty.tmpl=pagerduty.tmpl

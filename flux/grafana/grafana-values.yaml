@@ -14,16 +14,7 @@ serviceMonitor:
   enabled: true
 
 ingress:
-  enabled: true
-  ingressClassName: haproxy-tailnet
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-cloudflare-production
-  hosts:
-    - grafana.${cluster_domain}
-  tls:
-    - hosts:
-        - grafana.${cluster_domain}
-      secretName: ingress-grafana-tls
+  enabled: false
 
 admin:
   existingSecret: grafana-admin

@@ -1,0 +1,25 @@
+---
+# yamllint disable-line rule:line-length
+# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/refs/heads/main/gateway.networking.k8s.io/httproute_v1.json
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: elasticsearch
+  namespace: elastic-logs
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      namespace: envoy-gateway
+      name: tailnet
+  hostnames:
+    - elasticsearch.${cluster_domain}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - kind: Service
+          name: logs-es-http
+          port: 9200

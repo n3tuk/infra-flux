@@ -13,7 +13,7 @@ TODO
 | <a name="requirement_authentik"></a> [authentik](#requirement\_authentik) | 2025.10.1 |
 | <a name="requirement_cloudflare"></a> [cloudflare](#requirement\_cloudflare) | ~> 4.23 |
 | <a name="requirement_google"></a> [google](#requirement\_google) | ~> 7.0 |
-| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | ~> 2.38 |
+| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | ~> 3.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.7 |
 | <a name="requirement_tailscale"></a> [tailscale](#requirement\_tailscale) | ~> 0.24 |
 
@@ -24,7 +24,7 @@ TODO
 | <a name="provider_authentik"></a> [authentik](#provider\_authentik) | 2025.10.1 |
 | <a name="provider_cloudflare"></a> [cloudflare](#provider\_cloudflare) | 4.52.5 |
 | <a name="provider_google"></a> [google](#provider\_google) | 7.12.0 |
-| <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | 2.38.0 |
+| <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | 3.0.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | 3.7.2 |
 | <a name="provider_tailscale"></a> [tailscale](#provider\_tailscale) | 0.24.0 |
 
@@ -36,7 +36,11 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [authentik_application.alertmanager](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/resources/application) | resource |
+| [authentik_application.prometheus](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/resources/application) | resource |
 | [authentik_application.trivy_operator_dashboard](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/resources/application) | resource |
+| [authentik_provider_oauth2.alertmanager](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/resources/provider_oauth2) | resource |
+| [authentik_provider_oauth2.prometheus](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/resources/provider_oauth2) | resource |
 | [authentik_provider_oauth2.trivy_operator_dashboard](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/resources/provider_oauth2) | resource |
 | [cloudflare_api_token.cert_manager](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/resources/api_token) | resource |
 | [cloudflare_api_token.external_dns](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/resources/api_token) | resource |
@@ -50,6 +54,7 @@ No modules.
 | [kubernetes_manifest.flux_system_baseline](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
 | [kubernetes_manifest.flux_system_cluster](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
 | [kubernetes_namespace_v1.tailscale_operator](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
+| [kubernetes_secret_v1.flux_system_alertmanager_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.flux_system_cert_manager_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.flux_system_cloudflared_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.flux_system_dns_system_cloudflare_token](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
@@ -57,6 +62,7 @@ No modules.
 | [kubernetes_secret_v1.flux_system_dns_system_tailnet_rfc2136_key](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.flux_system_elastic_logs_credentials](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.flux_system_flux_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
+| [kubernetes_secret_v1.flux_system_prometheus_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.flux_system_trivy_operator_dashboard_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.flux_system_trivy_operator_substitutions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.prometheus_metrics_incidentio_credentials](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
@@ -68,13 +74,19 @@ No modules.
 | [random_password.elastic_logs_fluent_bit_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 | [random_password.elastic_logs_grafana_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 | [random_password.tunnel](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
+| [random_string.alertmanager_client_secret](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+| [random_string.prometheus_client_secret](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [random_string.trivy_operator_dashboard_client_secret](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+| [random_uuid.alertmanager_client_id](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) | resource |
+| [random_uuid.prometheus_client_id](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) | resource |
 | [random_uuid.trivy_operator_dashboard_client_id](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) | resource |
 | [tailscale_oauth_client.cluster](https://registry.terraform.io/providers/tailscale/tailscale/latest/docs/resources/oauth_client) | resource |
 | [authentik_certificate_key_pair.authentik_self_signed](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/data-sources/certificate_key_pair) | data source |
 | [authentik_flow.default_authentication_flow](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/data-sources/flow) | data source |
 | [authentik_flow.default_authorization_flow](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/data-sources/flow) | data source |
 | [authentik_flow.default_invalidation_flow](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/data-sources/flow) | data source |
+| [authentik_provider_oauth2_config.alertmanager](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/data-sources/provider_oauth2_config) | data source |
+| [authentik_provider_oauth2_config.prometheus](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/data-sources/provider_oauth2_config) | data source |
 | [authentik_provider_oauth2_config.trivy_operator_dashboard](https://registry.terraform.io/providers/goauthentik/authentik/2025.10.1/docs/data-sources/provider_oauth2_config) | data source |
 | [cloudflare_api_token_permission_groups.all](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/data-sources/api_token_permission_groups) | data source |
 | [cloudflare_zone.n3tuk](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/data-sources/zone) | data source |

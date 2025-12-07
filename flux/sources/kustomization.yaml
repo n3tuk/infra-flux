@@ -14,7 +14,6 @@ resources:
   - cloudflare.yaml
   - jetstack.yaml
   - external-dns.yaml
-  - haproxytech.yaml
   - envoy-gateway.yaml
   - metallb.yaml
   - prometheus-community.yaml

@@ -2,7 +2,7 @@
 # Enfoce an override on all naming to allow concurrent external-dns services to
 # operate within the same namespace, allowing DNS records to be managed
 # centrally for multiple providers, as needed
-nameOverride: n3tuk
+nameOverride: internal
 
 serviceAccount:
   create: true
@@ -10,7 +10,7 @@ serviceMonitor:
   enabled: true
 
 # Add a dedicated label to identify all resources created for the external-dns
-# n3tuk instance so that we can manage anti-affinity rules for the Pods to
+# internal instance so that we can manage anti-affinity rules for the Pods to
 # ensure all the different external-dns instances don't end up on the same node
 commonLabels:
   app.kubernetes.io/part-of: external-dns
@@ -48,7 +48,7 @@ sources:
   - service
 
 registry: txt
-txtOwnerId: ${cluster}/n3tuk
+txtOwnerId: ${cluster}/internal
 txtPrefix: _%{record_type}.
 
 logLevel: debug
@@ -74,27 +74,27 @@ env:
   - name: EXTERNAL_DNS_RFC2136_HOST
     valueFrom:
       secretKeyRef:
-        name: n3tuk-rfc2136-key
+        name: internal-rfc2136-key
         key: tsig-host
   - name: EXTERNAL_DNS_RFC2136_PORT
     valueFrom:
       secretKeyRef:
-        name: n3tuk-rfc2136-key
+        name: internal-rfc2136-key
         key: tsig-port
   - name: EXTERNAL_DNS_RFC2136_TSIG_KEYNAME
     valueFrom:
       secretKeyRef:
-        name: n3tuk-rfc2136-key
+        name: internal-rfc2136-key
         key: tsig-keyname
   - name: EXTERNAL_DNS_RFC2136_TSIG_SECRET
     valueFrom:
       secretKeyRef:
-        name: n3tuk-rfc2136-key
+        name: internal-rfc2136-key
         key: tsig-secret
   - name: EXTERNAL_DNS_RFC2136_TSIG_SECRET_ALG
     valueFrom:
       secretKeyRef:
-        name: n3tuk-rfc2136-key
+        name: internal-rfc2136-key
         key: tsig-alg
   # Enable AXFR support for RFC2136 to allow zone transfers which is required
   # to allow synchronisation of records between the cluster and server

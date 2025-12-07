@@ -56,6 +56,11 @@ spec:
         # This will only be accepting connections from Cloudflare Argo Tunnels,
         # so the ClusterIP is sufficient to expose it within the cluster only.
         type: ClusterIP
+        # We need to be able to direct traffic from Cloudflare Argo Tunnels to
+        # this Service independently of the hostnames of the incoming traffic,
+        # so ensure this Service resource has a fixed DNS name to allow
+        # Cloudflare to look up the IP address and direct traffic accordingly.
+        name: external
 ---
 # yamllint disable-line rule:line-length
 # yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/refs/heads/main/gateway.networking.k8s.io/gatewayclass_v1.json

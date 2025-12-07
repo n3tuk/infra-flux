@@ -18,7 +18,6 @@ resources:
   - cert-manager.yaml
   - certificates.yaml
   - external-dns.yaml
-  - ingress-haproxy.yaml
   - envoy-gateway.yaml
   - metallb.yaml
   - routing.yaml

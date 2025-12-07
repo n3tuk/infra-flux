@@ -40,23 +40,6 @@ resource "kubernetes_secret_v1" "flux_system_trivy_operator_dashboard_substituti
   }
 }
 
-
-data "authentik_flow" "default_authentication_flow" {
-  slug = "default-authentication-flow"
-}
-
-data "authentik_flow" "default_authorization_flow" {
-  slug = "default-provider-authorization-implicit-consent"
-}
-
-data "authentik_flow" "default_invalidation_flow" {
-  slug = "default-provider-invalidation-flow"
-}
-
-data "authentik_certificate_key_pair" "authentik_self_signed" {
-  name = "authentik Self-signed Certificate"
-}
-
 resource "random_uuid" "trivy_operator_dashboard_client_id" {}
 
 resource "random_string" "trivy_operator_dashboard_client_secret" {
