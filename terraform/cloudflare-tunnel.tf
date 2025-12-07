@@ -23,41 +23,31 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "cluster" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.cluster.id
 
   config {
-    ingress_rule {
-      hostname = "dashboard.${var.t3st_domain}"
-      service  = "http://haproxy-external.ingress-system.svc"
-      origin_request {
-        connect_timeout = "3s"
-      }
-    }
-
-    ingress_rule {
-      hostname = "podinfo.${var.t3st_domain}"
-      service  = "https://external.envoy-gateway.svc"
-
-      origin_request {
-        origin_server_name = "podinfo.${var.t3st_domain}"
-
-        http2_origin    = true
-        connect_timeout = "3s"
-        tls_timeout     = "3s"
-      }
-    }
-
     dynamic "ingress_rule" {
-      for_each = local.cloudflare_domains
+      for_each = local.cloudflare_hostnames
 
       content {
-        hostname = "*.${ingress_rule.value}"
-        service  = "http://haproxy-external.ingress-system.svc"
+        hostname = ingress_rule.value
+        service  = "https://external.envoy-gateway.svc"
+
         origin_request {
+          origin_server_name = ingress_rule.value
+
+          http2_origin    = true
           connect_timeout = "3s"
+          tls_timeout     = "3s"
         }
       }
     }
 
     ingress_rule {
-      service = "http://haproxy-external.ingress-nginx.svc"
+      service = "https://external.envoy-gateway.svc"
+
+      origin_request {
+        http2_origin    = true
+        connect_timeout = "3s"
+        tls_timeout     = "3s"
+      }
     }
   }
 }

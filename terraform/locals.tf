@@ -7,6 +7,11 @@ locals {
     "t3st.uk",
   ]
 
+  cloudflare_hostnames = [
+    "podinfo.${var.t3st_domain}",
+    "dashboard.${var.t3st_domain}",
+  ]
+
   cloudflare_ip = [
     "82.69.106.64/32",
     "2a02:8010:8006::/48",
