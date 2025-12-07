@@ -42,14 +42,14 @@ resource "kubernetes_secret_v1" "flux_system_dns_system_cloudflare_token" {
   }
 }
 
-resource "kubernetes_secret_v1" "flux_system_dns_system_n3tuk_rfc2136_key" {
+resource "kubernetes_secret_v1" "flux_system_dns_system_internal_rfc2136_key" {
   metadata {
-    name      = "n3tuk-rfc2136-key"
+    name      = "internal-rfc2136-key"
     namespace = "dns-system"
 
     labels = merge(local.kubernetes_labels, {
-      "flux.kub3.uk/name"     = "n3tuk"
-      "flux.kub3.uk/instance" = "n3tuk"
+      "flux.kub3.uk/name"     = "internal"
+      "flux.kub3.uk/instance" = "internal"
       "flux.kub3.uk/part-of"  = "external-dns"
     })
   }
@@ -57,11 +57,11 @@ resource "kubernetes_secret_v1" "flux_system_dns_system_n3tuk_rfc2136_key" {
   type = "Opaque"
 
   data = {
-    "tsig-host"    = local.external_dns_bind_secrets.n3tuk.host
-    "tsig-port"    = local.external_dns_bind_secrets.n3tuk.port
-    "tsig-keyname" = local.external_dns_bind_secrets.n3tuk.keyname
-    "tsig-secret"  = local.external_dns_bind_secrets.n3tuk.secret
-    "tsig-alg"     = local.external_dns_bind_secrets.n3tuk.alg
+    "tsig-host"    = local.external_dns_bind_secrets.internal.host
+    "tsig-port"    = local.external_dns_bind_secrets.internal.port
+    "tsig-keyname" = local.external_dns_bind_secrets.internal.keyname
+    "tsig-secret"  = local.external_dns_bind_secrets.internal.secret
+    "tsig-alg"     = local.external_dns_bind_secrets.internal.alg
   }
 }
 

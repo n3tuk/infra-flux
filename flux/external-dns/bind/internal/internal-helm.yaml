@@ -4,7 +4,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: n3tuk
+  name: internal
 spec:
   chart:
     spec:
@@ -34,4 +34,4 @@ spec:
 
   valuesFrom:
     - kind: ConfigMap
-      name: helm-n3tuk-values
+      name: helm-internal-values

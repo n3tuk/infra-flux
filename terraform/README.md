@@ -13,7 +13,7 @@ TODO
 | <a name="requirement_authentik"></a> [authentik](#requirement\_authentik) | 2025.10.1 |
 | <a name="requirement_cloudflare"></a> [cloudflare](#requirement\_cloudflare) | ~> 4.23 |
 | <a name="requirement_google"></a> [google](#requirement\_google) | ~> 7.0 |
-| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | ~> 2.38 |
+| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | ~> 3.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.7 |
 | <a name="requirement_tailscale"></a> [tailscale](#requirement\_tailscale) | ~> 0.24 |
 
@@ -24,7 +24,7 @@ TODO
 | <a name="provider_authentik"></a> [authentik](#provider\_authentik) | 2025.10.1 |
 | <a name="provider_cloudflare"></a> [cloudflare](#provider\_cloudflare) | 4.52.5 |
 | <a name="provider_google"></a> [google](#provider\_google) | 7.12.0 |
-| <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | 2.38.0 |
+| <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | 3.0.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | 3.7.2 |
 | <a name="provider_tailscale"></a> [tailscale](#provider\_tailscale) | 0.24.0 |
 
