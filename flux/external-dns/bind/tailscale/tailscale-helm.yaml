@@ -4,7 +4,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: tailnet
+  name: tailscale
 spec:
   chart:
     spec:
@@ -34,4 +34,4 @@ spec:
 
   valuesFrom:
     - kind: ConfigMap
-      name: helm-tailnet-values
+      name: helm-tailscale-values

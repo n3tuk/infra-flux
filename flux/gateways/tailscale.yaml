@@ -4,7 +4,7 @@
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
 metadata:
-  name: tailnet
+  name: tailscale
   namespace: envoy-gateway
 spec:
   provider:
@@ -28,7 +28,7 @@ spec:
                   app.kubernetes.io/name: envoy
                   app.kubernetes.io/component: proxy
                   app.kubernetes.io/managed-by: envoy-gateway
-                  gateway.envoyproxy.io/owning-gateway-name: tailnet
+                  gateway.envoyproxy.io/owning-gateway-name: tailscale
                   gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway
               matchLabelKeys:
                 - pod-template-hash
@@ -40,7 +40,7 @@ spec:
                   app.kubernetes.io/name: envoy
                   app.kubernetes.io/component: proxy
                   app.kubernetes.io/managed-by: envoy-gateway
-                  gateway.envoyproxy.io/owning-gateway-name: tailnet
+                  gateway.envoyproxy.io/owning-gateway-name: tailscale
                   gateway.envoyproxy.io/owning-gateway-namespace: envoy-gateway
               matchLabelKeys:
                 - pod-template-hash
@@ -55,6 +55,7 @@ spec:
 
       envoyService:
         type: LoadBalancer
+        name: tailscale
         loadBalancerClass: tailscale
         annotations:
           tailscale.com/expose: 'true'
@@ -67,26 +68,26 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
 metadata:
-  name: tailnet
+  name: tailscale
 spec:
   controllerName: gateway.envoyproxy.io/gatewayclass-controller
   parametersRef:
     group: gateway.envoyproxy.io
     kind: EnvoyProxy
     namespace: envoy-gateway
-    name: tailnet
+    name: tailscale
 ---
 # yamllint disable-line rule:line-length
 # yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/refs/heads/main/gateway.networking.k8s.io/gateway_v1.json
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: tailnet
+  name: tailscale
   namespace: envoy-gateway
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-cloudflare-production
 spec:
-  gatewayClassName: tailnet
+  gatewayClassName: tailscale
   listeners:
     - name: http
       port: 80

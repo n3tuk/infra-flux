@@ -12,7 +12,7 @@ spec:
       sectionName: http
     - name: internal
       sectionName: http
-    - name: tailnet
+    - name: tailscale
       sectionName: http
   rules:
     - filters:
