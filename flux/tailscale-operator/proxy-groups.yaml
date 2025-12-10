@@ -27,29 +27,6 @@ spec:
 apiVersion: tailscale.com/v1alpha1
 kind: ProxyClass
 metadata:
-  name: haproxy
-spec: {}
----
-# yamllint disable-line rule:line-length
-# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/refs/heads/main/tailscale.com/proxygroup_v1alpha1.json
-apiVersion: tailscale.com/v1alpha1
-kind: ProxyGroup
-metadata:
-  name: haproxy
-spec:
-  type: ingress
-  proxyClass: haproxy
-  hostnamePrefix: kub3-${cluster}-haproxy
-  replicas: 2
-  tags:
-    - tag:k8s-ingress
-    - tag:k8s-${cluster}-ingress
----
-# yamllint disable-line rule:line-length
-# yaml-language-server: $schema=https://github.com/datreeio/CRDs-catalog/raw/refs/heads/main/tailscale.com/proxyclass_v1alpha1.json
-apiVersion: tailscale.com/v1alpha1
-kind: ProxyClass
-metadata:
   name: egress
 spec: {}
 ---
