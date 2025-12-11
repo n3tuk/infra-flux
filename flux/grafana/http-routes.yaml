@@ -10,7 +10,7 @@ spec:
     - group: gateway.networking.k8s.io
       kind: Gateway
       namespace: envoy-gateway
-      name: tailnet
+      name: tailscale
   hostnames:
     - grafana.${cluster_domain}
   rules:

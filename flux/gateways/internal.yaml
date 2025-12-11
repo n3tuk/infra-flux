@@ -55,6 +55,7 @@ spec:
 
       envoyService:
         type: LoadBalancer
+        name: internal
         loadBalancerClass: metallb
 ---
 # yamllint disable-line rule:line-length

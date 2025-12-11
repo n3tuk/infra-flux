@@ -22,5 +22,5 @@ resources:
   - certificates.yaml
   - external.yaml
   - internal.yaml
-  - tailnet.yaml
+  - tailscale.yaml
   - https-redirect.yaml

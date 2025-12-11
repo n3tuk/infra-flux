@@ -22,4 +22,4 @@ resources:
   - prometheus-rules.yaml
   - cloudflare
   - bind/internal
-  - bind/tailnet
+  - bind/tailscale

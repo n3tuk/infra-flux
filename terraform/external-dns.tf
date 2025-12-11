@@ -65,14 +65,14 @@ resource "kubernetes_secret_v1" "flux_system_dns_system_internal_rfc2136_key" {
   }
 }
 
-resource "kubernetes_secret_v1" "flux_system_dns_system_tailnet_rfc2136_key" {
+resource "kubernetes_secret_v1" "flux_system_dns_system_tailscale_rfc2136_key" {
   metadata {
-    name      = "tailnet-rfc2136-key"
+    name      = "tailscale-rfc2136-key"
     namespace = "dns-system"
 
     labels = merge(local.kubernetes_labels, {
-      "flux.kub3.uk/name"     = "tailnet"
-      "flux.kub3.uk/instance" = "tailnet"
+      "flux.kub3.uk/name"     = "tailscale"
+      "flux.kub3.uk/instance" = "tailscale"
       "flux.kub3.uk/part-of"  = "external-dns"
     })
   }
@@ -80,10 +80,10 @@ resource "kubernetes_secret_v1" "flux_system_dns_system_tailnet_rfc2136_key" {
   type = "Opaque"
 
   data = {
-    "tsig-host"    = local.external_dns_bind_secrets.tailnet.host
-    "tsig-port"    = local.external_dns_bind_secrets.tailnet.port
-    "tsig-keyname" = local.external_dns_bind_secrets.tailnet.keyname
-    "tsig-secret"  = local.external_dns_bind_secrets.tailnet.secret
-    "tsig-alg"     = local.external_dns_bind_secrets.tailnet.alg
+    "tsig-host"    = local.external_dns_bind_secrets.tailscale.host
+    "tsig-port"    = local.external_dns_bind_secrets.tailscale.port
+    "tsig-keyname" = local.external_dns_bind_secrets.tailscale.keyname
+    "tsig-secret"  = local.external_dns_bind_secrets.tailscale.secret
+    "tsig-alg"     = local.external_dns_bind_secrets.tailscale.alg
   }
 }

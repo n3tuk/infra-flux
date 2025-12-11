@@ -10,15 +10,15 @@ namespace: dns-system
 labels:
   - includeSelectors: true
     pairs:
-      flux.kub3.uk/component: tailnet
+      flux.kub3.uk/component: tailscale
 
 resources:
-  - tailnet-helm.yaml
+  - tailscale-helm.yaml
 
 configMapGenerator:
-  - name: helm-tailnet-values
+  - name: helm-tailscale-values
     files:
-      - values.yaml=tailnet-values.yaml
+      - values.yaml=tailscale-values.yaml
 
 configurations:
   - kustomize-config.yaml
