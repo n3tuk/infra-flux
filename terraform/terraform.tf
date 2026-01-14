@@ -20,7 +20,7 @@ terraform {
     }
     authentik = {
       source  = "goauthentik/authentik"
-      version = "2025.10.1"
+      version = "2025.12.0"
     }
     random = {
       source  = "hashicorp/random"
