@@ -9,9 +9,13 @@ tasks:
       using the JSON Schema files, including:
 
       - Taskfiles (Taskfile.yaml, .taskfiles/*.yaml)
-      - GitHub Dependabot configuration (.github/dependabot.yaml)
+      - GitHub Renovate configuration (.github/renovate.json)
       - GitHub Workflows (.github/workflows/*.yaml)
       - pre-commit Configuration (.pre-commit-config)
+
+      Renovate is configured to manage dependencies for:
+      - GitHub Actions, Terraform, pre-commit, tflint plugins
+      - Flux HelmRelease and OCIRepository resources
 
       Checks on Kubernetes resources under the flux/ folder will be managed
       through the conform tasks using kubeconform, as although kubeconform still
@@ -23,7 +27,7 @@ tasks:
       - task: yamllint
     cmds:
       - task: taskfiles
-      - task: dependabot
+      - task: renovate
       - task: mergify
       - task: workflows
       - task: pre-commit-config
@@ -42,19 +46,21 @@ tasks:
             Taskfile.yaml .taskfiles/*.yaml
           echo -e '{{ .cg }}Passed{{ .cc }}'
 
-  dependabot:
+  renovate:
     internal: true
     silent: true
     sources:
-      - .github/dependabot.yaml
+      - .github/renovate.json
     cmds:
+      # yamllint disable rule:line-length
       - cmd: |-
-          [[ -f .github/dependabot.yaml ]] || exit 0
+          [[ -f .github/renovate.json ]] || exit 0
           check-jsonschema \
-            --output-format text --verbose \
-            --builtin-schema vendor.dependabot \
-            .github/dependabot.yaml
+            --output-format text --no-cache --verbose \
+            --builtin-schema vendor.renovate \
+            .github/renovate.json
           echo -e '{{ .cg }}Passed{{ .cc }}'
+      # yamllint enable rule:line-length
 
   mergify:
     internal: true

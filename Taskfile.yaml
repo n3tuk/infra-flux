@@ -133,7 +133,7 @@ tasks:
       - Parse all JSON, YAML, and Markdown files through Prettier in order to
         ensure they are syntactically correct, and that they are consistent in
         their layout and usage;
-      - Parse selected configurations (Task files, GitHub Dependabot
+      - Parse selected configurations (Task files, GitHub Renovate
         configuration, and GitHub Workflows) through JSON Schema to evaluate
         these free-from configuration types are correctly structured for their
         intended usage (i.e. keys are in the right place, the values are what is

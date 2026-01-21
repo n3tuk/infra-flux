@@ -1,0 +1,195 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "group:monorepos",
+    "group:recommended"
+  ],
+  "labels": [
+    "type/dependencies",
+    "release/chore"
+  ],
+  "timezone": "Europe/London",
+  "schedule": [
+    "18:00 every friday"
+  ],
+  "draftPR": true,
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 10,
+  "rebaseWhen": "conflicted",
+  "platformCommit": "enabled",
+  "separateMajorMinor": true,
+  "pinDigest": {
+    "groupName": "Pin Dependencies",
+    "commitMessageAction": "Pin",
+    "group": {
+      "commitMessageTopic": "Dependencies",
+      "commitMessageExtra": ""
+    }
+  },
+  "rollback": {
+    "commitMessageAction": "Roll Back"
+  },
+  "vulnerabilityAlerts": {
+    "commitMessageSuffix": "",
+    "branchTopic": "{{datasource}}-{{depNameSanitized}}-security"
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update Helm chart versions in Flux HelmRelease files",
+      "managerFilePatterns": [
+        "^flux/.+\\.yaml$"
+      ],
+      "matchStrings": [
+        "chart:\\s*\\n\\s*spec:\\s*\\n(?:[^\\n]*\\n)*?\\s*chart:\\s*(?<chart>[\\w-]+)\\s*\\n(?:[^\\n]*\\n)*?\\s*version:\\s*(?<currentValue>[\\d.]+)"
+      ],
+      "depNameTemplate": "{{chart}}",
+      "datasourceTemplate": "helm",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "Update tflint plugin versions in .tflint.hcl",
+      "managerFilePatterns": [
+        "^\\.tflint\\.hcl$"
+      ],
+      "matchStrings": [
+        "plugin\\s+\"(?<depName>[\\w-]+)\"\\s*\\{[^}]*source\\s*=\\s*\"github\\.com/(?<packageName>[^\"]+)\"[^}]*version\\s*=\\s*\"(?<currentValue>[\\d.]+)\""
+      ],
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "Update OCI image versions in Flux OCIRepository resources",
+      "managerFilePatterns": [
+        "/flux/sources/.+\\.yaml$/"
+      ],
+      "matchStrings": [
+        "url:\\s*oci://(?<registryUrl>[^\\s]+)/(?<depName>[^\\n]+)\\n.*?semver:\\s*(?<currentValue>[\\d.]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "semver"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Group minor and patch updates together",
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "minor-patch-updates",
+      "groupSlug": "minor-patch"
+    },
+    {
+      "description": "GitHub Actions updates",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "commitMessagePrefix": "actions",
+      "commitMessageTopic": "GitHub Action {{depName}}",
+      "labels": [
+        "type/dependencies",
+        "update/github-workflows",
+        "release/chore"
+      ]
+    },
+    {
+      "description": "Terraform provider updates",
+      "matchManagers": [
+        "terraform"
+      ],
+      "commitMessagePrefix": "terraform",
+      "commitMessageTopic": "terraform {{depType}} {{depName}}",
+      "labels": [
+        "type/dependencies",
+        "update/terraform",
+        "release/chore"
+      ]
+    },
+    {
+      "description": "pre-commit hook updates",
+      "matchManagers": [
+        "pre-commit"
+      ],
+      "commitMessagePrefix": "pre-commit",
+      "commitMessageTopic": "pre-commit {{depName}}",
+      "labels": [
+        "type/dependencies",
+        "update/pre-commit",
+        "release/chore"
+      ]
+    },
+    {
+      "description": "Flux HelmRelease updates",
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchDepNames": [
+        ".*"
+      ],
+      "commitMessagePrefix": "flux",
+      "commitMessageTopic": "HelmRelease {{depName}}",
+      "labels": [
+        "type/dependencies",
+        "update/flux",
+        "release/chore"
+      ]
+    },
+    {
+      "description": "Flux OCIRepository updates",
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchDepPatterns": [
+        "ghcr\\.io/.*"
+      ],
+      "commitMessagePrefix": "flux",
+      "commitMessageTopic": "OCIRepository {{depName}}",
+      "labels": [
+        "type/dependencies",
+        "update/flux",
+        "release/chore"
+      ]
+    },
+    {
+      "description": "tflint plugin updates",
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchDepNames": [
+        "terraform-linters/tflint-ruleset-.*"
+      ],
+      "commitMessagePrefix": "tflint",
+      "commitMessageTopic": "tflint plugin {{depName}}",
+      "labels": [
+        "type/dependencies",
+        "update/tflint",
+        "release/chore"
+      ]
+    }
+  ],
+  "terraform": {
+    "enabled": true
+  },
+  "pre-commit": {
+    "enabled": true
+  },
+  "github-actions": {
+    "enabled": true,
+    "managerFilePatterns": [
+      ".github/workflows/*.yaml"
+    ],
+    "extends": [
+      "helpers:pinGitHubActionDigests"
+    ]
+  },
+  "tflint-plugin": {
+    "enabled": true,
+    "managerFilePatterns": [
+      ".tflint.hcl"
+    ]
+  }
+}
