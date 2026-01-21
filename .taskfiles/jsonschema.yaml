@@ -13,6 +13,10 @@ tasks:
       - GitHub Workflows (.github/workflows/*.yaml)
       - pre-commit Configuration (.pre-commit-config)
 
+      Renovate is configured to manage dependencies for:
+      - GitHub Actions, Terraform, pre-commit, tflint plugins
+      - Flux HelmRelease and OCIRepository resources
+
       Checks on Kubernetes resources under the flux/ folder will be managed
       through the conform tasks using kubeconform, as although kubeconform still
       uses JSON Schemas, it is able to dynamocally find and process the schemas.

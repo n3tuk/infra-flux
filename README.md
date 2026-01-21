@@ -167,6 +167,7 @@ Renovate manages dependencies for the following ecosystems:
 | tflint         | `.tflint.hcl`             | `type/dependencies`, `update/tflint`           |
 | pre-commit     | `.pre-commit-config.yaml` | `type/dependencies`, `update/pre-commit`       |
 | Flux Helm      | `flux/**/*.yaml`          | `type/dependencies`, `update/flux`             |
+| Flux OCI       | `flux/sources/*.yaml`     | `type/dependencies`, `update/flux`             |
 
 To run Renovate manually:
 

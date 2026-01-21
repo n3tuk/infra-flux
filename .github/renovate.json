@@ -59,6 +59,18 @@
       ],
       "datasourceTemplate": "github-releases",
       "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "Update OCI image versions in Flux OCIRepository resources",
+      "managerFilePatterns": [
+        "/flux/sources/.+\\.yaml$/"
+      ],
+      "matchStrings": [
+        "url:\\s*oci://(?<registryUrl>[^\\s]+)/(?<depName>[^\\n]+)\\n.*?semver:\\s*(?<currentValue>[\\d.]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "semver"
     }
   ],
   "packageRules": [
@@ -120,6 +132,22 @@
       ],
       "commitMessagePrefix": "flux",
       "commitMessageTopic": "HelmRelease {{depName}}",
+      "labels": [
+        "type/dependencies",
+        "update/flux",
+        "release/chore"
+      ]
+    },
+    {
+      "description": "Flux OCIRepository updates",
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchDepPatterns": [
+        "ghcr\\.io/.*"
+      ],
+      "commitMessagePrefix": "flux",
+      "commitMessageTopic": "OCIRepository {{depName}}",
       "labels": [
         "type/dependencies",
         "update/flux",
