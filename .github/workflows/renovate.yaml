@@ -11,15 +11,12 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: >-
-          Select whether or not to run Renovate in dry-run mode to check for
-          updates without making any changes to the repository.
+        description: dry-run mode for Renovate
         required: false
         type: boolean
         default: false
       log_level:
-        description: >-
-          Select the level of logging to use in Renovate when running.
+        description: Logging level for Renovate
         required: false
         default: info
         type: choice
