@@ -1,0 +1,57 @@
+---
+name: Renovate
+
+on:
+  schedule:
+    # Run every Friday at 18:00 Europe/London time (GMT used currently).
+    # Time zones are not yet supported for scheduled events in GitHub Actions:
+    #   https://github.com/orgs/community/discussions/13454
+    - cron: 0 18 * * 5
+
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: >-
+          Select whether or not to run Renovate in dry-run mode to check for
+          updates without making any changes to the repository.
+        required: false
+        type: boolean
+        default: false
+      log_level:
+        description: >-
+          Select the level of logging to use in Renovate when running.
+        required: false
+        default: info
+        type: choice
+        options:
+          - debug
+          - info
+          - warn
+          - error
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -eo pipefail {0}
+
+jobs:
+  renovate:
+    name: Renovate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Run Renovate
+        uses: renovatebot/github-action@v42
+        with:
+          configurationFile: .github/renovate.json
+          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          LOG_LEVEL: ${{ inputs.log_level || 'info' }}
+          RENOVATE_DRY_RUN: ${{ inputs.dry_run == 'true' && 'full' || '' }}

@@ -143,3 +143,37 @@ For the `cert-manager` CRDs, download the latest release of
 wget https://github.com/cert-manager/cert-manager/releases/download/{release}/cert-manager.crds.yaml \
   -o flux/custom-resources/cert-manager.yaml
 ```
+
+## Dependency Management
+
+This repository uses [Renovate][renovate] for automated dependency management.
+Renovate is configured to:
+
+- Run weekly on Fridays at 18:00 (Europe/London time)
+- Group minor and patch updates together to reduce PR noise
+- Create separate PRs for major updates to allow careful review
+- Support manual triggering via GitHub Actions workflow dispatch
+
+[renovate]: https://docs.renovatebot.com/
+
+### Supported Ecosystems
+
+Renovate manages dependencies for the following ecosystems:
+
+| Ecosystem      | Location                  | Labels                                         |
+| -------------- | ------------------------- | ---------------------------------------------- |
+| GitHub Actions | `.github/workflows/`      | `type/dependencies`, `update/github-workflows` |
+| Terraform      | `terraform/`              | `type/dependencies`, `update/terraform`        |
+| tflint         | `.tflint.hcl`             | `type/dependencies`, `update/tflint`           |
+| pre-commit     | `.pre-commit-config.yaml` | `type/dependencies`, `update/pre-commit`       |
+| Flux Helm      | `flux/**/*.yaml`          | `type/dependencies`, `update/flux`             |
+
+To run Renovate manually:
+
+1. Log in to GitHub and navigate to [_Actions_][gh-actions], and select the
+   [_Renovate_][gha-renovate] workflow.
+2. Click _Run workflow_.
+3. Optionally enable dry-run mode for testing.
+
+[gh-actions]: https://github.com/n3tuk/infra-flux/actions
+[gha-renovate]: https://github.com/n3tuk/infra-flux/actions/workflows/renovate.yaml
